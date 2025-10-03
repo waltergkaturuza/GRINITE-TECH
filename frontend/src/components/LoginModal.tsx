@@ -45,15 +45,20 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
 
   return (
     <Modal isOpen={isOpen} closeModal={closeModal} title="Login">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="bg-crimson-900/20 border border-crimson-900/50 text-crimson-200 px-4 py-3 rounded-lg animate-shake">
-            {error}
-          </div>
-        )}
+      <div className="relative">
+        {/* Additional Login Form Glow Effects */}
+        <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 via-purple-400/20 to-yellow-400/20 rounded-2xl blur-xl opacity-60 animate-pulse"></div>
+        
+        <form onSubmit={handleSubmit} className="relative space-y-6 bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          {error && (
+            <div className="bg-crimson-900/20 border border-crimson-900/50 text-crimson-200 px-4 py-3 rounded-lg animate-shake shadow-lg shadow-red-500/20">
+              {error}
+            </div>
+          )}
         
         <div className="space-y-4">
           <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
             <input
               id="email"
               name="email"
@@ -62,11 +67,12 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 group-hover:bg-white/15 hover:border-cyan-400/50 focus:bg-white/20"
+              className="relative w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 group-hover:bg-white/15 hover:border-cyan-400/50 focus:bg-white/20 focus:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
             />
           </div>
           
           <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-400 to-pink-400 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
             <input
               id="password"
               name="password"
@@ -75,12 +81,12 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 group-hover:bg-white/15 hover:border-cyan-400/50 focus:bg-white/20"
+              className="relative w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 group-hover:bg-white/15 hover:border-cyan-400/50 focus:bg-white/20 focus:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-cyan-400 transition-colors duration-200"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-cyan-400 transition-colors duration-200 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"
             >
               {showPassword ? (
                 <EyeSlashIcon className="h-5 w-5" />
@@ -107,16 +113,19 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
           </button>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-gradient-to-r from-cyan-500 to-yellow-500 hover:from-cyan-400 hover:to-yellow-400 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-cyan-500/25 relative overflow-hidden group"
-        >
-          <span className="relative z-10">
-            {isLoading ? "Signing in..." : "Login"}
-          </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        </button>
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-yellow-500 rounded-xl blur opacity-60 group-hover:opacity-80 transition duration-300"></div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="relative w-full bg-gradient-to-r from-cyan-500 to-yellow-500 hover:from-cyan-400 hover:to-yellow-400 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-cyan-500/25 overflow-hidden group/btn"
+          >
+            <span className="relative z-10">
+              {isLoading ? "Signing in..." : "Login"}
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-cyan-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+          </button>
+        </div>
 
         <div className="mt-6">
           <div className="relative">
@@ -129,12 +138,18 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
           </div>
           
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button type="button" className="w-full inline-flex justify-center py-3 px-4 rounded-xl border border-white/20 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-200">
-              <span>Google</span>
-            </button>
-            <button type="button" className="w-full inline-flex justify-center py-3 px-4 rounded-xl border border-white/20 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-200">
-              <span>GitHub</span>
-            </button>
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-red-400 to-orange-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+              <button type="button" className="relative w-full inline-flex justify-center py-3 px-4 rounded-xl border border-white/20 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-200 hover:text-white hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                <span>Google</span>
+              </button>
+            </div>
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-gray-400 to-slate-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+              <button type="button" className="relative w-full inline-flex justify-center py-3 px-4 rounded-xl border border-white/20 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-200 hover:text-white hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                <span>GitHub</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -144,13 +159,14 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
             <button
               type="button"
               onClick={switchToSignup}
-              className="text-cyan-400 hover:text-yellow-400 font-medium transition-colors duration-200"
+              className="text-cyan-400 hover:text-yellow-400 font-medium transition-colors duration-200 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"
             >
               Sign up
             </button>
           </p>
         </div>
-      </form>
+        </form>
+      </div>
     </Modal>
   )
 }
