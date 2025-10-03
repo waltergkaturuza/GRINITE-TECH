@@ -37,7 +37,19 @@ export default function SignupModal({ isOpen, closeModal, openLoginModal }: Sign
     }
 
     try {
-      const data = await authAPI.register(formData.name, formData.email, formData.password)
+      // Split name into firstName and lastName
+      const nameParts = formData.name.trim().split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+      
+      const userData = {
+        firstName,
+        lastName,
+        email: formData.email,
+        password: formData.password
+      }
+      
+      const data = await authAPI.register(userData)
       localStorage.setItem('token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
       closeModal()
