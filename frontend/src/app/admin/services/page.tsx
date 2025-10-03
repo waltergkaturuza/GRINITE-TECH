@@ -112,7 +112,8 @@ export default function AdminServicesPage() {
   const fetchServices = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:3001/api/v1/services')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+      const response = await fetch(`${apiUrl}/services`)
       if (!response.ok) {
         throw new Error('Failed to fetch services')
       }
@@ -132,7 +133,8 @@ export default function AdminServicesPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/v1/services/categories')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+      const response = await fetch(`${apiUrl}/services/categories`)
       if (!response.ok) {
         throw new Error('Failed to fetch categories')
       }
@@ -150,10 +152,10 @@ export default function AdminServicesPage() {
     e.preventDefault()
     
     try {
-      const url = editingService 
-        ? `http://localhost:3001/api/v1/services/${editingService.id}`
-        : 'http://localhost:3001/api/v1/services'
-      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+      const url = editingService
+        ? `${apiUrl}/services/${editingService.id}`
+        : `${apiUrl}/services`
       const method = editingService ? 'PUT' : 'POST'
       
       const response = await fetch(url, {
@@ -189,7 +191,8 @@ export default function AdminServicesPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/v1/services/${id}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+      const response = await fetch(`${apiUrl}/services/${id}`, {
         method: 'DELETE'
       })
 

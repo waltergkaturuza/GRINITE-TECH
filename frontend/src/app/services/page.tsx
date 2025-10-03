@@ -56,7 +56,8 @@ export default function ServicesPage() {
     const fetchServices = async () => {
       try {
         setLoading(true)
-        const response = await fetch('http://localhost:3001/api/v1/services?status=active')
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+        const response = await fetch(`${apiUrl}/services?status=active`)
         if (!response.ok) {
           throw new Error('Failed to fetch services')
         }
@@ -81,7 +82,8 @@ export default function ServicesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/v1/services/categories')
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+        const response = await fetch(`${apiUrl}/services/categories`)
         if (!response.ok) {
           throw new Error('Failed to fetch categories')
         }
