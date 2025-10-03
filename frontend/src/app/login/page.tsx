@@ -33,21 +33,22 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-granite-800 via-jungle-900 to-crimson-900 flex items-center justify-center p-4 overflow-hidden relative">
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center z-0">
         <div className="relative">
-          <div className="w-96 h-96 border-4 border-transparent rounded-full animate-spin-slow">
-            <div className="w-full h-full border-4 border-dashed border-t-cyan-400 border-r-cyan-500 border-b-blue-400 border-l-blue-500 rounded-full animate-spin-reverse opacity-60"></div>
+          <div className="w-[800px] h-[800px] border-4 border-transparent rounded-full animate-spin-slow">
+            <div className="w-full h-full border-4 border-dashed border-t-cyan-400 border-r-cyan-500 border-b-blue-400 border-l-blue-500 rounded-full animate-spin-reverse opacity-70 shadow-lg shadow-cyan-500/20"></div>
           </div>
-          <div className="absolute top-8 left-8 w-80 h-80 border-2 border-transparent rounded-full animate-spin-slow-reverse">
-            <div className="w-full h-full border-2 border-dotted border-t-yellow-400 border-r-peach-400 border-b-yellow-500 border-l-peach-500 rounded-full animate-spin opacity-50"></div>
+          <div className="absolute top-16 left-16 w-[720px] h-[720px] border-3 border-transparent rounded-full animate-spin-slow-reverse">
+            <div className="w-full h-full border-3 border-dotted border-t-yellow-400 border-r-peach-400 border-b-yellow-500 border-l-peach-500 rounded-full animate-spin opacity-60 shadow-lg shadow-yellow-500/20"></div>
           </div>
-          <div className="absolute top-16 left-16 w-64 h-64 border-2 border-transparent rounded-full animate-pulse">
-            <div className="w-full h-full border-2 border-solid border-t-jungle-400 border-r-olive-400 border-b-jungle-500 border-l-olive-500 rounded-full animate-spin-slow opacity-40"></div>
+          <div className="absolute top-32 left-32 w-[640px] h-[640px] border-2 border-transparent rounded-full animate-pulse">
+            <div className="w-full h-full border-2 border-solid border-t-jungle-400 border-r-olive-400 border-b-jungle-500 border-l-olive-500 rounded-full animate-spin-slow opacity-50 shadow-lg shadow-green-500/20"></div>
           </div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gradient-to-r from-cyan-400/20 to-yellow-400/20 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-cyan-400/15 to-yellow-400/15 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-gradient-to-r from-blue-400/10 to-green-400/10 rounded-full blur-xl animate-ping"></div>
         </div>
       </div>
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-50 w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-yellow-400 mb-2 animate-pulse">
@@ -56,9 +57,11 @@ export default function LoginPage() {
           </Link>
           <p className="text-gray-300 text-lg">Welcome back</p>
         </div>
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-yellow-500/5 rounded-2xl"></div>
-          <div className="relative z-10">
+        <div className="bg-white/20 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/40 relative overflow-hidden z-10 hover:bg-white/25 transition-all duration-500 hover:shadow-cyan-500/10 hover:shadow-3xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/15 to-yellow-500/15 rounded-3xl animate-pulse"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-cyan-400/20 to-transparent rounded-full blur-2xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-yellow-400/20 to-transparent rounded-full blur-2xl"></div>
+          <div className="relative z-20">
             <h2 className="text-2xl font-bold text-white text-center mb-6">Login</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
@@ -76,7 +79,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 group-hover:bg-white/15 hover:border-cyan-400/50 focus:bg-white/20"
                   />
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-400/0 to-yellow-400/0 group-focus-within:from-cyan-400/10 group-focus-within:to-yellow-400/10 transition-all duration-300 pointer-events-none"></div>
                 </div>
@@ -89,7 +92,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
-                    className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
+                    className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 group-hover:bg-white/15 hover:border-cyan-400/50 focus:bg-white/20"
                   />
                   <button
                     type="button"

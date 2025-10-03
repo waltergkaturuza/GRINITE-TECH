@@ -1,35 +1,12 @@
 import Link from 'next/link'
 import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline'
+import Navigation from './components/Navigation'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
       {/* Navigation */}
-      <nav className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-granite-200">
-        <div className="wide-container px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-granite-800 to-crimson-900 bg-clip-text text-transparent">
-                GRANITE TECH
-              </Link>
-            </div>
-            <div className="flex items-center space-x-6">
-              <Link href="/products" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
-                Products
-              </Link>
-              <Link href="/services" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
-                Services
-              </Link>
-              <Link href="/login" className="btn-outline">
-                Login
-              </Link>
-              <Link href="/signup" className="btn-primary">
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Hero Section */}
       <section className="py-20 relative overflow-hidden">

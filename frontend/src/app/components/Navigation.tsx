@@ -4,10 +4,14 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bars3Icon, XMarkIcon, UserIcon } from '@heroicons/react/24/outline'
+import LoginModal from '@/components/LoginModal'
+import SignupModal from '@/components/SignupModal'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -21,6 +25,23 @@ export default function Navigation() {
     localStorage.removeItem('user')
     setIsLoggedIn(false)
     router.push('/')
+  }
+
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true)
+    setIsSignupModalOpen(false)
+    setIsMenuOpen(false)
+  }
+
+  const openSignupModal = () => {
+    setIsSignupModalOpen(true)
+    setIsLoginModalOpen(false)
+    setIsMenuOpen(false)
+  }
+
+  const closeModals = () => {
+    setIsLoginModalOpen(false)
+    setIsSignupModalOpen(false)
   }
 
   return (
@@ -64,18 +85,18 @@ export default function Navigation() {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link 
-                  href="/login" 
+                <button 
+                  onClick={openLoginModal}
                   className="text-granite-700 hover:text-crimson-900 transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-granite-100"
                 >
                   Login
-                </Link>
-                <Link 
-                  href="/signup" 
+                </button>
+                <button 
+                  onClick={openSignupModal}
                   className="bg-gradient-to-r from-crimson-900 to-crimson-800 hover:from-crimson-800 hover:to-crimson-700 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium"
                 >
                   Get Started
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -149,26 +170,36 @@ export default function Navigation() {
                 </>
               ) : (
                 <>
-                  <Link 
-                    href="/login" 
-                    className="block px-3 py-2 text-granite-700 hover:text-crimson-900 transition-colors duration-200"
-                    onClick={() => setIsMenuOpen(false)}
+                  <button 
+                    onClick={openLoginModal}
+                    className="block w-full text-left px-3 py-2 text-granite-700 hover:text-crimson-900 transition-colors duration-200"
                   >
                     Login
-                  </Link>
-                  <Link 
-                    href="/signup" 
+                  </button>
+                  <button 
+                    onClick={openSignupModal}
                     className="block px-3 py-2 bg-gradient-to-r from-crimson-900 to-crimson-800 text-white rounded-lg font-medium mx-3"
-                    onClick={() => setIsMenuOpen(false)}
                   >
                     Get Started
-                  </Link>
+                  </button>
                 </>
               )}
             </div>
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        closeModal={closeModals} 
+        openSignupModal={openSignupModal}
+      />
+      <SignupModal 
+        isOpen={isSignupModalOpen} 
+        closeModal={closeModals} 
+        openLoginModal={openLoginModal}
+      />
     </nav>
   )
 }

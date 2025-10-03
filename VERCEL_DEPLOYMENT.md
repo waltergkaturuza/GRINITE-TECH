@@ -17,10 +17,10 @@ NODE_ENV=production
 
 ### 2. FRONTEND DEPLOYMENT (Deploy after backend)
 Import same repo → Select "frontend" folder only
-Add these environment variables (update backend URL after deployment):
+Add these environment variables:
 ```
-NEXT_PUBLIC_API_URL=https://[YOUR-BACKEND-URL].vercel.app/api/v1
-NEXT_PUBLIC_SITE_URL=https://[YOUR-FRONTEND-URL].vercel.app
+NEXT_PUBLIC_API_URL=https://granite-tech-backend.vercel.app/api/v1
+NEXT_PUBLIC_SITE_URL=https://granite-tech-frontend.vercel.app
 ```
 
 ### 3. OPTIONAL: Stripe Integration
