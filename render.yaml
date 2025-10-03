@@ -1,0 +1,50 @@
+services:
+  # Backend API Service
+  - type: web
+    name: granite-tech-backend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: granite-tech-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: granite-tech-frontend
+          property: host
+    
+  # Frontend Application Service  
+  - type: web
+    name: granite-tech-frontend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: granite-tech-backend
+          property: host
+
+# Database
+databases:
+  - name: granite-tech-db
+    databaseName: granite_tech
+    user: granite_user
+    region: oregon
+    plan: starter

@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-white text-granite-800;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-white text-granite-800;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-crimson-900 hover:bg-crimson-800 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply bg-olive-900 hover:bg-jungle-900 text-granite-800 font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md;
+  }
+  
+  .btn-accent {
+    @apply bg-yellow-900 hover:bg-peach-900 text-granite-800 font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-crimson-900 text-crimson-900 hover:bg-crimson-900 hover:text-white font-medium py-2 px-4 rounded-lg transition-all duration-200;
+  }
+  
+  .btn-dark {
+    @apply bg-granite-800 hover:bg-granite-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-lg border border-granite-200 p-6 hover:shadow-xl transition-shadow duration-300;
+  }
+  
+  .card-dark {
+    @apply bg-granite-800 text-white rounded-lg shadow-lg border border-granite-700 p-6 hover:shadow-xl transition-shadow duration-300;
+  }
+  
+  .input-field {
+    @apply block w-full rounded-md border-granite-300 shadow-sm focus:border-crimson-500 focus:ring-crimson-500 sm:text-sm transition-colors duration-200;
+  }
+  
+  .page-header {
+    @apply text-3xl font-bold text-granite-800 mb-6;
+  }
+  
+  .section-header {
+    @apply text-2xl font-semibold text-granite-800 mb-4;
+  }
+  
+  .accent-text {
+    @apply text-crimson-900 font-semibold;
+  }
+  
+  .gradient-bg {
+    @apply bg-gradient-to-br from-granite-800 via-crimson-900 to-jungle-900;
+  }
+  
+  .tech-gradient {
+    @apply bg-gradient-to-r from-granite-800 to-crimson-900;
+  }
+  
+  .wide-container {
+    margin-left: 10mm;
+    margin-right: 10mm;
+    width: calc(100% - 20mm);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

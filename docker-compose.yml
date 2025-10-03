@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: granite-postgres
+    environment:
+      POSTGRES_DB: granite_tech
+      POSTGRES_USER: granite_user
+      POSTGRES_PASSWORD: granite_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - granite-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: granite-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - granite-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: granite-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://granite_user:granite_password@postgres:5432/granite_tech
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - granite-network
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: granite-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - granite-network
+
+  # Chatbot Service
+  chatbot:
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile
+    container_name: granite-chatbot
+    ports:
+      - "5005:5005"
+    environment:
+      - RASA_API_URL=http://backend:3001
+    depends_on:
+      - backend
+    volumes:
+      - ./chatbot:/app
+    networks:
+      - granite-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  granite-network:
+    driver: bridge
