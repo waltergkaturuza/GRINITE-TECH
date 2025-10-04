@@ -256,7 +256,7 @@ export default function ClientsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-900 text-green-200'
-      case 'inactive': return 'bg-yellow-900 text-yellow-200'
+      case 'inactive': return 'bg-amber-800 text-amber-200'
       case 'suspended': return 'bg-red-900 text-red-200'
       default: return 'bg-gray-700 text-gray-200'
     }
@@ -305,7 +305,7 @@ export default function ClientsPage() {
         <div className="mt-4 sm:mt-0 flex space-x-3">
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-900 hover:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors active:bg-green-700"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
             Add Client
@@ -469,7 +469,7 @@ export default function ClientsPage() {
                   onClick={() => setViewMode('list')}
                   className={`px-3 py-2 text-sm ${
                     viewMode === 'list'
-                      ? 'bg-yellow-900 text-white'
+                      ? 'bg-green-600 text-white'
                       : 'bg-granite-700 text-gray-300 hover:bg-granite-600'
                   }`}
                 >
@@ -479,7 +479,7 @@ export default function ClientsPage() {
                   onClick={() => setViewMode('grid')}
                   className={`px-3 py-2 text-sm ${
                     viewMode === 'grid'
-                      ? 'bg-yellow-900 text-white'
+                      ? 'bg-green-600 text-white'
                       : 'bg-granite-700 text-gray-300 hover:bg-granite-600'
                   }`}
                 >
@@ -520,7 +520,7 @@ export default function ClientsPage() {
                           {client.avatar ? (
                             <img className="h-10 w-10 rounded-full" src={client.avatar} alt="" />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-yellow-900 flex items-center justify-center">
+                            <div className="h-10 w-10 rounded-full bg-amber-800 flex items-center justify-center">
                               <span className="text-white font-medium">
                                 {client.firstName.charAt(0)}{client.lastName.charAt(0)}
                               </span>
@@ -600,7 +600,7 @@ export default function ClientsPage() {
                 <div className="mt-6">
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-yellow-900 hover:bg-yellow-800"
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-800 hover:bg-green-600 active:bg-green-700 transition-colors"
                   >
                     <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
                     Add Client
@@ -853,7 +853,7 @@ export default function ClientsPage() {
                     {selectedClient.avatar ? (
                       <img className="h-16 w-16 rounded-full" src={selectedClient.avatar} alt="" />
                     ) : (
-                      <div className="h-16 w-16 rounded-full bg-yellow-900 flex items-center justify-center">
+                      <div className="h-16 w-16 rounded-full bg-amber-800 flex items-center justify-center">
                         <span className="text-white text-xl font-medium">
                           {selectedClient.firstName.charAt(0)}{selectedClient.lastName.charAt(0)}
                         </span>

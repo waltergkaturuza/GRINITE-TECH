@@ -196,7 +196,7 @@ export default function InvoicesPage() {
         <div className="mt-4 sm:mt-0">
           <button 
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 active:bg-green-700 transition-colors duration-200"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
             Create Invoice
@@ -323,7 +323,7 @@ export default function InvoicesPage() {
               <p className="text-gray-300">No invoices found</p>
               <button
                 onClick={() => setShowForm(true)}
-                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700"
+                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 active:bg-green-700 transition-colors duration-200"
               >
                 <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
                 Create Your First Invoice
@@ -436,7 +436,7 @@ export default function InvoicesPage() {
                             onClick={() => setCurrentPage(page)}
                             className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                               page === currentPage
-                                ? 'z-10 bg-yellow-600 border-yellow-600 text-white'
+                                ? 'z-10 bg-green-600 border-green-600 text-white'
                                 : 'bg-granite-800 border-granite-600 text-gray-300 hover:bg-granite-700'
                             }`}
                           >

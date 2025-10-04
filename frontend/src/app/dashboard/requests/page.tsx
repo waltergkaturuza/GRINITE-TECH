@@ -44,7 +44,7 @@ interface ProjectRequest {
 }
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: ClockIcon },
+  pending: { label: 'Pending', color: 'bg-amber-200 text-amber-900', icon: ClockIcon },
   reviewing: { label: 'Reviewing', color: 'bg-blue-100 text-blue-800', icon: EyeIcon },
   quoted: { label: 'Quoted', color: 'bg-purple-100 text-purple-800', icon: CurrencyDollarIcon },
   accepted: { label: 'Accepted', color: 'bg-green-100 text-green-800', icon: CheckCircleIcon },

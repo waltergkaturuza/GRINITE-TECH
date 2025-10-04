@@ -32,7 +32,7 @@
   }
   
   .btn-accent {
-    @apply bg-yellow-900 hover:bg-peach-900 text-granite-800 font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md;
+    @apply bg-amber-800 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:bg-green-700;
   }
   
   .btn-outline {

@@ -153,7 +153,7 @@ export default function DashboardPage() {
       case 'in_progress':
         return 'bg-blue-100 text-blue-800'
       case 'planning':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-amber-200 text-amber-900'
       case 'on_hold':
         return 'bg-gray-100 text-gray-800'
       case 'cancelled':

@@ -285,7 +285,7 @@ export default function ChatPage() {
           <div className="flex space-x-3">
             <button
               onClick={createNewSession}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-900 hover:bg-yellow-800"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 active:bg-green-700 transition-colors"
             >
               <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
               New Chat
@@ -342,7 +342,7 @@ export default function ChatPage() {
                 <p className="mt-1 text-sm text-gray-400">Start a new conversation to get started.</p>
                 <button
                   onClick={createNewSession}
-                  className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-yellow-900 hover:bg-yellow-800"
+                  className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-amber-800 hover:bg-green-600 active:bg-green-700 transition-colors"
                 >
                   <PlusIcon className="-ml-0.5 mr-2 h-4 w-4" />
                   New Chat
@@ -360,7 +360,7 @@ export default function ChatPage() {
                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-yellow-900 flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-full bg-amber-800 flex items-center justify-center">
                           <ChatBubbleLeftRightIcon className="h-5 w-5 text-white" />
                         </div>
                       </div>
@@ -433,7 +433,7 @@ export default function ChatPage() {
                     <div
                       className={`max-w-xs lg:max-w-md xl:max-w-lg ${
                         msg.isUser
-                          ? 'bg-yellow-900 text-white rounded-l-lg rounded-tr-lg'
+                          ? 'bg-green-600 text-white rounded-l-lg rounded-tr-lg'
                           : 'bg-granite-700 text-white rounded-r-lg rounded-tl-lg'
                       } px-4 py-2 shadow-lg`}
                     >
@@ -501,7 +501,7 @@ export default function ChatPage() {
                   <button
                     onClick={sendMessage}
                     disabled={!message.trim() || isTyping}
-                    className="p-2 bg-yellow-900 text-white rounded-full hover:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 bg-amber-800 text-white rounded-full hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:bg-green-700"
                   >
                     <PaperAirplaneIcon className="h-5 w-5" />
                   </button>

@@ -40,7 +40,7 @@ interface ProjectRequest {
 }
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending Review', color: 'bg-yellow-100 text-yellow-800', icon: ClockIcon, description: 'Your request is being reviewed by our team' },
+  pending: { label: 'Pending Review', color: 'bg-amber-200 text-amber-900', icon: ClockIcon, description: 'Your request is being reviewed by our team' },
   reviewing: { label: 'Under Review', color: 'bg-blue-100 text-blue-800', icon: EyeIcon, description: 'Our team is analyzing your requirements' },
   quoted: { label: 'Quote Sent', color: 'bg-purple-100 text-purple-800', icon: DocumentIcon, description: 'We\'ve prepared a quote for your project' },
   accepted: { label: 'Accepted', color: 'bg-green-100 text-green-800', icon: CheckCircleIcon, description: 'Your project has been accepted and will start soon' },

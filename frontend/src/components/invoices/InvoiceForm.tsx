@@ -303,7 +303,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
             <button
               type="button"
               onClick={addItem}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-amber-800 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 active:bg-green-700 transition-colors duration-200"
             >
               <PlusIcon className="w-4 h-4 mr-1" />
               Add Item
@@ -464,7 +464,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-amber-800 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed active:bg-green-700 transition-colors duration-200"
           >
             {isLoading ? 'Saving...' : (invoice ? 'Update Invoice' : 'Create Invoice')}
           </button>
