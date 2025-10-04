@@ -125,10 +125,18 @@ export default function ProjectsPage() {
       setStats(projectStats)
     } catch (error) {
       console.error('Error loading projects:', error)
-      // Use mock data if API fails
-      const mockProjects = generateMockProjects()
-      setProjects(mockProjects)
-      setStats(calculateStats(mockProjects))
+      setProjects([])
+      setStats({
+        total: 0,
+        planning: 0,
+        inProgress: 0,
+        review: 0,
+        completed: 0,
+        cancelled: 0,
+        totalBudget: 0,
+        totalActualHours: 0,
+        averageCompletion: 0
+      })
     } finally {
       setLoading(false)
     }
