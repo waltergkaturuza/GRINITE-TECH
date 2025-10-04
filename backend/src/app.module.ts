@@ -12,6 +12,7 @@ import { ChatbotModule } from './chatbot/chatbot.module';
 import { ChatModule } from './chat/chat.module';
 import { ServicesModule } from './services/services.module';
 import { DatabaseModule } from './database/database.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { DatabaseModule } from './database/database.module';
     ChatbotModule,
     ChatModule,
     ServicesModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

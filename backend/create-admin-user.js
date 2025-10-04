@@ -13,7 +13,7 @@ async function createAdminUser() {
     };
 
     // Register admin user on production backend
-    const response = await axios.post('https://granite-tech-backend.vercel.app/api/v1/auth/register', adminData);
+    const response = await axios.post('https://grinite-tech-backend.vercel.app/api/v1/auth/register', adminData);
     
     console.log('✅ Admin user created successfully in production!');
     console.log('📧 Email: admin@granitetech.com');
