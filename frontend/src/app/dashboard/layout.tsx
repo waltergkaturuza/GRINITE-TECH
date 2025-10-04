@@ -16,7 +16,8 @@ import {
   DocumentTextIcon,
   BellIcon,
   UserCircleIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline'
 
 export default function DashboardLayout({
@@ -52,6 +53,7 @@ export default function DashboardLayout({
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: true },
     { name: 'Projects', href: '/dashboard/projects', icon: CubeIcon, current: false },
     { name: 'Clients', href: '/dashboard/clients', icon: UsersIcon, current: false },
+    { name: 'Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, current: false },
     { name: 'Products', href: '/dashboard/products', icon: ShoppingCartIcon, current: false },
     { name: 'Analytics', href: '/dashboard/analytics', icon: ChartBarIcon, current: false },
     { name: 'Chat', href: '/dashboard/chat', icon: ChatBubbleLeftRightIcon, current: false },

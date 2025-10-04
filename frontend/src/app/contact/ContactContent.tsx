@@ -7,8 +7,11 @@ import {
   PhoneIcon,
   MapPinIcon,
   ClockIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  DocumentArrowUpIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline'
+import { requestsAPI } from '@/lib/api'
 
 const services = [
   { id: 'web-development', name: 'Web Development' },
@@ -24,15 +27,16 @@ const services = [
 export default function ContactContent() {
   const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     email: '',
     company: '',
     phone: '',
-    service: '',
-    budget: '',
-    timeline: '',
-    message: ''
+    serviceInterested: '',
+    projectBudget: '',
+    projectTimeline: '',
+    description: ''
   })
+  const [files, setFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -41,7 +45,7 @@ export default function ContactContent() {
     // Pre-fill service if coming from a specific service page
     const serviceParam = searchParams.get('service')
     if (serviceParam) {
-      setFormData(prev => ({ ...prev, service: serviceParam }))
+      setFormData(prev => ({ ...prev, serviceInterested: serviceParam }))
     }
   }, [searchParams])
 
@@ -53,31 +57,49 @@ export default function ContactContent() {
     }))
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || [])
+    const validFiles = selectedFiles.filter(file => {
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      if (file.size > maxSize) {
+        setError(`File ${file.name} is too large. Maximum size is 10MB.`)
+        return false
+      }
+      return true
+    })
+    setFiles(prev => [...prev, ...validFiles])
+  }
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError('')
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      const result = await requestsAPI.submitRequest(formData, files)
       
-      // Here you would typically send the data to your backend
-      console.log('Form submitted:', formData)
-      
-      setIsSubmitted(true)
-      setFormData({
-        name: '',
-        email: '',
-        company: '',
-        phone: '',
-        service: '',
-        budget: '',
-        timeline: '',
-        message: ''
-      })
-    } catch (err) {
-      setError('Failed to send message. Please try again.')
+      if (result.success) {
+        setIsSubmitted(true)
+        setFormData({
+          fullName: '',
+          email: '',
+          company: '',
+          phone: '',
+          serviceInterested: '',
+          projectBudget: '',
+          projectTimeline: '',
+          description: ''
+        })
+        setFiles([])
+      } else {
+        setError(result.message || 'Failed to send message. Please try again.')
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send message. Please try again.')
       console.error('Form submission error:', err)
     } finally {
       setIsSubmitting(false)
@@ -137,15 +159,15 @@ export default function ContactContent() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-granite-700 mb-2">
+                  <label htmlFor="fullName" className="block text-sm font-medium text-granite-700 mb-2">
                     Full Name *
                   </label>
                   <input
                     type="text"
-                    id="name"
-                    name="name"
+                    id="fullName"
+                    name="fullName"
                     required
-                    value={formData.name}
+                    value={formData.fullName}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors"
                     placeholder="John Doe"
@@ -202,13 +224,13 @@ export default function ContactContent() {
               </div>
 
               <div>
-                <label htmlFor="service" className="block text-sm font-medium text-granite-700 mb-2">
+                <label htmlFor="serviceInterested" className="block text-sm font-medium text-granite-700 mb-2">
                   Service Interested In
                 </label>
                 <select
-                  id="service"
-                  name="service"
-                  value={formData.service}
+                  id="serviceInterested"
+                  name="serviceInterested"
+                  value={formData.serviceInterested}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors"
                 >
@@ -223,13 +245,13 @@ export default function ContactContent() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="budget" className="block text-sm font-medium text-granite-700 mb-2">
+                  <label htmlFor="projectBudget" className="block text-sm font-medium text-granite-700 mb-2">
                     Project Budget
                   </label>
                   <select
-                    id="budget"
-                    name="budget"
-                    value={formData.budget}
+                    id="projectBudget"
+                    name="projectBudget"
+                    value={formData.projectBudget}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors"
                   >
@@ -243,13 +265,13 @@ export default function ContactContent() {
                 </div>
 
                 <div>
-                  <label htmlFor="timeline" className="block text-sm font-medium text-granite-700 mb-2">
+                  <label htmlFor="projectTimeline" className="block text-sm font-medium text-granite-700 mb-2">
                     Project Timeline
                   </label>
                   <select
-                    id="timeline"
-                    name="timeline"
-                    value={formData.timeline}
+                    id="projectTimeline"
+                    name="projectTimeline"
+                    value={formData.projectTimeline}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors"
                   >
@@ -264,19 +286,74 @@ export default function ContactContent() {
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-granite-700 mb-2">
+                <label htmlFor="description" className="block text-sm font-medium text-granite-700 mb-2">
                   Project Description *
                 </label>
                 <textarea
-                  id="message"
-                  name="message"
+                  id="description"
+                  name="description"
                   required
                   rows={5}
-                  value={formData.message}
+                  value={formData.description}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors resize-none"
                   placeholder="Tell us about your project, goals, and any specific requirements..."
                 />
+              </div>
+
+              {/* File Upload Section */}
+              <div>
+                <label className="block text-sm font-medium text-granite-700 mb-2">
+                  Attachments (Optional)
+                </label>
+                <div className="w-full border-2 border-dashed border-granite-300 rounded-lg p-6 text-center hover:border-crimson-500 transition-colors">
+                  <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-granite-400" />
+                  <div className="mt-4">
+                    <label htmlFor="files" className="cursor-pointer">
+                      <span className="mt-2 block text-sm font-medium text-granite-900">
+                        Drop files here or click to upload
+                      </span>
+                      <span className="mt-1 block text-xs text-granite-500">
+                        PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, Images, ZIP up to 10MB each
+                      </span>
+                    </label>
+                    <input
+                      id="files"
+                      name="files"
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="sr-only"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp,.zip"
+                    />
+                  </div>
+                </div>
+
+                {/* File List */}
+                {files.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {files.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <DocumentArrowUpIcon className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button

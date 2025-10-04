@@ -28,13 +28,13 @@ export class ProjectsController {
 
   @Get()
   findAll(
+    @CurrentUser() user: User,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: string,
     @Query('type') type?: string,
     @Query('clientId') clientId?: string,
     @Query('search') search?: string,
-    @CurrentUser() user: User,
   ) {
     const queryParams = {
       page: page ? parseInt(page, 10) : 1,

@@ -11,6 +11,7 @@ import { MonitoringModule } from './monitoring/monitoring.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
 import { ChatModule } from './chat/chat.module';
 import { ServicesModule } from './services/services.module';
+import { RequestsModule } from './requests/requests.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 
@@ -43,6 +44,7 @@ import { HealthModule } from './health/health.module';
     ChatbotModule,
     ChatModule,
     ServicesModule,
+    RequestsModule,
     HealthModule,
   ],
 })

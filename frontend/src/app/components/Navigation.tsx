@@ -69,6 +69,9 @@ export default function Navigation() {
             <Link href="/contact" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
               Contact
             </Link>
+            <Link href="/track-request" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
+              Track Request
+            </Link>
             
             {isLoggedIn ? (
               <div className="flex items-center space-x-4">
@@ -147,6 +150,13 @@ export default function Navigation() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact
+              </Link>
+              <Link 
+                href="/track-request" 
+                className="block px-3 py-2 text-granite-700 hover:text-crimson-900 transition-colors duration-200"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Track Request
               </Link>
               
               {isLoggedIn ? (

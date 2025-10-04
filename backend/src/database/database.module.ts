@@ -6,6 +6,7 @@ import { Project } from '../projects/entities/project.entity';
 import { Product } from '../products/entities/product.entity';
 import { Payment } from '../payments/entities/payment.entity';
 import { ChatSession } from '../chatbot/entities/chat-session.entity';
+import { ProjectRequest, RequestDocument, RequestMessage, MessageAttachment } from '../requests/entities/request.entity';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { ChatSession } from '../chatbot/entities/chat-session.entity';
           return {
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
-            entities: [User, Project, Product, Payment, ChatSession],
+            entities: [User, Project, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment],
             synchronize: true, // Temporarily enabled to create schema
             ssl: {
               rejectUnauthorized: false
@@ -31,7 +32,7 @@ import { ChatSession } from '../chatbot/entities/chat-session.entity';
           return {
             type: 'better-sqlite3',
             database: ':memory:',
-            entities: [User, Project, Product, Payment, ChatSession],
+            entities: [User, Project, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment],
             synchronize: true, // Only for development
             logging: true,
           };
