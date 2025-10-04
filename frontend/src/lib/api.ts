@@ -489,4 +489,70 @@ export const dashboardAPI = {
   },
 }
 
+export const invoicesAPI = {
+  getInvoices: async (params?: {
+    page?: number
+    limit?: number
+    status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+  }) => {
+    const response = await api.get('/invoices', { params })
+    return response.data
+  },
+  getInvoice: async (id: number) => {
+    const response = await api.get(`/invoices/${id}`)
+    return response.data
+  },
+  createInvoice: async (invoiceData: {
+    client_id: string
+    issue_date: string
+    due_date: string
+    payment_terms?: 'net_15' | 'net_30' | 'net_45' | 'net_60' | 'due_on_receipt'
+    tax_rate?: number
+    discount_amount?: number
+    notes?: string
+    terms_conditions?: string
+    billing_address?: string
+    billing_email?: string
+    billing_phone?: string
+    items: Array<{
+      description: string
+      quantity: number
+      unit_price: number
+      tax_rate?: number
+    }>
+  }) => {
+    const response = await api.post('/invoices', invoiceData)
+    return response.data
+  },
+  updateInvoice: async (id: number, invoiceData: any) => {
+    const response = await api.patch(`/invoices/${id}`, invoiceData)
+    return response.data
+  },
+  updateInvoiceStatus: async (id: number, statusData: {
+    status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+    payment_date?: string
+    payment_method?: string
+    payment_reference?: string
+  }) => {
+    const response = await api.patch(`/invoices/${id}/status`, statusData)
+    return response.data
+  },
+  deleteInvoice: async (id: number) => {
+    const response = await api.delete(`/invoices/${id}`)
+    return response.data
+  },
+  sendInvoice: async (id: number) => {
+    const response = await api.post(`/invoices/${id}/send`)
+    return response.data
+  },
+  duplicateInvoice: async (id: number) => {
+    const response = await api.post(`/invoices/${id}/duplicate`)
+    return response.data
+  },
+  getInvoiceStats: async () => {
+    const response = await api.get('/invoices/stats')
+    return response.data
+  },
+}
+
 export default api

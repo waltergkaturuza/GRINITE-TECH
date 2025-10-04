@@ -1,39 +1,187 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { 
   DocumentTextIcon,
   PlusIcon,
   EyeIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon
 } from '@heroicons/react/24/outline'
+import { invoicesAPI } from '../../../lib/api'
+import InvoiceForm from '../../../components/invoices/InvoiceForm'
+import InvoiceView from '../../../components/invoices/InvoiceView'
+import InvoiceActions from '../../../components/invoices/InvoiceActions'
+
+interface InvoiceStats {
+  total_invoices: number
+  total_revenue: number
+  paid_invoices: number
+  pending_invoices: number
+  draft_invoices: number
+  overdue_invoices: number
+  monthly_revenue: number
+  monthly_growth: number
+}
 
 export default function InvoicesPage() {
-  const invoices = [
-    {
-      id: 'INV-001',
-      client: 'TechCorp Solutions',
-      amount: '$2,500',
-      status: 'Paid',
-      date: '2025-09-15',
-      dueDate: '2025-10-15'
-    },
-    {
-      id: 'INV-002', 
-      client: 'Innovate LLC',
-      amount: '$5,000',
-      status: 'Pending',
-      date: '2025-09-28',
-      dueDate: '2025-10-28'
-    },
-    {
-      id: 'INV-003',
-      client: 'StartupXYZ',
-      amount: '$3,500', 
-      status: 'Draft',
-      date: '2025-10-01',
-      dueDate: '2025-11-01'
+  const [invoices, setInvoices] = useState<any[]>([])
+  const [stats, setStats] = useState<InvoiceStats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [showView, setShowView] = useState(false)
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
+  const [isFormLoading, setIsFormLoading] = useState(false)
+  
+  // Filters and pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [statusFilter, setStatusFilter] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [totalCount, setTotalCount] = useState(0)
+  const itemsPerPage = 10
+
+  useEffect(() => {
+    loadInvoices()
+    loadStats()
+  }, [currentPage, statusFilter])
+
+  const loadInvoices = async () => {
+    setIsLoading(true)
+    try {
+      const params: any = {
+        page: currentPage,
+        limit: itemsPerPage
+      }
+      
+      if (statusFilter) {
+        params.status = statusFilter
+      }
+
+      const response = await invoicesAPI.getInvoices(params)
+      setInvoices(response.invoices || [])
+      setTotalCount(response.total || 0)
+    } catch (error) {
+      console.error('Failed to load invoices:', error)
+      setInvoices([])
+    } finally {
+      setIsLoading(false)
     }
-  ]
+  }
+
+  const loadStats = async () => {
+    try {
+      const statsData = await invoicesAPI.getInvoiceStats()
+      setStats(statsData)
+    } catch (error) {
+      console.error('Failed to load stats:', error)
+    }
+  }
+
+  const handleCreateInvoice = async (invoiceData: any) => {
+    setIsFormLoading(true)
+    try {
+      await invoicesAPI.createInvoice(invoiceData)
+      setShowForm(false)
+      setSelectedInvoice(null)
+      loadInvoices()
+      loadStats()
+    } catch (error) {
+      console.error('Failed to create invoice:', error)
+      alert('Failed to create invoice. Please try again.')
+    } finally {
+      setIsFormLoading(false)
+    }
+  }
+
+  const handleUpdateInvoice = async (invoiceData: any) => {
+    if (!selectedInvoice) return
+    
+    setIsFormLoading(true)
+    try {
+      await invoicesAPI.updateInvoice(selectedInvoice.id, invoiceData)
+      setShowForm(false)
+      setSelectedInvoice(null)
+      loadInvoices()
+      loadStats()
+    } catch (error) {
+      console.error('Failed to update invoice:', error)
+      alert('Failed to update invoice. Please try again.')
+    } finally {
+      setIsFormLoading(false)
+    }
+  }
+
+  const handleDeleteInvoice = async (invoiceId: number) => {
+    try {
+      await invoicesAPI.deleteInvoice(invoiceId)
+      loadInvoices()
+      loadStats()
+    } catch (error) {
+      console.error('Failed to delete invoice:', error)
+      alert('Failed to delete invoice. Please try again.')
+    }
+  }
+
+  const handleStatusUpdate = (invoiceId: number, newStatus: string) => {
+    setInvoices(prev => prev.map(invoice => 
+      invoice.id === invoiceId 
+        ? { ...invoice, status: newStatus }
+        : invoice
+    ))
+    loadStats()
+  }
+
+  const handleEditInvoice = (invoice: any) => {
+    setSelectedInvoice(invoice)
+    setShowForm(true)
+  }
+
+  const handleViewInvoice = (invoice: any) => {
+    setSelectedInvoice(invoice)
+    setShowView(true)
+  }
+
+  const filteredInvoices = invoices.filter(invoice =>
+    searchTerm === '' || 
+    invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.client?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.client?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.client?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
+
+  if (showForm) {
+    return (
+      <div className="space-y-6">
+        <InvoiceForm
+          invoice={selectedInvoice}
+          onSubmit={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
+          onCancel={() => {
+            setShowForm(false)
+            setSelectedInvoice(null)
+          }}
+          isLoading={isFormLoading}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -46,7 +194,10 @@ export default function InvoicesPage() {
           </p>
         </div>
         <div className="mt-4 sm:mt-0">
-          <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-900 hover:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+          <button 
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+          >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
             Create Invoice
           </button>
@@ -54,56 +205,102 @@ export default function InvoicesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-4">
-        <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <DocumentTextIcon className="h-6 w-6 text-yellow-400" />
+      {stats && (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <DocumentTextIcon className="h-6 w-6 text-yellow-400" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-300 truncate">Total Invoices</dt>
+                    <dd className="text-lg font-medium text-white">{stats.total_invoices}</dd>
+                  </dl>
+                </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-300 truncate">Total Invoices</dt>
-                  <dd className="text-lg font-medium text-white">{invoices.length}</dd>
-                </dl>
+            </div>
+          </div>
+          
+          <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-300 truncate">Total Revenue</dt>
+                    <dd className="text-lg font-medium text-white">{formatCurrency(stats.total_revenue)}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-300 truncate">Paid</dt>
+                    <dd className="text-lg font-medium text-white">{stats.paid_invoices}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-300 truncate">Pending</dt>
+                    <dd className="text-lg font-medium text-white">{stats.pending_invoices}</dd>
+                  </dl>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-300 truncate">Total Revenue</dt>
-                  <dd className="text-lg font-medium text-white">$11,000</dd>
-                </dl>
-              </div>
-            </div>
+      )}
+
+      {/* Filters and Search */}
+      <div className="bg-granite-800 shadow rounded-lg border border-granite-700 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search invoices..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
           </div>
-        </div>
-        <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-300 truncate">Paid</dt>
-                  <dd className="text-lg font-medium text-white">1</dd>
-                </dl>
-              </div>
-            </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <FunnelIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            >
+              <option value="">All Statuses</option>
+              <option value="draft">Draft</option>
+              <option value="sent">Sent</option>
+              <option value="paid">Paid</option>
+              <option value="overdue">Overdue</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
-        </div>
-        <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-300 truncate">Pending</dt>
-                  <dd className="text-lg font-medium text-white">1</dd>
-                </dl>
-              </div>
-            </div>
+
+          {/* Results Count */}
+          <div className="flex items-center text-gray-300">
+            <span className="text-sm">
+              Showing {filteredInvoices.length} of {totalCount} invoices
+            </span>
           </div>
         </div>
       </div>
@@ -111,52 +308,173 @@ export default function InvoicesPage() {
       {/* Invoices Table */}
       <div className="bg-granite-800 shadow rounded-lg border border-granite-700">
         <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-white mb-4">Recent Invoices</h3>
+          <h3 className="text-lg leading-6 font-medium text-white mb-4">
+            {statusFilter ? `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Invoices` : 'All Invoices'}
+          </h3>
           
-          <div className="overflow-hidden">
-            <table className="min-w-full divide-y divide-granite-600">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Invoice</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Client</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-granite-600">
-                {invoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-granite-700 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{invoice.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{invoice.client}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{invoice.amount}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        invoice.status === 'Paid' ? 'bg-green-900 text-green-200' :
-                        invoice.status === 'Pending' ? 'bg-yellow-900 text-yellow-200' :
-                        'bg-gray-700 text-gray-200'
-                      }`}>
-                        {invoice.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{invoice.dueDate}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-400 hover:text-blue-300 mr-3">
-                        <EyeIcon className="h-4 w-4" />
-                      </button>
-                      <button className="text-green-400 hover:text-green-300 mr-3">
-                        <ArrowDownTrayIcon className="h-4 w-4" />
-                      </button>
-                      <button className="text-yellow-400 hover:text-yellow-300">Edit</button>
-                    </td>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+              <p className="text-gray-300 mt-2">Loading invoices...</p>
+            </div>
+          ) : filteredInvoices.length === 0 ? (
+            <div className="text-center py-8">
+              <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-300">No invoices found</p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700"
+              >
+                <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
+                Create Your First Invoice
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-hidden">
+              <table className="min-w-full divide-y divide-granite-600">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Invoice</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Client</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Issue Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status & Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-granite-600">
+                  {filteredInvoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-granite-700 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                        {invoice.invoice_number}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        <div>
+                          <div className="font-medium">
+                            {invoice.client?.firstName} {invoice.client?.lastName}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {invoice.client?.email}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
+                        {formatCurrency(invoice.total_amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {formatDate(invoice.issue_date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {formatDate(invoice.due_date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <InvoiceActions
+                          invoice={invoice}
+                          onEdit={handleEditInvoice}
+                          onView={handleViewInvoice}
+                          onDelete={handleDeleteInvoice}
+                          onStatusUpdate={handleStatusUpdate}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-granite-600 pt-6 mt-6">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-granite-600 text-sm font-medium rounded-md text-gray-300 bg-granite-800 hover:bg-granite-700 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-granite-600 text-sm font-medium rounded-md text-gray-300 bg-granite-800 hover:bg-granite-700 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-300">
+                    Showing{' '}
+                    <span className="font-medium">
+                      {((currentPage - 1) * itemsPerPage) + 1}
+                    </span>{' '}
+                    to{' '}
+                    <span className="font-medium">
+                      {Math.min(currentPage * itemsPerPage, totalCount)}
+                    </span>{' '}
+                    of{' '}
+                    <span className="font-medium">{totalCount}</span>{' '}
+                    results
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-granite-600 bg-granite-800 text-sm font-medium text-gray-300 hover:bg-granite-700 disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    {[...Array(totalPages)].map((_, index) => {
+                      const page = index + 1
+                      if (page === currentPage || Math.abs(page - currentPage) <= 2) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              page === currentPage
+                                ? 'z-10 bg-yellow-600 border-yellow-600 text-white'
+                                : 'bg-granite-800 border-granite-600 text-gray-300 hover:bg-granite-700'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      }
+                      return null
+                    })}
+                    <button
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-granite-600 bg-granite-800 text-sm font-medium text-gray-300 hover:bg-granite-700 disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Invoice View Modal */}
+      {showView && selectedInvoice && (
+        <InvoiceView
+          invoice={selectedInvoice}
+          onClose={() => {
+            setShowView(false)
+            setSelectedInvoice(null)
+          }}
+          onEdit={() => {
+            setShowView(false)
+            setShowForm(true)
+          }}
+        />
+      )}
     </div>
   )
 }
