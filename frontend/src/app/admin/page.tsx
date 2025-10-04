@@ -379,7 +379,7 @@ export default function AdminDashboardPage() {
                           <td className="py-3 px-2">
                             <div className="flex items-center">
                               <div className="w-8 h-8 bg-crimson-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                {client.name.split(' ').map(n => n[0]).join('')}
+                                {client.name.split(' ').map((n: string) => n[0]).join('')}
                               </div>
                               <span className="ml-3 font-medium text-granite-800">{client.name}</span>
                             </div>
