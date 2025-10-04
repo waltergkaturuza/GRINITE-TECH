@@ -8,17 +8,8 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ShoppingCartIcon,
-  StarIco                        {product.features && product.features.slice(0, 4).map((feature, index) => (
-                          <div key={index} className="flex items-center text-sm text-granite-600">
-                            <CheckIcon className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
-                            {feature}
-                          </div>
-                        ))}
-                        {product.features && product.features.length > 4 && (
-                          <div className="text-sm text-granite-500 italic">
-                            +{product.features.length - 4} more features
-                          </div>
-                        )}Icon
+  StarIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline'
 
 // Interface for products from backend
@@ -132,7 +123,7 @@ export default function ProductsPage() {
         case 'price-high':
           return b.price - a.price
         case 'rating':
-          return b.rating - a.rating
+          return (b.rating || 0) - (a.rating || 0)
         case 'name':
         default:
           return a.name.localeCompare(b.name)
@@ -282,13 +273,13 @@ export default function ProductsPage() {
                     <div className="mb-6">
                       <h4 className="font-semibold text-granite-800 mb-2">Features:</h4>
                       <ul className="space-y-1">
-                        {product.features.slice(0, 4).map((feature, index) => (
+                        {product.features && product.features.slice(0, 4).map((feature, index) => (
                           <li key={index} className="flex items-center text-sm text-granite-600">
                             <CheckIcon className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
                             {feature}
                           </li>
                         ))}
-                        {product.features.length > 4 && (
+                        {product.features && product.features.length > 4 && (
                           <li className="text-sm text-granite-500">
                             +{product.features.length - 4} more features
                           </li>
