@@ -2,18 +2,15 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from '../src/app.module';
-import helmet from 'helmet';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
 
-const server = express();
+let app: any;
 
 export default async (req: any, res: any) => {
-  if (!global.__nest_app__) {
-    const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
-
-    // Security middleware
-    app.use(helmet());
+  if (!app) {
+    const server = express();
+    app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
     // CORS configuration
     app.enableCors({
@@ -39,20 +36,8 @@ export default async (req: any, res: any) => {
     // API prefix
     app.setGlobalPrefix('api/v1');
 
-    // Swagger documentation
-    const config = new DocumentBuilder()
-      .setTitle('GRANITE TECH API')
-      .setDescription('Comprehensive business management platform API')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
-    
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
-
     await app.init();
-    global.__nest_app__ = app;
   }
 
-  return server(req, res);
+  return app.getHttpAdapter().getInstance()(req, res);
 };
