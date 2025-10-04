@@ -255,8 +255,8 @@ export default function ChatPage() {
   }
 
   const filteredSessions = sessions.filter(session =>
-    session.sessionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    session.metadata?.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    (session.sessionId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (session.metadata?.title || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const formatTime = (timestamp: string) => {

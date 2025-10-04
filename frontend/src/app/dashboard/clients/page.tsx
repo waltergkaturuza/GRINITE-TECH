@@ -93,10 +93,10 @@ export default function ClientsPage() {
     // Search filter
     if (searchQuery) {
       filtered = filtered.filter(client =>
-        client.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.company?.toLowerCase().includes(searchQuery.toLowerCase())
+        (client.firstName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (client.lastName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (client.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (client.company || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 

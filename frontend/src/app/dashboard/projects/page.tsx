@@ -335,6 +335,7 @@ export default function ProjectsPage() {
   }
 
   const getStatusBadge = (status: string) => {
+    if (!status) return null
     const statusConfig = PROJECT_STATUSES.find(s => s.value === status)
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig?.color || 'bg-gray-100 text-gray-800'}`}>
@@ -543,12 +544,12 @@ export default function ProjectsPage() {
                   </td>
                 </tr>
               ) : (
-                projects.map((project) => (
+                projects?.filter(project => project && project.id).map((project) => (
                   <tr key={project.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                        <div className="text-sm text-gray-500 line-clamp-2">{project.description}</div>
+                        <div className="text-sm font-medium text-gray-900">{project.title || 'Untitled'}</div>
+                        <div className="text-sm text-gray-500 line-clamp-2">{project.description || 'No description'}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -557,9 +558,9 @@ export default function ProjectsPage() {
                           <UserIcon className="h-4 w-4 text-gray-400 mr-2" />
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {project.client.firstName} {project.client.lastName}
+                              {project.client.firstName || ''} {project.client.lastName || ''}
                             </div>
-                            <div className="text-sm text-gray-500">{project.client.email}</div>
+                            <div className="text-sm text-gray-500">{project.client.email || ''}</div>
                           </div>
                         </div>
                       ) : (
@@ -568,7 +569,7 @@ export default function ProjectsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {PROJECT_TYPES.find(t => t.value === project.type)?.label || project.type}
+                        {PROJECT_TYPES.find(t => t.value === project.type)?.label || project.type || 'Unknown'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
