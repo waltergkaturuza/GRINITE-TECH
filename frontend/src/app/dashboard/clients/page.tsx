@@ -134,7 +134,7 @@ export default function ClientsPage() {
   const loadClients = async () => {
     try {
       setLoading(true)
-      const data = await usersAPI.getAll()
+      const data = await usersAPI.getUsers()
       // Filter only clients and exclude admin users
       const clientUsers = data.filter((user: Client) => user.role === 'client' || user.role === 'developer')
       setClients(clientUsers)

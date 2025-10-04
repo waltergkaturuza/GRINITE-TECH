@@ -1,4 +1,4 @@
-﻿import axios from 'axios'
+import axios from 'axios'
 
 const api = axios.create({ 
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1',
@@ -48,16 +48,38 @@ export const authAPI = {
     const response = await api.get('/auth/profile')
     return response.data
   },
+  updateProfile: async (userData: any) => {
+    const response = await api.put('/auth/profile', userData)
+    return response.data
+  },
+  changePassword: async (passwordData: any) => {
+    const response = await api.put('/auth/change-password', passwordData)
+    return response.data
+  },
+  forgotPassword: async (email: string) => {
+    const response = await api.post('/auth/forgot-password', { email })
+    return response.data
+  },
+  resetPassword: async (token: string, password: string) => {
+    const response = await api.post('/auth/reset-password', { token, password })
+    return response.data
+  },
+  logout: async () => {
+    const response = await api.post('/auth/logout')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token')
+    }
+    return response.data
+  },
+  refreshToken: async () => {
+    const response = await api.post('/auth/refresh')
+    return response.data
+  },
 }
 
-// Users API
 export const usersAPI = {
   getUsers: async (params?: any) => {
     const response = await api.get('/users', { params })
-    return response.data
-  },
-  getAll: async () => {
-    const response = await api.get('/users')
     return response.data
   },
   getUser: async (id: string) => {
@@ -68,20 +90,29 @@ export const usersAPI = {
     const response = await api.post('/users', userData)
     return response.data
   },
-  create: async (userData: any) => {
-    const response = await api.post('/users', userData)
-    return response.data
-  },
   updateUser: async (id: string, userData: any) => {
-    const response = await api.patch(`/users/${id}`, userData)
-    return response.data
-  },
-  update: async (id: string, userData: any) => {
-    const response = await api.patch(`/users/${id}`, userData)
+    const response = await api.put(`/users/${id}`, userData)
     return response.data
   },
   deleteUser: async (id: string) => {
     const response = await api.delete(`/users/${id}`)
+    return response.data
+  },
+  // Legacy methods for backward compatibility
+  getAll: async () => {
+    const response = await api.get('/users')
+    return response.data
+  },
+  getById: async (id: string) => {
+    const response = await api.get(`/users/${id}`)
+    return response.data
+  },
+  create: async (userData: any) => {
+    const response = await api.post('/users', userData)
+    return response.data
+  },
+  update: async (id: string, userData: any) => {
+    const response = await api.put(`/users/${id}`, userData)
     return response.data
   },
   delete: async (id: string) => {
@@ -90,33 +121,49 @@ export const usersAPI = {
   },
 }
 
-// Projects API
-export const projectsAPI = { 
-  getProjects: async (params?: any) => {
+export const projectsAPI = {
+  getProjects: async (params?: {
+    page?: number
+    limit?: number
+    status?: string
+    type?: string
+    clientId?: string
+    search?: string
+  }) => {
     const response = await api.get('/projects', { params })
-    return response.data
-  },
-  getAll: async () => {
-    const response = await api.get('/projects')
     return response.data
   },
   getProject: async (id: string) => {
     const response = await api.get(`/projects/${id}`)
     return response.data
   },
-  createProject: async (projectData: any) => {
+  createProject: async (projectData: {
+    title: string
+    description?: string
+    type: string
+    status?: string
+    budget?: number
+    startDate?: string
+    endDate?: string
+    estimatedHours?: number
+    clientId?: string
+  }) => {
     const response = await api.post('/projects', projectData)
     return response.data
   },
-  create: async (projectData: any) => {
-    const response = await api.post('/projects', projectData)
-    return response.data
-  },
-  updateProject: async (id: string, projectData: any) => {
-    const response = await api.patch(`/projects/${id}`, projectData)
-    return response.data
-  },
-  update: async (id: string, projectData: any) => {
+  updateProject: async (id: string, projectData: Partial<{
+    title: string
+    description: string
+    type: string
+    status: string
+    budget: number
+    startDate: string
+    endDate: string
+    estimatedHours: number
+    actualHours: number
+    completionPercentage: number
+    clientId: string
+  }>) => {
     const response = await api.patch(`/projects/${id}`, projectData)
     return response.data
   },
@@ -124,31 +171,80 @@ export const projectsAPI = {
     const response = await api.delete(`/projects/${id}`)
     return response.data
   },
+  getProjectStats: async () => {
+    const response = await api.get('/projects/stats')
+    return response.data
+  },
+  getProjectsByStatus: async (status: string) => {
+    const response = await api.get(`/projects/status/${status}`)
+    return response.data
+  },
+  // Legacy methods for backward compatibility
+  getAll: async () => {
+    const response = await api.get('/projects')
+    return response.data
+  },
+  getById: async (id: string) => {
+    const response = await api.get(`/projects/${id}`)
+    return response.data
+  },
+  create: async (projectData: any) => {
+    const response = await api.post('/projects', projectData)
+    return response.data
+  },
+  update: async (id: string, projectData: any) => {
+    const response = await api.put(`/projects/${id}`, projectData)
+    return response.data
+  },
   delete: async (id: string) => {
     const response = await api.delete(`/projects/${id}`)
     return response.data
   },
 }
 
-// Products API
 export const productsAPI = {
-  getProducts: async (params?: any) => {
+  getProducts: async (params?: {
+    page?: number
+    limit?: number
+    category?: string
+    featured?: boolean
+    inStock?: boolean
+    search?: string
+  }) => {
     const response = await api.get('/products', { params })
-    return response.data
-  },
-  getAll: async () => {
-    const response = await api.get('/products')
     return response.data
   },
   getProduct: async (id: string) => {
     const response = await api.get(`/products/${id}`)
     return response.data
   },
-  createProduct: async (productData: any) => {
-    const response = await api.post('/products', productData)
-    return response.data
-  },
-  create: async (productData: any) => {
+  createProduct: async (productData: {
+    name: string
+    description?: string
+    shortDescription?: string
+    price: number
+    category: string
+    images?: string[]
+    videos?: string[]
+    gifs?: string[]
+    specifications?: any
+    features?: string[]
+    technologies?: string[]
+    advantages?: string[]
+    functionalities?: string[]
+    costBreakdown?: any
+    timeline?: any
+    teamSize?: number
+    complexity?: string
+    deliverables?: string[]
+    supportIncluded?: boolean
+    warrantyMonths?: number
+    inStock?: boolean
+    featured?: boolean
+    demoUrl?: string
+    caseStudies?: any[]
+    testimonials?: any[]
+  }) => {
     const response = await api.post('/products', productData)
     return response.data
   },
@@ -156,12 +252,39 @@ export const productsAPI = {
     const response = await api.patch(`/products/${id}`, productData)
     return response.data
   },
-  update: async (id: string, productData: any) => {
-    const response = await api.patch(`/products/${id}`, productData)
-    return response.data
-  },
   deleteProduct: async (id: string) => {
     const response = await api.delete(`/products/${id}`)
+    return response.data
+  },
+  uploadMedia: async (id: string, files: File[], type: 'images' | 'videos' | 'gifs') => {
+    const formData = new FormData()
+    files.forEach(file => {
+      formData.append('files', file)
+    })
+    formData.append('type', type)
+    
+    const response = await api.post(`/products/${id}/media`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+  // Legacy methods for backward compatibility
+  getAll: async () => {
+    const response = await api.get('/products')
+    return response.data
+  },
+  getById: async (id: string) => {
+    const response = await api.get(`/products/${id}`)
+    return response.data
+  },
+  create: async (productData: any) => {
+    const response = await api.post('/products', productData)
+    return response.data
+  },
+  update: async (id: string, productData: any) => {
+    const response = await api.put(`/products/${id}`, productData)
     return response.data
   },
   delete: async (id: string) => {
@@ -170,7 +293,6 @@ export const productsAPI = {
   },
 }
 
-// Chat API
 export const chatAPI = {
   getSessions: async (userId?: string) => {
     const response = await api.get('/chat/sessions', { params: { userId } })
@@ -180,16 +302,40 @@ export const chatAPI = {
     const response = await api.get(`/chat/sessions/${id}`)
     return response.data
   },
-  createSession: async (sessionData: any) => {
+  createSession: async (sessionData: {
+    sessionId: string
+    userId?: string
+    messages: any[]
+    metadata?: Record<string, any>
+  }) => {
     const response = await api.post('/chat/sessions', sessionData)
     return response.data
   },
-  createFeedback: async (feedbackData: any) => {
+  updateSession: async (id: string, sessionData: any) => {
+    const response = await api.patch(`/chat/sessions/${id}`, sessionData)
+    return response.data
+  },
+  deleteSession: async (id: string) => {
+    const response = await api.delete(`/chat/sessions/${id}`)
+    return response.data
+  },
+  addMessage: async (sessionId: string, messageData: any) => {
+    const response = await api.post(`/chat/sessions/${sessionId}/messages`, messageData)
+    return response.data
+  },
+  createFeedback: async (feedbackData: {
+    messageId: string
+    sessionId?: string
+    userId?: string
+    rating: number
+    comment?: string
+    metadata?: Record<string, any>
+  }) => {
     const response = await api.post('/chat/feedback', feedbackData)
     return response.data
   },
-  getFeedback: async (params?: any) => {
-    const response = await api.get('/chat/feedback', { params })
+  getFeedback: async (sessionId?: string, userId?: string) => {
+    const response = await api.get('/chat/feedback', { params: { sessionId, userId } })
     return response.data
   },
   getAnalytics: async () => {
@@ -198,13 +344,14 @@ export const chatAPI = {
   },
 }
 
-// Project Requests API
 export const requestsAPI = {
   submitRequest: async (requestData: any, files?: File[]) => {
     const formData = new FormData()
     
     Object.keys(requestData).forEach(key => {
-      formData.append(key, requestData[key])
+      if (requestData[key] !== null && requestData[key] !== undefined) {
+        formData.append(key, requestData[key])
+      }
     })
     
     if (files && files.length > 0) {
@@ -220,32 +367,40 @@ export const requestsAPI = {
     })
     return response.data
   },
-  
-  getRequests: async (params?: any) => {
+  getRequests: async (params?: {
+    page?: number
+    limit?: number
+    status?: string
+    type?: string
+    email?: string
+    search?: string
+  }) => {
     const response = await api.get('/requests', { params })
     return response.data
   },
-  
   getRequest: async (id: string) => {
     const response = await api.get(`/requests/${id}`)
     return response.data
   },
-  
   getRequestsByEmail: async (email: string) => {
     const response = await api.get(`/requests/by-email/${email}`)
     return response.data
   },
-  
   updateRequest: async (id: string, updateData: any) => {
     const response = await api.patch(`/requests/${id}`, updateData)
     return response.data
   },
-  
+  deleteRequest: async (id: string) => {
+    const response = await api.delete(`/requests/${id}`)
+    return response.data
+  },
   addMessage: async (requestId: string, messageData: any, attachments?: File[]) => {
     const formData = new FormData()
     
     Object.keys(messageData).forEach(key => {
-      formData.append(key, messageData[key])
+      if (messageData[key] !== null && messageData[key] !== undefined) {
+        formData.append(key, messageData[key])
+      }
     })
     
     if (attachments && attachments.length > 0) {
@@ -261,9 +416,75 @@ export const requestsAPI = {
     })
     return response.data
   },
-  
+  getMessages: async (requestId: string) => {
+    const response = await api.get(`/requests/${requestId}/messages`)
+    return response.data
+  },
   getStats: async () => {
     const response = await api.get('/requests/stats')
+    return response.data
+  },
+}
+
+export const servicesAPI = {
+  getServices: async (params?: any) => {
+    const response = await api.get('/services', { params })
+    return response.data
+  },
+  getService: async (id: string) => {
+    const response = await api.get(`/services/${id}`)
+    return response.data
+  },
+  createService: async (serviceData: any) => {
+    const response = await api.post('/services', serviceData)
+    return response.data
+  },
+  updateService: async (id: string, serviceData: any) => {
+    const response = await api.patch(`/services/${id}`, serviceData)
+    return response.data
+  },
+  deleteService: async (id: string) => {
+    const response = await api.delete(`/services/${id}`)
+    return response.data
+  },
+  // Legacy methods for backward compatibility
+  getAll: async () => {
+    const response = await api.get('/services')
+    return response.data
+  },
+  getById: async (id: string) => {
+    const response = await api.get(`/services/${id}`)
+    return response.data
+  },
+  create: async (serviceData: any) => {
+    const response = await api.post('/services', serviceData)
+    return response.data
+  },
+  update: async (id: string, serviceData: any) => {
+    const response = await api.put(`/services/${id}`, serviceData)
+    return response.data
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/services/${id}`)
+    return response.data
+  },
+}
+
+export const dashboardAPI = {
+  getStats: async () => {
+    const response = await api.get('/dashboard/stats')
+    return response.data
+  },
+  getRecentActivity: async () => {
+    const response = await api.get('/dashboard/activity')
+    return response.data
+  },
+  getNotifications: async () => {
+    const response = await api.get('/dashboard/notifications')
+    return response.data
+  },
+  markNotificationRead: async (id: string) => {
+    const response = await api.patch(`/dashboard/notifications/${id}/read`)
     return response.data
   },
 }
