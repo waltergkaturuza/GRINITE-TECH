@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { authAPI } from '@/lib/api'
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -46,31 +47,19 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          company: formData.company,
-          password: formData.password,
-        }),
+      const data = await authAPI.register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        company: formData.company,
+        password: formData.password,
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem('token', data.access_token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        router.push('/dashboard')
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || 'Registration failed')
-      }
-    } catch (err) {
-      setError('Network error. Please try again.')
+      localStorage.setItem('token', data.access_token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      router.push('/dashboard')
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Registration failed')
     } finally {
       setIsLoading(false)
     }
