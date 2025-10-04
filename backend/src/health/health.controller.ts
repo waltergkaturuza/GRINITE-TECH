@@ -26,4 +26,18 @@ export class HealthController {
       databaseUrlPrefix: this.configService.get('DATABASE_URL')?.substring(0, 20) + '...',
     };
   }
+
+  @Get('cors')
+  checkCors() {
+    return {
+      status: 'ok',
+      message: 'CORS is working',
+      timestamp: new Date().toISOString(),
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Requested-With, Origin'
+      }
+    };
+  }
 }
