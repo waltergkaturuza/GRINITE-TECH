@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { authAPI } from '@/lib/api'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -18,22 +19,10 @@ export default function ForgotPasswordPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      if (response.ok) {
-        setIsSubmitted(true)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || 'Failed to send reset email')
-      }
-    } catch (err) {
-      setError('Network error. Please try again.')
+      await authAPI.forgotPassword(email)
+      setIsSubmitted(true)
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send reset email')
     } finally {
       setIsLoading(false)
     }

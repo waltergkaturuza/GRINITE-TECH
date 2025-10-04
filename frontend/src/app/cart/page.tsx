@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import Link from 'next/link'
+import { cartAPI, productsAPI } from '../../lib/api'
 import { 
   TrashIcon,
   PlusIcon,

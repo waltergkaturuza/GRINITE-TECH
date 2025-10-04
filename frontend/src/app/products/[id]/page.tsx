@@ -105,8 +105,6 @@ export default function ProductDetailPage() {
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load product')
       console.error('Error loading product:', err)
-      // Mock data for demonstration
-      setProduct(getMockProductDetail())
     } finally {
       setLoading(false)
     }

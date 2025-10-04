@@ -555,4 +555,77 @@ export const invoicesAPI = {
   },
 }
 
+export const adminAPI = {
+  getStats: async () => {
+    const response = await api.get('/admin/stats')
+    return response.data
+  },
+  getRecentClients: async (limit = 5) => {
+    const response = await api.get(`/admin/recent-clients?limit=${limit}`)
+    return response.data
+  },
+  getRecentProjects: async (limit = 5) => {
+    const response = await api.get(`/admin/recent-projects?limit=${limit}`)
+    return response.data
+  },
+  getRecentOrders: async (limit = 5) => {
+    const response = await api.get(`/admin/recent-orders?limit=${limit}`)
+    return response.data
+  },
+  getDashboardData: async () => {
+    const response = await api.get('/admin/dashboard')
+    return response.data
+  },
+  getSystemHealth: async () => {
+    const response = await api.get('/admin/health')
+    return response.data
+  },
+}
+
+export const cartAPI = {
+  getCart: async () => {
+    const response = await api.get('/cart')
+    return response.data
+  },
+  addItem: async (productId: string, quantity: number = 1) => {
+    const response = await api.post('/cart/items', { productId, quantity })
+    return response.data
+  },
+  updateItem: async (itemId: string, quantity: number) => {
+    const response = await api.put(`/cart/items/${itemId}`, { quantity })
+    return response.data
+  },
+  removeItem: async (itemId: string) => {
+    const response = await api.delete(`/cart/items/${itemId}`)
+    return response.data
+  },
+  clearCart: async () => {
+    const response = await api.delete('/cart')
+    return response.data
+  },
+}
+
+export const ordersAPI = {
+  createOrder: async (orderData: any) => {
+    const response = await api.post('/orders', orderData)
+    return response.data
+  },
+  getOrders: async (params?: any) => {
+    const response = await api.get('/orders', { params })
+    return response.data
+  },
+  getOrder: async (id: string) => {
+    const response = await api.get(`/orders/${id}`)
+    return response.data
+  },
+  updateOrder: async (id: string, orderData: any) => {
+    const response = await api.put(`/orders/${id}`, orderData)
+    return response.data
+  },
+  cancelOrder: async (id: string) => {
+    const response = await api.delete(`/orders/${id}`)
+    return response.data
+  },
+}
+
 export default api

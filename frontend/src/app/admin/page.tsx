@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '../components/Navigation'
+import { adminAPI, authAPI } from '../../lib/api'
 import { 
   ChartBarIcon,
   UserGroupIcon,
@@ -22,45 +23,28 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline'
 
-// Mock data for admin dashboard
-const mockAdminData = {
+interface AdminData {
   stats: {
-    totalRevenue: 245750,
-    monthlyRevenue: 34200,
-    totalClients: 48,
-    activeProjects: 12,
-    completedProjects: 156,
-    totalProducts: 24,
-    pendingOrders: 8,
-    monthlyGrowth: 15.8
-  },
-  recentClients: [
-    { id: '1', name: 'Tech Innovations Inc', email: 'john@techinnovations.com', joinDate: '2024-01-15', status: 'active', projects: 3 },
-    { id: '2', name: 'Green Energy Solutions', email: 'sarah@greenenergy.com', joinDate: '2024-01-12', status: 'active', projects: 2 },
-    { id: '3', name: 'Digital Marketing Pro', email: 'mike@digitalmarketing.com', joinDate: '2024-01-10', status: 'active', projects: 1 },
-    { id: '4', name: 'Startup Ventures', email: 'lisa@startupventures.com', joinDate: '2024-01-08', status: 'pending', projects: 0 },
-    { id: '5', name: 'Modern Designs LLC', email: 'alex@moderndesigns.com', joinDate: '2024-01-05', status: 'active', projects: 4 }
-  ],
-  recentProjects: [
-    { id: '1', name: 'E-commerce Platform', client: 'Tech Innovations Inc', status: 'In Progress', progress: 75, revenue: 4999, dueDate: '2024-02-15' },
-    { id: '2', name: 'Mobile App Development', client: 'Green Energy Solutions', status: 'Planning', progress: 25, revenue: 7999, dueDate: '2024-03-01' },
-    { id: '3', name: 'Website Redesign', client: 'Digital Marketing Pro', status: 'In Progress', progress: 60, revenue: 2999, dueDate: '2024-01-30' },
-    { id: '4', name: 'API Integration', client: 'Modern Designs LLC', status: 'Completed', progress: 100, revenue: 3499, dueDate: '2024-01-20' },
-    { id: '5', name: 'Analytics Dashboard', client: 'Tech Innovations Inc', status: 'Review', progress: 90, revenue: 3999, dueDate: '2024-02-05' }
-  ],
-  recentOrders: [
-    { id: '1', client: 'Startup Ventures', product: 'Starter Website Package', amount: 1999, status: 'pending', date: '2024-01-20' },
-    { id: '2', client: 'Modern Designs LLC', product: 'Cloud Infrastructure Setup', amount: 3499, status: 'completed', date: '2024-01-19' },
-    { id: '3', client: 'Green Energy Solutions', product: 'API Development Package', amount: 2999, status: 'processing', date: '2024-01-18' },
-    { id: '4', client: 'Tech Innovations Inc', product: 'Analytics Dashboard', amount: 3999, status: 'completed', date: '2024-01-17' }
-  ]
+    totalRevenue: number
+    monthlyRevenue: number
+    totalClients: number
+    activeProjects: number
+    completedProjects: number
+    totalProducts: number
+    pendingOrders: number
+    monthlyGrowth: number
+  }
+  recentClients: any[]
+  recentProjects: any[]
+  recentOrders: any[]
 }
 
 export default function AdminDashboardPage() {
   const router = useRouter()
-  const [adminData, setAdminData] = useState(mockAdminData)
+  const [adminData, setAdminData] = useState<AdminData | null>(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Check authentication and admin role
@@ -70,12 +54,61 @@ export default function AdminDashboardPage() {
       return
     }
     
-    // In a real app, verify admin role here
-    // For demo, we'll assume the user is admin
-    
-    // Simulate loading
-    setTimeout(() => setIsLoading(false), 1000)
+    loadAdminData()
   }, [router])
+
+  const loadAdminData = async () => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      // Verify admin role first
+      const userProfile = await authAPI.getProfile()
+      if (userProfile.role !== 'admin') {
+        router.push('/dashboard')
+        return
+      }
+
+      // Load admin dashboard data
+      const dashboardData = await adminAPI.getDashboardData()
+      setAdminData(dashboardData)
+      
+    } catch (error) {
+      console.error('Error loading admin data:', error)
+      setError('Failed to load admin dashboard data')
+      
+      // Fallback to individual API calls if dashboard endpoint doesn't exist
+      try {
+        const [stats, recentClients, recentProjects, recentOrders] = await Promise.all([
+          adminAPI.getStats().catch(() => ({
+            totalRevenue: 0,
+            monthlyRevenue: 0,
+            totalClients: 0,
+            activeProjects: 0,
+            completedProjects: 0,
+            totalProducts: 0,
+            pendingOrders: 0,
+            monthlyGrowth: 0
+          })),
+          adminAPI.getRecentClients(5).catch(() => []),
+          adminAPI.getRecentProjects(5).catch(() => []),
+          adminAPI.getRecentOrders(5).catch(() => [])
+        ])
+        
+        setAdminData({
+          stats,
+          recentClients,
+          recentProjects,
+          recentOrders
+        })
+        setError(null)
+      } catch (fallbackError) {
+        setError('Unable to load admin data. Please try again.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -121,6 +154,29 @@ export default function AdminDashboardPage() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crimson-900 mx-auto"></div>
             <p className="mt-4 text-granite-600">Loading admin dashboard...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !adminData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
+        <Navigation />
+        <div className="wide-container px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+              <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Admin Data</h3>
+              <p className="text-red-600 mb-4">{error || 'Failed to load dashboard data'}</p>
+              <button 
+                onClick={loadAdminData}
+                className="bg-crimson-900 text-white px-4 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
         </div>
       </div>
