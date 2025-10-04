@@ -4,9 +4,10 @@ import { User, UserRole, UserStatus } from './src/users/entities/user.entity';
 
 const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL || 'postgresql://granite_tech_owner:FUcx0WiROTzG@ep-royal-pond-a5uj9geg.us-east-2.aws.neon.tech/granite_tech?sslmode=require',
+  url: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_BSxyR0PiM9Fd@ep-holy-frog-ade6mw5t-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require',
   entities: [User],
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false },
+  synchronize: true, // This will create tables automatically
 });
 
 async function createAdminUser() {

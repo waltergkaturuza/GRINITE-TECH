@@ -15,12 +15,12 @@ import { ChatSession } from '../chatbot/entities/chat-session.entity';
         const isProduction = configService.get('NODE_ENV') === 'production';
         
         if (isProduction) {
-          // PostgreSQL configuration for production (Supabase)
+          // PostgreSQL configuration for production (Neon)
           return {
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
             entities: [User, Project, Product, Payment, ChatSession],
-            synchronize: false, // Never use in production
+            synchronize: true, // Temporarily enabled to create schema
             ssl: {
               rejectUnauthorized: false
             },
