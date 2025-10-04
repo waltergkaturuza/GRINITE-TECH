@@ -14,7 +14,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'https://granite-tech-frontend.vercel.app',
+      'https://grinite-tech-frontend.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean),
     credentials: true,
