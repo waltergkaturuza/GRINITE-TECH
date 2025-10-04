@@ -166,5 +166,50 @@ export const productsAPI = {
   },
 }
 
+// Chat API methods
+export const chatAPI = {
+  getSessions: async (userId?: string) => {
+    const response = await api.get('/chat/sessions', { params: { userId } })
+    return response.data
+  },
+
+  getSession: async (id: string) => {
+    const response = await api.get(`/chat/sessions/${id}`)
+    return response.data
+  },
+
+  createSession: async (sessionData: {
+    sessionId: string
+    userId?: string
+    messages: any[]
+    metadata?: Record<string, any>
+  }) => {
+    const response = await api.post('/chat/sessions', sessionData)
+    return response.data
+  },
+
+  createFeedback: async (feedbackData: {
+    messageId: string
+    sessionId?: string
+    userId?: string
+    rating: number
+    comment?: string
+    metadata?: Record<string, any>
+  }) => {
+    const response = await api.post('/chat/feedback', feedbackData)
+    return response.data
+  },
+
+  getFeedback: async (sessionId?: string, userId?: string) => {
+    const response = await api.get('/chat/feedback', { params: { sessionId, userId } })
+    return response.data
+  },
+
+  getAnalytics: async () => {
+    const response = await api.get('/chat/analytics')
+    return response.data
+  },
+}
+
 // Export the main api instance for custom requests
 export default api
