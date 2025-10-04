@@ -4,11 +4,9 @@ import { User, UserRole, UserStatus } from './src/users/entities/user.entity';
 
 const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL,
+  url: process.env.DATABASE_URL || 'postgresql://granite_tech_owner:FUcx0WiROTzG@ep-royal-pond-a5uj9geg.us-east-2.aws.neon.tech/granite_tech?sslmode=require',
   entities: [User],
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 async function createAdminUser() {
