@@ -12,14 +12,12 @@ async function bootstrap() {
 
   // CORS configuration
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'https://grinite-tech-frontend.vercel.app',
-      process.env.FRONTEND_URL
-    ].filter(Boolean),
+    origin: true, // Allow all origins for now to debug
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   });
 
   // Global validation pipe

@@ -13,15 +13,19 @@ export default async (req: any, res: any) => {
     'http://localhost:3000',
     'https://grinite-tech-frontend.vercel.app',
     'https://granite-tech-frontend.vercel.app',
+    'https://grinite-tech.vercel.app',
     process.env.FRONTEND_URL,
     process.env.NEXT_PUBLIC_SITE_URL
   ].filter(Boolean);
 
   const origin = req.headers.origin;
   
-  // Check if origin is allowed or allow all in development
-  if (allowedOrigins.includes(origin) || !origin) {
+  // More permissive CORS for Vercel deployment
+  if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  } else {
+    // Allow all origins for now to debug the issue
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
@@ -35,45 +39,48 @@ export default async (req: any, res: any) => {
     return;
   }
 
-  if (!app) {
-    const server = express();
-    app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+  try {
+    if (!app) {
+      const server = express();
+      app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
-    // Additional CORS configuration for NestJS
-    app.enableCors({
-      origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.includes(origin)) {
-          return callback(null, true);
-        }
-        
-        // Log the rejected origin for debugging
-        console.log('CORS blocked origin:', origin);
-        return callback(new Error('Not allowed by CORS'), false);
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
-      preflightContinue: false,
-      optionsSuccessStatus: 204
+      // More permissive CORS configuration for NestJS
+      app.enableCors({
+        origin: true, // Allow all origins for now
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
+        preflightContinue: false,
+        optionsSuccessStatus: 204
+      });
+
+      // Global validation pipe
+      app.useGlobalPipes(
+        new ValidationPipe({
+          whitelist: true,
+          forbidNonWhitelisted: true,
+          transform: true,
+        }),
+      );
+
+      // API prefix
+      app.setGlobalPrefix('api/v1');
+
+      await app.init();
+    }
+
+    return app.getHttpAdapter().getInstance()(req, res);
+  } catch (error) {
+    console.error('Error in Vercel function:', error);
+    
+    // Set CORS headers even for error responses
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin');
+    
+    return res.status(500).json({ 
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
-
-    // Global validation pipe
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    // API prefix
-    app.setGlobalPrefix('api/v1');
-
-    await app.init();
   }
-
-  return app.getHttpAdapter().getInstance()(req, res);
 };
