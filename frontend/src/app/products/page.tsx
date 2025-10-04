@@ -3,137 +3,58 @@
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import Link from 'next/link'
+import { productsAPI } from '../../lib/api'
 import { 
   MagnifyingGlassIcon,
   FunnelIcon,
   ShoppingCartIcon,
-  StarIcon,
-  CheckIcon
+  StarIco                        {product.features && product.features.slice(0, 4).map((feature, index) => (
+                          <div key={index} className="flex items-center text-sm text-granite-600">
+                            <CheckIcon className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
+                            {feature}
+                          </div>
+                        ))}
+                        {product.features && product.features.length > 4 && (
+                          <div className="text-sm text-granite-500 italic">
+                            +{product.features.length - 4} more features
+                          </div>
+                        )}Icon
 } from '@heroicons/react/24/outline'
 
-// Mock products data - will be replaced with API calls
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Starter Website Package',
-    description: 'Perfect for small businesses and startups looking to establish their online presence',
-    price: 1999,
-    type: 'digital',
-    category: 'website',
-    image: '/api/placeholder/400/300',
-    features: [
-      '5-page responsive website',
-      'Mobile-friendly design',
-      'Basic SEO setup',
-      'Contact form integration',
-      '3 months free hosting',
-      'SSL certificate included'
-    ],
-    rating: 4.8,
-    reviews: 24,
-    deliveryDays: 14
-  },
-  {
-    id: '2',
-    name: 'E-commerce Solution',
-    description: 'Complete online store with payment processing and inventory management',
-    price: 4999,
-    type: 'digital',
-    category: 'ecommerce',
-    image: '/api/placeholder/400/300',
-    features: [
-      'Custom e-commerce website',
-      'Payment gateway integration',
-      'Inventory management',
-      'Order tracking system',
-      'Admin dashboard',
-      '6 months support'
-    ],
-    rating: 4.9,
-    reviews: 18,
-    deliveryDays: 30
-  },
-  {
-    id: '3',
-    name: 'Mobile App Development',
-    description: 'Cross-platform mobile application for iOS and Android',
-    price: 7999,
-    type: 'digital',
-    category: 'mobile',
-    image: '/api/placeholder/400/300',
-    features: [
-      'iOS & Android apps',
-      'React Native development',
-      'API integration',
-      'Push notifications',
-      'App store submission',
-      '12 months support'
-    ],
-    rating: 4.7,
-    reviews: 12,
-    deliveryDays: 45
-  },
-  {
-    id: '4',
-    name: 'API Development Package',
-    description: 'RESTful API with documentation and authentication',
-    price: 2999,
-    type: 'digital',
-    category: 'api',
-    image: '/api/placeholder/400/300',
-    features: [
-      'Custom REST API',
-      'Authentication system',
-      'Database integration',
-      'API documentation',
-      'Rate limiting',
-      '6 months support'
-    ],
-    rating: 4.6,
-    reviews: 15,
-    deliveryDays: 21
-  },
-  {
-    id: '5',
-    name: 'Cloud Infrastructure Setup',
-    description: 'Complete cloud infrastructure with monitoring and backup',
-    price: 3499,
-    type: 'service',
-    category: 'cloud',
-    image: '/api/placeholder/400/300',
-    features: [
-      'AWS/Azure setup',
-      'Auto-scaling configuration',
-      'Monitoring & alerts',
-      'Backup solutions',
-      'Security configuration',
-      '3 months support'
-    ],
-    rating: 4.8,
-    reviews: 9,
-    deliveryDays: 14
-  },
-  {
-    id: '6',
-    name: 'Analytics Dashboard',
-    description: 'Custom analytics dashboard with real-time data visualization',
-    price: 3999,
-    type: 'digital',
-    category: 'analytics',
-    image: '/api/placeholder/400/300',
-    features: [
-      'Real-time analytics',
-      'Custom dashboards',
-      'Data visualization',
-      'Report generation',
-      'Multiple data sources',
-      '6 months support'
-    ],
-    rating: 4.9,
-    reviews: 7,
-    deliveryDays: 28
-  }
-]
+// Interface for products from backend
+interface Product {
+  id: string
+  name: string
+  description?: string
+  shortDescription?: string
+  price: number
+  category: string
+  images?: string[]
+  features?: string[]
+  technologies?: string[]
+  advantages?: string[]
+  functionalities?: string[]
+  costBreakdown?: any
+  timeline?: any
+  teamSize?: number
+  complexity?: string
+  deliverables?: string[]
+  supportIncluded?: boolean
+  warrantyMonths?: number
+  inStock?: boolean
+  featured?: boolean
+  demoUrl?: string
+  caseStudies?: any[]
+  testimonials?: any[]
+  // Optional fields for display compatibility
+  rating?: number
+  reviews?: number
+  deliveryDays?: number
+  image?: string
+  type?: string
+  createdAt: string
+  updatedAt: string
+}
 
 const categories = [
   { id: 'all', name: 'All Products' },
@@ -146,12 +67,38 @@ const categories = [
 ]
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState(mockProducts)
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts)
+  const [products, setProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('name')
   const [cart, setCart] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Load products from API
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const response = await productsAPI.getProducts()
+        const productsData = response.products || response.data || response
+        setProducts(productsData)
+        setFilteredProducts(productsData)
+      } catch (err) {
+        console.error('Failed to load products:', err)
+        setError('Failed to load products. Please try again later.')
+        // Fallback to empty array instead of mock data
+        setProducts([])
+        setFilteredProducts([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadProducts()
+  }, [])
 
   useEffect(() => {
     // Load cart from localStorage
@@ -173,7 +120,7 @@ export default function ProductsPage() {
     if (searchQuery) {
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     }
 
@@ -318,7 +265,7 @@ export default function ProductsPage() {
                             <StarIcon 
                               key={i} 
                               className={`h-4 w-4 ${
-                                i < Math.floor(product.rating) 
+                                i < Math.floor(product.rating || 0) 
                                   ? 'text-yellow-400 fill-current' 
                                   : 'text-granite-300'
                               }`} 
@@ -326,7 +273,7 @@ export default function ProductsPage() {
                           ))}
                         </div>
                         <span className="text-sm text-granite-500">
-                          {product.rating} ({product.reviews} reviews)
+                          {(product.rating || 0).toFixed(1)} ({product.reviews || 0} reviews)
                         </span>
                       </div>
                     </div>
@@ -357,7 +304,7 @@ export default function ProductsPage() {
                             ${product.price.toLocaleString()}
                           </p>
                           <p className="text-sm text-granite-500">
-                            {product.deliveryDays}-day delivery
+                            {product.deliveryDays || 30}-day delivery
                           </p>
                         </div>
                       </div>
