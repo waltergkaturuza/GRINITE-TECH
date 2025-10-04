@@ -1,7 +1,7 @@
 {
   "name": "granite-tech-frontend",
-  "version": "1.0.0",
-  "description": "Frontend application for GRANITE TECH system",
+  "version": "1.0.1",
+  "description": "Frontend application for GRANITE TECH system - build fix applied",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
