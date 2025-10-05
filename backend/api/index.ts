@@ -1,75 +1,52 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from '../src/app.module';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
-import { corsOptions, resolveAllowOrigin, isOriginAllowed, logCorsDebug } from '../src/config/cors.config';
+import { corsOptions, resolveAllowOrigin } from '../src/config/cors.config';
 
-let app: any;
-
-export default async (req: any, res: any) => {
-  console.log('[Vercel Function] Request:', req.method, req.url, 'Origin:', req.headers.origin);
+export default async function handler(req: any, res: any) {
+  // Log everything for debugging
+  console.log('=== VERCEL FUNCTION STARTED ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Origin:', req.headers.origin);
   
-  // Enhanced CORS headers for Vercel deployment
-  const origin = req.headers.origin as string | undefined;
-  const allowOrigin = resolveAllowOrigin(origin);
-  
-  console.log('[CORS Debug] Origin:', origin, 'Allowed:', allowOrigin);
-  
-  if (allowOrigin) {
-    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
-  }
-  res.setHeader('Vary', 'Origin'); // Ensure caches differentiate
-  res.setHeader('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
-  res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  logCorsDebug(origin);
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
   try {
-    if (!app) {
-      const server = express();
-      app = await NestFactory.create(AppModule, new ExpressAdapter(server));
-
-      // CORS configuration (shared)
-      app.enableCors(corsOptions);
-
-      // Global validation pipe
-      app.useGlobalPipes(
-        new ValidationPipe({
-          whitelist: true,
-          forbidNonWhitelisted: true,
-          transform: true,
-        }),
-      );
-
-      // API prefix
-      app.setGlobalPrefix('api/v1');
-
-      await app.init();
-    }
-
-    return app.getHttpAdapter().getInstance()(req, res);
-  } catch (error) {
-    console.error('Error in Vercel function:', error);
+    // Get origin
+    const origin = req.headers.origin as string | undefined;
+    const allowOrigin = resolveAllowOrigin(origin);
     
-    // Set CORS headers even for error responses
-    if (isOriginAllowed(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin as string);
-    }
-    res.setHeader('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
-    res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
+    console.log('Resolved origin:', allowOrigin);
     
-    return res.status(500).json({ 
-      error: 'Internal Server Error',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    // Set CORS headers
+    if (allowOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+    }
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,X-Requested-With');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    res.setHeader('Vary', 'Origin');
+    
+    // Handle OPTIONS
+    if (req.method === 'OPTIONS') {
+      console.log('Returning 200 for OPTIONS');
+      return res.status(200).end();
+    }
+    
+    // For now, return a simple response to test if function works
+    console.log('Returning test response');
+    return res.status(200).json({
+      message: 'Backend is running',
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      url: req.url
+    });
+    
+  } catch (error: any) {
+    console.error('ERROR:', error);
+    console.error('Stack:', error?.stack);
+    
+    return res.status(500).json({
+      error: 'Function failed',
+      message: error?.message || String(error),
+      stack: error?.stack
     });
   }
-};
+}
