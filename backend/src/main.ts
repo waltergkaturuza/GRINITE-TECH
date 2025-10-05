@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
+import { corsOptions, logCorsDebug } from './config/cors.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,15 +11,9 @@ async function bootstrap() {
   // Security middleware
   app.use(helmet());
 
-  // CORS configuration
-  app.enableCors({
-    origin: true, // Allow all origins for now to debug
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-  });
+  // CORS configuration (explicit allowlist, avoids wildcard + credentials mismatch)
+  app.enableCors(corsOptions);
+  logCorsDebug(undefined);
 
   // Global validation pipe
   app.useGlobalPipes(

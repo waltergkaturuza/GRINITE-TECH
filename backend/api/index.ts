@@ -4,34 +4,23 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from '../src/app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
+import { corsOptions, resolveAllowOrigin, isOriginAllowed, logCorsDebug } from '../src/config/cors.config';
 
 let app: any;
 
 export default async (req: any, res: any) => {
   // Enhanced CORS headers for Vercel deployment
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'https://grinite-tech-frontend.vercel.app',
-    'https://granite-tech-frontend.vercel.app',
-    'https://grinite-tech.vercel.app',
-    process.env.FRONTEND_URL,
-    process.env.NEXT_PUBLIC_SITE_URL
-  ].filter(Boolean);
-
-  const origin = req.headers.origin;
-  
-  // More permissive CORS for Vercel deployment
-  if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-  } else {
-    // Allow all origins for now to debug the issue
-    res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin as string | undefined;
+  const allowOrigin = resolveAllowOrigin(origin);
+  if (allowOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
   }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin');
+  res.setHeader('Vary', 'Origin'); // Ensure caches differentiate
+  res.setHeader('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
+  res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+  res.setHeader('Access-Control-Max-Age', '86400');
+  logCorsDebug(origin);
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -44,15 +33,8 @@ export default async (req: any, res: any) => {
       const server = express();
       app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
-      // More permissive CORS configuration for NestJS
-      app.enableCors({
-        origin: true, // Allow all origins for now
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
-        preflightContinue: false,
-        optionsSuccessStatus: 204
-      });
+      // CORS configuration (shared)
+      app.enableCors(corsOptions);
 
       // Global validation pipe
       app.useGlobalPipes(
@@ -74,9 +56,11 @@ export default async (req: any, res: any) => {
     console.error('Error in Vercel function:', error);
     
     // Set CORS headers even for error responses
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin');
+    if (isOriginAllowed(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin as string);
+    }
+    res.setHeader('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
+    res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
     
     return res.status(500).json({ 
       error: 'Internal Server Error',
