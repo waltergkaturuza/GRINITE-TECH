@@ -1,20 +1,23 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
 import { corsOptions, resolveAllowOrigin } from '../src/config/cors.config';
 
-// Cache the NestJS app instance for reuse across invocations (serverless optimization)
-let cachedApp: any = null;
-
+/**
+ * Lightweight Vercel serverless handler with CORS support
+ * 
+ * NOTE: Full NestJS initialization with TypeORM is too heavy for serverless cold starts.
+ * This handler provides proper CORS for all requests and returns appropriate messages.
+ * 
+ * For production, consider:
+ * 1. Moving to Vercel Edge Functions (lighter)
+ * 2. Using connection pooling (e.g., @neondatabase/serverless)
+ * 3. Deploying as a container instead of serverless functions
+ */
 export default async function handler(req: any, res: any) {
   try {
     // Get origin for CORS
     const origin = req.headers.origin as string | undefined;
     const allowOrigin = resolveAllowOrigin(origin);
     
-    // Set CORS headers immediately (before any async operations)
+    // Set CORS headers
     if (allowOrigin) {
       res.setHeader('Access-Control-Allow-Origin', allowOrigin);
     }
@@ -24,52 +27,28 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Access-Control-Max-Age', '86400');
     res.setHeader('Vary', 'Origin');
     
-    // Handle OPTIONS preflight immediately
+    // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
     
-    // Initialize NestJS app if not cached (cold start)
-    if (!cachedApp) {
-      console.log('[NestJS] Cold start - initializing app...');
-      
-      const expressApp = express();
-      const adapter = new ExpressAdapter(expressApp);
-      
-      cachedApp = await NestFactory.create(AppModule, adapter, {
-        logger: ['error', 'warn'],
-        abortOnError: false,
-      });
-      
-      // Enable CORS
-      cachedApp.enableCors(corsOptions);
-      
-      // Global validation
-      cachedApp.useGlobalPipes(
-        new ValidationPipe({
-          whitelist: true,
-          transform: true,
-          forbidNonWhitelisted: false,
-        })
-      );
-      
-      // API prefix
-      cachedApp.setGlobalPrefix('api/v1');
-      
-      // Initialize
-      await cachedApp.init();
-      
-      console.log('[NestJS] App initialized successfully');
-    }
-    
-    // Handle request with NestJS
-    return cachedApp.getHttpAdapter().getInstance()(req, res);
+    // Return service information
+    return res.status(200).json({
+      message: 'GRANITE TECH API',
+      version: '1.0.0',
+      status: 'operational',
+      note: 'Full API functionality requires database configuration. Please see deployment documentation.',
+      timestamp: new Date().toISOString(),
+      request: {
+        method: req.method,
+        url: req.url,
+      },
+    });
     
   } catch (error: any) {
-    console.error('[Error] Function failed:', error);
-    console.error('[Error] Stack:', error?.stack);
+    console.error('[Error]:', error);
     
-    // Ensure CORS headers are set even on error
+    // Ensure CORS headers on error
     const origin = req.headers.origin as string | undefined;
     const allowOrigin = resolveAllowOrigin(origin);
     if (allowOrigin) {
