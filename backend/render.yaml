@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: grinite-tech-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false
+        # You'll add this in Render dashboard with your Neon connection string
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://grinite-tech-frontend.vercel.app
+      - key: ALLOWED_ORIGINS
+        value: https://grinite-tech-frontend.vercel.app,https://granite-tech-frontend.vercel.app
