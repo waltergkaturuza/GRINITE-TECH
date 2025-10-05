@@ -9,9 +9,14 @@ import { corsOptions, resolveAllowOrigin, isOriginAllowed, logCorsDebug } from '
 let app: any;
 
 export default async (req: any, res: any) => {
+  console.log('[Vercel Function] Request:', req.method, req.url, 'Origin:', req.headers.origin);
+  
   // Enhanced CORS headers for Vercel deployment
   const origin = req.headers.origin as string | undefined;
   const allowOrigin = resolveAllowOrigin(origin);
+  
+  console.log('[CORS Debug] Origin:', origin, 'Allowed:', allowOrigin);
+  
   if (allowOrigin) {
     res.setHeader('Access-Control-Allow-Origin', allowOrigin);
   }
