@@ -33,7 +33,7 @@ Fill in these settings:
 - **Runtime**: `Node`
 - **Build Command**: 
   ```
-  npm install && npm run build
+  npm install --include=dev && npm run build
   ```
 - **Start Command**: 
   ```
