@@ -34,18 +34,38 @@ export function resolveAllowOrigin(origin?: string): string | undefined {
 
 export const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    if (isOriginAllowed(origin)) return callback(null, true);
-    return callback(new Error('Origin not allowed by CORS'));
+    // Allow requests with no origin (e.g., mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowlist
+    if (isOriginAllowed(origin)) {
+      return callback(null, true);
+    }
+    
+    // Log rejected origins in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CORS] Rejected origin:', origin);
+      console.log('[CORS] Allowed origins:', allowedOrigins);
+    }
+    
+    // Reject with false instead of Error to allow proper CORS headers
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 200, // Changed from 204 to 200 for better compatibility
+  preflightContinue: false,
 };
 
 export function logCorsDebug(origin?: string) {
-  if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
-    console.log('[CORS]', { origin, allowed: isOriginAllowed(origin), allowedOrigins });
-  }
+  // eslint-disable-next-line no-console
+  console.log('[CORS Config]', { 
+    origin, 
+    allowed: isOriginAllowed(origin), 
+    allowedOrigins,
+    env: process.env.NODE_ENV,
+    frontendUrl: process.env.FRONTEND_URL,
+    allowedOriginsEnv: process.env.ALLOWED_ORIGINS
+  });
 }
