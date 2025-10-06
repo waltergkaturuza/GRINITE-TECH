@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '../../users/entities/user.entity';
 
@@ -16,14 +16,38 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     
-    const { user } = context.switchToHttp().getRequest();
-    
-    // Handle both string role and array of roles
-    if (!user || !user.role) {
-      return false;
+    const request = context.switchToHttp().getRequest();
+    const { user } = request;
+
+    if (!user) {
+      throw new ForbiddenException('Missing authenticated user in request');
     }
-    
-    const userRoles = Array.isArray(user.role) ? user.role : [user.role];
-    return requiredRoles.some((role) => userRoles.includes(role));
+
+    if (!user.role) {
+      throw new ForbiddenException('User has no role assigned');
+    }
+
+    // Normalize user roles: accept string, array, or comma/space separated string
+    let rawRoles: string[] = [];
+    if (Array.isArray(user.role)) {
+      rawRoles = user.role as string[];
+    } else if (typeof user.role === 'string') {
+      rawRoles = user.role
+        .split(/[,:;\s]+/) // split by common delimiters
+        .filter(Boolean);
+    }
+
+    const normalizedUserRoles = rawRoles.map(r => r.toLowerCase().trim());
+    const normalizedRequired = requiredRoles.map(r => r.toLowerCase());
+
+    const allowed = normalizedRequired.some(r => normalizedUserRoles.includes(r));
+
+    if (!allowed) {
+      // Attach minimal debug info (avoid leaking sensitive data)
+      throw new ForbiddenException(
+        `Insufficient role. Required: ${normalizedRequired.join(', ')} | User roles: ${normalizedUserRoles.join(', ')}`,
+      );
+    }
+    return true;
   }
 }
