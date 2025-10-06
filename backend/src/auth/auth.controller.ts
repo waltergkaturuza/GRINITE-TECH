@@ -36,4 +36,21 @@ export class AuthController {
   async getProfile(@CurrentUser() user: any) {
     return this.authService.getProfile(user.userId);
   }
+
+  @Get('debug')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Debug current user JWT data' })
+  @ApiResponse({ status: 200, description: 'Debug info retrieved' })
+  async debug(@CurrentUser() user: any) {
+    return {
+      rawUser: user,
+      userId: user.userId,
+      email: user.email,
+      role: user.role,
+      roleType: typeof user.role,
+      roleIsArray: Array.isArray(user.role),
+      fullUserObject: user.user,
+    };
+  }
 }
