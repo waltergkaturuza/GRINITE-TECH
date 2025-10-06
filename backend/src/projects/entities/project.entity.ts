@@ -9,6 +9,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Milestone } from './milestone.entity';
 
 export enum ProjectStatus {
   PLANNING = 'planning',
@@ -70,6 +71,9 @@ export class Project {
   @ManyToOne(() => User, (user) => user.projects)
   @JoinColumn({ name: 'client_id' })
   client: User;
+
+  @OneToMany(() => Milestone, (milestone) => milestone.project)
+  milestones: Milestone[];
 
   @CreateDateColumn()
   createdAt: Date;
