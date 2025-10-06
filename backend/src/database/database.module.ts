@@ -3,6 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { Project } from '../projects/entities/project.entity';
+import { Milestone } from '../projects/entities/milestone.entity';
+import { Module as ProjectModule } from '../projects/entities/module.entity';
+import { Feature } from '../projects/entities/feature.entity';
 import { Product } from '../products/entities/product.entity';
 import { Payment } from '../payments/entities/payment.entity';
 import { ChatSession } from '../chatbot/entities/chat-session.entity';
@@ -20,7 +23,7 @@ import { ProjectRequest, RequestDocument, RequestMessage, MessageAttachment } fr
           return {
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
-            entities: [User, Project, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment],
+            entities: [User, Project, Milestone, ProjectModule, Feature, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment],
             synchronize: true, // Temporarily enabled to create schema
             ssl: {
               rejectUnauthorized: false
@@ -32,7 +35,7 @@ import { ProjectRequest, RequestDocument, RequestMessage, MessageAttachment } fr
           return {
             type: 'better-sqlite3',
             database: ':memory:',
-            entities: [User, Project, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment],
+            entities: [User, Project, Milestone, ProjectModule, Feature, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment],
             synchronize: true, // Only for development
             logging: true,
           };
