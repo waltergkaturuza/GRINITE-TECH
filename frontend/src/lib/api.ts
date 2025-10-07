@@ -628,4 +628,112 @@ export const ordersAPI = {
   },
 }
 
+// Project Tracking API
+export const milestonesAPI = {
+  getMilestones: async (projectId?: string) => {
+    const params = projectId ? { projectId } : {}
+    const response = await api.get('/milestones', { params })
+    return response.data
+  },
+  getMilestone: async (id: string) => {
+    const response = await api.get(`/milestones/${id}`)
+    return response.data
+  },
+  createMilestone: async (milestoneData: {
+    name: string
+    description?: string
+    projectId: string
+    status?: string
+    orderIndex?: number
+    dueDate?: string
+    estimatedHours?: number
+  }) => {
+    const response = await api.post('/milestones', milestoneData)
+    return response.data
+  },
+  updateMilestone: async (id: string, milestoneData: any) => {
+    const response = await api.patch(`/milestones/${id}`, milestoneData)
+    return response.data
+  },
+  deleteMilestone: async (id: string) => {
+    const response = await api.delete(`/milestones/${id}`)
+    return response.data
+  },
+  updateProgress: async (id: string) => {
+    const response = await api.patch(`/milestones/${id}/progress`)
+    return response.data
+  }
+}
+
+export const modulesAPI = {
+  getModules: async (milestoneId?: string) => {
+    const params = milestoneId ? { milestoneId } : {}
+    const response = await api.get('/modules', { params })
+    return response.data
+  },
+  getModule: async (id: string) => {
+    const response = await api.get(`/modules/${id}`)
+    return response.data
+  },
+  createModule: async (moduleData: {
+    name: string
+    description?: string
+    milestoneId: string
+    status?: string
+    orderIndex?: number
+    estimatedHours?: number
+  }) => {
+    const response = await api.post('/modules', moduleData)
+    return response.data
+  },
+  updateModule: async (id: string, moduleData: any) => {
+    const response = await api.patch(`/modules/${id}`, moduleData)
+    return response.data
+  },
+  deleteModule: async (id: string) => {
+    const response = await api.delete(`/modules/${id}`)
+    return response.data
+  },
+  updateProgress: async (id: string) => {
+    const response = await api.patch(`/modules/${id}/progress`)
+    return response.data
+  }
+}
+
+export const featuresAPI = {
+  getFeatures: async (moduleId?: string) => {
+    const params = moduleId ? { moduleId } : {}
+    const response = await api.get('/features', { params })
+    return response.data
+  },
+  getFeature: async (id: string) => {
+    const response = await api.get(`/features/${id}`)
+    return response.data
+  },
+  createFeature: async (featureData: {
+    name: string
+    description?: string
+    moduleId: string
+    status?: string
+    priority?: string
+    orderIndex?: number
+    estimatedHours?: number
+    notes?: string
+  }) => {
+    const response = await api.post('/features', featureData)
+    return response.data
+  },
+  updateFeature: async (id: string, featureData: any) => {
+    const response = await api.patch(`/features/${id}`, featureData)
+    return response.data
+  },
+  deleteFeature: async (id: string) => {
+    const response = await api.delete(`/features/${id}`)
+    return response.data
+  },
+  toggleFeature: async (id: string, isCompleted: boolean) => {
+    const response = await api.patch(`/features/${id}/toggle`, { isCompleted })
+    return response.data
+  }
+}
 export default api

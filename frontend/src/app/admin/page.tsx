@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Navigation from '../components/Navigation'
 import { adminAPI, authAPI } from '../../lib/api'
 import { 
@@ -20,7 +21,8 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   PencilIcon,
-  TrashIcon
+  TrashIcon,
+  PresentationChartLineIcon
 } from '@heroicons/react/24/outline'
 
 interface AdminData {
@@ -260,6 +262,7 @@ export default function AdminDashboardPage() {
             <div className="flex space-x-8">
               {[
                 { id: 'overview', name: 'Overview', icon: ChartBarIcon },
+                { id: 'tracking', name: 'Project Tracking', icon: PresentationChartLineIcon },
                 { id: 'clients', name: 'Clients', icon: UserGroupIcon },
                 { id: 'projects', name: 'Projects', icon: BriefcaseIcon },
                 { id: 'orders', name: 'Orders', icon: ShoppingCartIcon },
@@ -345,6 +348,113 @@ export default function AdminDashboardPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Project Tracking Tab */}
+            {activeTab === 'tracking' && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-granite-800">Project Tracking Overview</h3>
+                    <p className="text-granite-600 text-sm">Monitor progress across all your projects with milestones, modules, and features</p>
+                  </div>
+                  <div className="flex space-x-3">
+                    <Link 
+                      href="/admin/tracking"
+                      className="bg-crimson-600 hover:bg-crimson-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center"
+                    >
+                      <PresentationChartLineIcon className="h-5 w-5 mr-2" />
+                      View All Tracking
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <BriefcaseIcon className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-blue-600 font-medium">Active Projects</p>
+                        <p className="text-2xl font-bold text-blue-800">{adminData.stats.activeProjects}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="bg-green-100 p-2 rounded-lg">
+                        <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-green-600 font-medium">Completed Projects</p>
+                        <p className="text-2xl font-bold text-green-800">{adminData.stats.completedProjects}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="bg-purple-100 p-2 rounded-lg">
+                        <PresentationChartLineIcon className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-purple-600 font-medium">Avg Progress</p>
+                        <p className="text-2xl font-bold text-purple-800">
+                          {adminData.stats.activeProjects > 0 ? 
+                            Math.round((adminData.stats.completedProjects / (adminData.stats.activeProjects + adminData.stats.completedProjects)) * 100) : 0}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Projects with Tracking */}
+                <div>
+                  <h4 className="text-md font-semibold text-granite-800 mb-4">Recent Projects - Tracking Status</h4>
+                  <div className="space-y-3">
+                    {adminData.recentProjects.slice(0, 5).map((project) => (
+                      <div key={project.id} className="flex items-center justify-between p-4 border border-granite-200 rounded-lg hover:bg-granite-50 transition-colors duration-200">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="font-medium text-granite-800">{project.name}</h5>
+                            <Link 
+                              href={`/admin/projects/${project.id}/tracking`}
+                              className="text-crimson-600 hover:text-crimson-700 text-sm font-medium"
+                            >
+                              View Tracking →
+                            </Link>
+                          </div>
+                          <p className="text-sm text-granite-500 mb-2">{project.client}</p>
+                          <div className="w-full bg-granite-200 rounded-full h-2">
+                            <div
+                              className="bg-crimson-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${project.progress}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between mt-2 text-sm text-granite-600">
+                            <span>{project.progress}% Complete</span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                              {project.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-4 text-center">
+                    <Link 
+                      href="/admin/tracking"
+                      className="text-crimson-600 hover:text-crimson-700 font-medium"
+                    >
+                      View all project tracking →
+                    </Link>
                   </div>
                 </div>
               </div>
