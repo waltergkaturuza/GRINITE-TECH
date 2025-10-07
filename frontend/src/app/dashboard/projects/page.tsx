@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { projectsAPI, usersAPI } from '@/lib/api'
+import { EXPANDED_PROJECT_TYPES, PROJECT_CATEGORIES } from '../../../constants/projectTypes'
 import { 
   FolderIcon, 
   PlusIcon, 
@@ -52,13 +53,7 @@ interface ProjectStats {
   averageCompletion: number
 }
 
-const PROJECT_TYPES = [
-  { value: 'website', label: 'Website' },
-  { value: 'mobile_app', label: 'Mobile App' },
-  { value: 'api', label: 'API' },
-  { value: 'consulting', label: 'Consulting' },
-  { value: 'maintenance', label: 'Maintenance' }
-]
+const PROJECT_TYPES = EXPANDED_PROJECT_TYPES;
 
 const PROJECT_STATUSES = [
   { value: 'planning', label: 'Planning', color: 'bg-gray-100 text-gray-800' },

@@ -736,4 +736,52 @@ export const featuresAPI = {
     return response.data
   }
 }
+
+// Project Types API
+export const projectTypesAPI = {
+  getProjectTypes: async (params?: { includeInactive?: boolean; category?: string }) => {
+    const response = await api.get('/project-types', { params })
+    return response.data
+  },
+  getCategories: async () => {
+    const response = await api.get('/project-types/categories')
+    return response.data
+  },
+  getProjectType: async (id: string) => {
+    const response = await api.get(`/project-types/${id}`)
+    return response.data
+  },
+  createProjectType: async (projectTypeData: {
+    value: string
+    label: string
+    category: string
+    description?: string
+    icon?: string
+    orderIndex?: number
+  }) => {
+    const response = await api.post('/project-types', projectTypeData)
+    return response.data
+  },
+  updateProjectType: async (id: string, projectTypeData: any) => {
+    const response = await api.patch(`/project-types/${id}`, projectTypeData)
+    return response.data
+  },
+  deleteProjectType: async (id: string) => {
+    const response = await api.delete(`/project-types/${id}`)
+    return response.data
+  },
+  deactivateProjectType: async (id: string) => {
+    const response = await api.patch(`/project-types/${id}/deactivate`)
+    return response.data
+  },
+  reactivateProjectType: async (id: string) => {
+    const response = await api.patch(`/project-types/${id}/reactivate`)
+    return response.data
+  },
+  seedDefaultTypes: async () => {
+    const response = await api.post('/project-types/seed')
+    return response.data
+  }
+}
+
 export default api
