@@ -140,7 +140,7 @@ export default function ProjectsPage() {
   const loadClients = async () => {
     try {
       const response = await usersAPI.getUsers({ role: 'client' })
-      setClients(response.users || [])
+      setClients(response || [])
     } catch (error) {
       console.error('Error loading clients:', error)
     }
