@@ -1,6 +1,6 @@
 import { IsEmail, IsString, IsOptional, IsEnum, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '../entities/user.entity';
+import { UserRole, UserStatus } from '../entities/user.entity';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -60,4 +60,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  @ApiProperty({
+    description: 'User status in the system',
+    enum: UserStatus,
+    example: UserStatus.ACTIVE,
+    default: UserStatus.ACTIVE,
+  })
+  @IsOptional()
+  @IsEnum(UserStatus)
+  status?: UserStatus;
 }
