@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { projectsAPI } from '@/lib/api'
 import { 
   ClockIcon,
   CheckCircleIcon,
@@ -11,27 +13,165 @@ import {
   FolderIcon,
   PlayIcon,
   PauseIcon,
-  StopIcon
+  StopIcon,
+  BellIcon,
+  DocumentIcon,
+  ChatBubbleLeftEllipsisIcon,
+  CurrencyDollarIcon,
+  ArrowTrendingUpIcon,
+  ExclamationCircleIcon,
+  Cog6ToothIcon,
+  PlusIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  ShareIcon,
+  ArrowDownTrayIcon,
+  UsersIcon,
+  ClipboardDocumentListIcon,
+  ShieldCheckIcon,
+  BugAntIcon,
+  LinkIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline'
 
-interface ProjectTrackingData {
+// Backend API Types
+interface Project {
   id: string
   title: string
-  client: {
+  description?: string
+  type: string
+  status: 'planning' | 'in_progress' | 'review' | 'completed' | 'cancelled'
+  budget?: number
+  startDate?: string
+  endDate?: string
+  estimatedHours?: number
+  actualHours: number
+  completionPercentage: number
+  client?: {
+    id: string
     firstName: string
     lastName: string
     email: string
   }
-  status: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
+  milestones?: Milestone[]
+  createdAt: string
+  updatedAt: string
+}
+
+interface Milestone {
+  id: string
+  name: string
+  description?: string
+  status: 'not_started' | 'in_progress' | 'completed' | 'blocked'
+  orderIndex: number
+  progress: number
+  dueDate?: string
+  estimatedHours?: number
+  createdAt: string
+  updatedAt: string
+}
+
+// Extended types for tracking
+interface Task {
+  id: string
+  title: string
+  description: string
+  status: 'pending' | 'ongoing' | 'done' | 'blocked'
+  assignedTo: string
+  assignedToName: string
   startDate: string
   endDate: string
-  estimatedHours: number
+  progress: number
+  dependencies: string[]
+  comments: Comment[]
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+}
+
+interface Comment {
+  id: string
+  author: string
+  message: string
+  timestamp: string
+  mentions?: string[]
+}
+
+interface Resource {
+  id: string
+  name: string
+  role: string
+  allocatedHours: number
+  usedHours: number
+  hourlyRate: number
+  availability: number // percentage
+}
+
+interface BudgetCategory {
+  id: string
+  name: string
+  allocated: number
+  spent: number
+  category: 'materials' | 'labor' | 'software' | 'other'
+}
+
+interface Risk {
+  id: string
+  title: string
+  description: string
+  likelihood: 'low' | 'medium' | 'high'
+  impact: 'low' | 'medium' | 'high'
+  status: 'open' | 'mitigated' | 'closed'
+  mitigationPlan: string
+  assignedTo: string
+}
+
+interface Issue {
+  id: string
+  title: string
+  description: string
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  status: 'open' | 'in-progress' | 'resolved' | 'closed'
+  reportedBy: string
+  assignedTo: string
+  dateRaised: string
+  dateResolved?: string
+}
+
+// Enhanced project interface for tracking
+interface ProjectTrackingData {
+  id: string
+  title: string
+  description?: string
+  type: string
+  status: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled'
+  budget?: number
+  startDate?: string
+  endDate?: string
+  estimatedHours?: number
   actualHours: number
   completionPercentage: number
-  budget: number
+  client?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }
+  milestones?: Milestone[]
+  createdAt: string
+  updatedAt: string
+  priority: 'low' | 'medium' | 'high' | 'urgent'
   spentBudget: number
   lastUpdate: string
+  tasks: Task[]
+  resources: Resource[]
+  budgetBreakdown: BudgetCategory[]
+  risks: Risk[]
+  issues: Issue[]
+  documents: any[]
+  teamMembers: string[]
 }
 
 const STATUS_CONFIG = {
@@ -43,16 +183,30 @@ const STATUS_CONFIG = {
 }
 
 const PRIORITY_CONFIG = {
-  low: { label: 'Low', color: 'bg-gray-100 text-gray-800' },
-  medium: { label: 'Medium', color: 'bg-blue-100 text-blue-800' },
-  high: { label: 'High', color: 'bg-orange-100 text-orange-800' },
-  urgent: { label: 'Urgent', color: 'bg-red-100 text-red-800' },
+  low: { label: 'Low', color: 'bg-gray-100 text-gray-800', icon: ClockIcon },
+  medium: { label: 'Medium', color: 'bg-yellow-100 text-yellow-800', icon: ExclamationCircleIcon },
+  high: { label: 'High', color: 'bg-orange-100 text-orange-800', icon: ExclamationTriangleIcon },
+  urgent: { label: 'Urgent', color: 'bg-red-100 text-red-800', icon: ExclamationTriangleIcon },
+}
+
+const TASK_STATUS_CONFIG = {
+  pending: { label: 'Pending', color: 'bg-gray-100 text-gray-800', icon: ClockIcon },
+  ongoing: { label: 'In Progress', color: 'bg-blue-100 text-blue-800', icon: PlayIcon },
+  done: { label: 'Done', color: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
+  blocked: { label: 'Blocked', color: 'bg-red-100 text-red-800', icon: ExclamationTriangleIcon },
 }
 
 export default function ProjectTrackingPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const projectId = searchParams.get('id')
+
   const [projects, setProjects] = useState<ProjectTrackingData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedProject, setSelectedProject] = useState<ProjectTrackingData | null>(null)
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'resources' | 'budget' | 'risks' | 'issues' | 'documents' | 'timeline' | 'analytics'>('overview')
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
   const [filters, setFilters] = useState({
     status: '',
     priority: '',
@@ -63,57 +217,110 @@ export default function ProjectTrackingPage() {
     loadProjects()
   }, [filters])
 
+  useEffect(() => {
+    if (projectId && projects.length > 0) {
+      const project = projects.find(p => p.id === projectId)
+      if (project) {
+        setSelectedProject(project)
+      }
+    }
+  }, [projectId, projects])
+
   const loadProjects = async () => {
     try {
       setLoading(true)
-      // Simulate loading data - replace with actual API call
-      setTimeout(() => {
-        const mockProjects: ProjectTrackingData[] = [
+      setError(null)
+      
+      // Get projects from API
+      const response = await projectsAPI.getProjects({
+        status: filters.status || undefined,
+        search: filters.search || undefined
+      })
+      
+      // Transform projects to include tracking data
+      const projectsWithTracking: ProjectTrackingData[] = response.data.map((project: Project) => ({
+        ...project,
+        // Convert backend status to frontend status
+        status: mapBackendStatus(project.status),
+        // Set default priority if not available
+        priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+        // Calculate spent budget (this would ideally come from backend)
+        spentBudget: Math.round((project.budget || 0) * (project.completionPercentage / 100)),
+        lastUpdate: project.updatedAt,
+        // Initialize empty arrays for now - these would come from additional API calls
+        tasks: project.milestones?.map(milestone => ({
+          id: milestone.id,
+          title: milestone.name,
+          description: milestone.description || '',
+          status: mapMilestoneStatus(milestone.status),
+          assignedTo: 'team-member',
+          assignedToName: 'Team Member',
+          startDate: project.startDate || new Date().toISOString(),
+          endDate: milestone.dueDate || project.endDate || new Date().toISOString(),
+          progress: milestone.progress,
+          dependencies: [],
+          comments: [],
+          priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent'
+        })) || [],
+        resources: [],
+        budgetBreakdown: project.budget ? [
           {
             id: '1',
-            title: 'E-commerce Website Development',
-            client: {
-              firstName: 'John',
-              lastName: 'Doe',
-              email: 'john@example.com'
-            },
-            status: 'active',
-            priority: 'high',
-            startDate: '2025-09-01',
-            endDate: '2025-11-30',
-            estimatedHours: 120,
-            actualHours: 85,
-            completionPercentage: 65,
-            budget: 15000,
-            spentBudget: 9750,
-            lastUpdate: '2025-10-08'
+            name: 'Development',
+            allocated: Math.round(project.budget * 0.7),
+            spent: Math.round((project.budget || 0) * 0.7 * (project.completionPercentage / 100)),
+            category: 'labor' as 'materials' | 'labor' | 'software' | 'other'
           },
           {
             id: '2',
-            title: 'Mobile App UI/UX Design',
-            client: {
-              firstName: 'Jane',
-              lastName: 'Smith',
-              email: 'jane@example.com'
-            },
-            status: 'planning',
-            priority: 'medium',
-            startDate: '2025-10-15',
-            endDate: '2025-12-15',
-            estimatedHours: 80,
-            actualHours: 0,
-            completionPercentage: 0,
-            budget: 8000,
-            spentBudget: 0,
-            lastUpdate: '2025-10-05'
+            name: 'Tools & Software',
+            allocated: Math.round(project.budget * 0.2),
+            spent: Math.round((project.budget || 0) * 0.2 * (project.completionPercentage / 100)),
+            category: 'software' as 'materials' | 'labor' | 'software' | 'other'
+          },
+          {
+            id: '3',
+            name: 'Other Expenses',
+            allocated: Math.round(project.budget * 0.1),
+            spent: Math.round((project.budget || 0) * 0.1 * (project.completionPercentage / 100)),
+            category: 'other' as 'materials' | 'labor' | 'software' | 'other'
           }
-        ]
-        setProjects(mockProjects)
-        setLoading(false)
-      }, 1000)
-    } catch (err: any) {
-      setError('Failed to load project tracking data')
+        ] : [],
+        risks: [],
+        issues: [],
+        documents: [],
+        teamMembers: []
+      }))
+      
+      setProjects(projectsWithTracking)
+    } catch (error) {
+      console.error('Error loading projects:', error)
+      setError('Failed to load projects')
+    } finally {
       setLoading(false)
+    }
+  }
+
+  // Helper function to map backend status to frontend status
+  const mapBackendStatus = (status: string): 'planning' | 'active' | 'paused' | 'completed' | 'cancelled' => {
+    switch (status) {
+      case 'planning': return 'planning'
+      case 'in_progress': return 'active'
+      case 'review': return 'active'
+      case 'completed': return 'completed'
+      case 'cancelled': return 'cancelled'
+      default: return 'planning'
+    }
+  }
+
+  // Helper function to map milestone status to task status
+  const mapMilestoneStatus = (status: string): 'pending' | 'ongoing' | 'done' | 'blocked' => {
+    switch (status) {
+      case 'not_started': return 'pending'
+      case 'in_progress': return 'ongoing'
+      case 'completed': return 'done'
+      case 'blocked': return 'blocked'
+      default: return 'pending'
     }
   }
 
@@ -128,10 +335,23 @@ export default function ProjectTrackingPage() {
     )
   }
 
-  const getPriorityBadge = (priority: string) => {
-    const config = PRIORITY_CONFIG[priority as keyof typeof PRIORITY_CONFIG]
+  const getTaskStatusBadge = (status: string) => {
+    const config = TASK_STATUS_CONFIG[status as keyof typeof TASK_STATUS_CONFIG]
+    const IconComponent = config?.icon || ClockIcon
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config?.color || 'bg-gray-100 text-gray-800'}`}>
+        <IconComponent className="w-3 h-3 mr-1" />
+        {config?.label || status}
+      </span>
+    )
+  }
+
+  const getPriorityBadge = (priority: string) => {
+    const config = PRIORITY_CONFIG[priority as keyof typeof PRIORITY_CONFIG]
+    const IconComponent = config?.icon || ClockIcon
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config?.color || 'bg-gray-100 text-gray-800'}`}>
+        <IconComponent className="w-3 h-3 mr-1" />
         {config?.label || priority}
       </span>
     )
@@ -146,8 +366,16 @@ export default function ProjectTrackingPage() {
   }
 
   const calculateProgress = (actual: number, estimated: number) => {
-    return estimated > 0 ? Math.min((actual / estimated) * 100, 100) : 0
+    if (estimated === 0) return 0
+    return Math.min((actual / estimated) * 100, 100)
   }
+
+  const navigateToProject = (project: ProjectTrackingData) => {
+    setSelectedProject(project)
+    router.push(`/dashboard/tracking?id=${project.id}`)
+  }
+
+  // ... (include all the render functions from the previous implementation)
 
   const filteredProjects = projects.filter(project => {
     return (
@@ -155,7 +383,7 @@ export default function ProjectTrackingPage() {
       (!filters.priority || project.priority === filters.priority) &&
       (!filters.search || 
         project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        `${project.client.firstName} ${project.client.lastName}`.toLowerCase().includes(filters.search.toLowerCase())
+        `${project.client?.firstName || ''} ${project.client?.lastName || ''}`.toLowerCase().includes(filters.search.toLowerCase())
       )
     )
   })
@@ -199,22 +427,9 @@ export default function ProjectTrackingPage() {
                 <PlayIcon className="h-8 w-8 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Active Projects</p>
+                <p className="text-sm font-medium text-gray-500">Active</p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {projects.filter(p => p.status === 'active').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <ClockIcon className="h-8 w-8 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Hours Tracked</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {projects.reduce((total, p) => total + p.actualHours, 0)}
                 </p>
               </div>
             </div>
@@ -228,6 +443,19 @@ export default function ProjectTrackingPage() {
                 <p className="text-sm font-medium text-gray-500">Completed</p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {projects.filter(p => p.status === 'completed').length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CurrencyDollarIcon className="h-8 w-8 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Budget</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  ${projects.reduce((sum, p) => sum + (p.budget || 0), 0).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -280,7 +508,7 @@ export default function ProjectTrackingPage() {
             <div className="flex items-end">
               <button
                 onClick={() => setFilters({ status: '', priority: '', search: '' })}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md"
               >
                 Clear Filters
               </button>
@@ -288,39 +516,32 @@ export default function ProjectTrackingPage() {
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
-
-        {/* Projects Table */}
+        {/* Project List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Project
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Priority
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Progress
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Timeline
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Budget
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hours
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -331,7 +552,7 @@ export default function ProjectTrackingPage() {
                       <div>
                         <div className="text-sm font-medium text-gray-900">{project.title}</div>
                         <div className="text-sm text-gray-500">
-                          {project.client.firstName} {project.client.lastName}
+                          {project.client ? `${project.client.firstName} ${project.client.lastName}` : 'No client assigned'}
                         </div>
                       </div>
                     </td>
@@ -354,30 +575,27 @@ export default function ProjectTrackingPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {formatDate(project.startDate)} - {formatDate(project.endDate)}
+                        {project.startDate ? formatDate(project.startDate) : 'No start date'} - {project.endDate ? formatDate(project.endDate) : 'No end date'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        ${project.spentBudget.toLocaleString()} / ${project.budget.toLocaleString()}
+                        ${project.spentBudget.toLocaleString()} / ${(project.budget || 0).toLocaleString()}
                       </div>
                       <div className="w-16 bg-gray-200 rounded-full h-1 mt-1">
                         <div
                           className="bg-green-600 h-1 rounded-full"
-                          style={{ width: `${Math.min((project.spentBudget / project.budget) * 100, 100)}%` }}
+                          style={{ width: `${Math.min((project.spentBudget / (project.budget || 1)) * 100, 100)}%` }}
                         ></div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {project.actualHours}h / {project.estimatedHours}h
-                      </div>
-                      <div className="w-16 bg-gray-200 rounded-full h-1 mt-1">
-                        <div
-                          className="bg-blue-600 h-1 rounded-full"
-                          style={{ width: `${calculateProgress(project.actualHours, project.estimatedHours)}%` }}
-                        ></div>
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => navigateToProject(project)}
+                        className="text-blue-600 hover:text-blue-900 mr-2"
+                      >
+                        View Details
+                      </button>
                     </td>
                   </tr>
                 ))}

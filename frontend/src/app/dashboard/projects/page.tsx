@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { projectsAPI, usersAPI } from '@/lib/api'
 import { EXPANDED_PROJECT_TYPES, PROJECT_CATEGORIES } from '../../../constants/projectTypes'
 import { 
@@ -15,7 +16,8 @@ import {
   ClockIcon,
   UserIcon,
   ChartBarIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline'
 
 // Types
@@ -64,6 +66,7 @@ const PROJECT_STATUSES = [
 ]
 
 export default function ProjectsPage() {
+  const router = useRouter()
   const [projects, setProjects] = useState<Project[]>([])
   const [clients, setClients] = useState<any[]>([])
   const [stats, setStats] = useState<ProjectStats>({
@@ -248,6 +251,10 @@ export default function ProjectsPage() {
       clientId: project.client?.id || ''
     })
     setIsEditModalOpen(true)
+  }
+
+  const trackProject = (project: Project) => {
+    router.push(`/dashboard/tracking?id=${project.id}`)
   }
 
   const getStatusBadge = (status: string) => {
@@ -510,6 +517,13 @@ export default function ProjectsPage() {
                     </td>
                     <td className="px-6 py-4 text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => trackProject(project)}
+                          className="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50"
+                          title="Track project"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => openEditModal(project)}
                           className="text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50"
