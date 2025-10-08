@@ -157,8 +157,8 @@ export default function ClientsPage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        phone: formData.phone || undefined,
-        company: formData.company || undefined,
+        phone: formData.phone || '',
+        company: formData.company || '',
         role: formData.role,
         status: formData.status,
         password: formData.password
@@ -182,8 +182,8 @@ export default function ClientsPage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        phone: formData.phone || undefined,
-        company: formData.company || undefined,
+        phone: formData.phone || '',
+        company: formData.company || '',
         role: formData.role,
         status: formData.status
       }

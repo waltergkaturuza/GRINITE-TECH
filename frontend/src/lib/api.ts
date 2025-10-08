@@ -91,7 +91,7 @@ export const usersAPI = {
     return response.data
   },
   updateUser: async (id: string, userData: any) => {
-    const response = await api.put(`/users/${id}`, userData)
+    const response = await api.patch(`/users/${id}`, userData)
     return response.data
   },
   deleteUser: async (id: string) => {
@@ -112,7 +112,7 @@ export const usersAPI = {
     return response.data
   },
   update: async (id: string, userData: any) => {
-    const response = await api.put(`/users/${id}`, userData)
+    const response = await api.patch(`/users/${id}`, userData)
     return response.data
   },
   delete: async (id: string) => {
