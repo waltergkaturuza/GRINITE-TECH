@@ -67,6 +67,9 @@ export default function RequestsPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedRequest, setSelectedRequest] = useState<ProjectRequest | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isReplyFormOpen, setIsReplyFormOpen] = useState(false)
+  const [replyMessage, setReplyMessage] = useState('')
+  const [sendingReply, setSendingReply] = useState(false)
   const [filters, setFilters] = useState({
     status: '',
     search: '',
@@ -126,6 +129,38 @@ export default function RequestsPage() {
   const openRequestDetails = (request: ProjectRequest) => {
     setSelectedRequest(request)
     setIsModalOpen(true)
+    setIsReplyFormOpen(false)
+    setReplyMessage('')
+  }
+
+  const handleSendReply = async () => {
+    if (!selectedRequest || !replyMessage.trim()) return
+
+    try {
+      setSendingReply(true)
+      const response = await requestsAPI.addMessage(selectedRequest.id, {
+        message: replyMessage.trim(),
+        senderName: 'Admin', // This should come from current user context
+        senderType: 'admin'
+      })
+
+      if (response.success) {
+        // Reload the request details to show the new message
+        const updatedResponse = await requestsAPI.getRequest(selectedRequest.id)
+        if (updatedResponse.success) {
+          setSelectedRequest(updatedResponse.data)
+        }
+        setReplyMessage('')
+        setIsReplyFormOpen(false)
+      } else {
+        setError(response.message || 'Failed to send reply')
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send reply')
+      console.error('Error sending reply:', err)
+    } finally {
+      setSendingReply(false)
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -523,12 +558,51 @@ export default function RequestsPage() {
                   Close
                 </button>
                 <button
-                  onClick={() => {/* TODO: Implement message reply */}}
+                  onClick={() => setIsReplyFormOpen(!isReplyFormOpen)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
                 >
-                  Reply
+                  {isReplyFormOpen ? 'Cancel Reply' : 'Reply'}
                 </button>
               </div>
+
+              {/* Reply Form */}
+              {isReplyFormOpen && (
+                <div className="mt-6 border-t pt-6">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Send Reply</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Message
+                      </label>
+                      <textarea
+                        value={replyMessage}
+                        onChange={(e) => setReplyMessage(e.target.value)}
+                        rows={4}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Type your reply message..."
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        onClick={() => {
+                          setIsReplyFormOpen(false)
+                          setReplyMessage('')
+                        }}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSendReply}
+                        disabled={!replyMessage.trim() || sendingReply}
+                        className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
+                      >
+                        {sendingReply ? 'Sending...' : 'Send Reply'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

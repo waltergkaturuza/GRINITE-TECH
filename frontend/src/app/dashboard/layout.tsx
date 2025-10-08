@@ -17,7 +17,9 @@ import {
   BellIcon,
   UserCircleIcon,
   MagnifyingGlassIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  BriefcaseIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline'
 
 export default function DashboardLayout({
@@ -52,6 +54,8 @@ export default function DashboardLayout({
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: true },
     { name: 'Projects', href: '/dashboard/projects', icon: CubeIcon, current: false },
+    { name: 'Portfolio', href: '/portfolio', icon: BriefcaseIcon, current: false },
+    { name: 'Project Tracking', href: '/dashboard/tracking', icon: ClockIcon, current: false },
     { name: 'Clients', href: '/dashboard/clients', icon: UsersIcon, current: false },
     { name: 'Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, current: false },
     { name: 'Products', href: '/dashboard/products', icon: ShoppingCartIcon, current: false },
