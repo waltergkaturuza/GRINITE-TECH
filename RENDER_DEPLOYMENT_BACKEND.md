@@ -82,7 +82,7 @@ Watch the logs in real-time:
 
 Once deployed, you'll see:
 ```
-Your service is live at https://grinite-tech-backend.onrender.com
+Your service is live at https://grinite-tech.onrender.com
 ```
 
 Copy this URL!
@@ -91,7 +91,7 @@ Copy this URL!
 
 Test the health endpoint:
 ```powershell
-curl https://grinite-tech-backend.onrender.com/api/v1/health
+curl https://grinite-tech.onrender.com/api/v1/health
 ```
 
 Expected response:
@@ -107,7 +107,7 @@ Expected response:
 
 Test CORS:
 ```powershell
-curl -I -X OPTIONS https://grinite-tech-backend.onrender.com/api/v1/users `
+curl -I -X OPTIONS https://grinite-tech.onrender.com/api/v1/users `
   -H "Origin: https://grinite-tech-frontend.vercel.app"
 ```
 
@@ -120,13 +120,13 @@ Update your frontend to use the new backend URL:
 ```typescript
 // frontend/src/lib/api.ts (or wherever your API base URL is)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 
-  'https://grinite-tech-backend.onrender.com';
+  'https://grinite-tech.onrender.com';
 ```
 
 Add to your Vercel environment variables:
 1. Go to https://vercel.com/your-username/grinite-tech-frontend
 2. Settings → Environment Variables
-3. Add: `NEXT_PUBLIC_API_URL` = `https://grinite-tech-backend.onrender.com`
+3. Add: `NEXT_PUBLIC_API_URL` = `https://grinite-tech.onrender.com`
 4. Redeploy frontend
 
 ## Step 10: Verify Everything Works
@@ -134,7 +134,7 @@ Add to your Vercel environment variables:
 1. Visit your frontend: https://grinite-tech-frontend.vercel.app
 2. Open browser DevTools (F12) → Network tab
 3. Try to log in or fetch data
-4. Check that API calls go to `grinite-tech-backend.onrender.com`
+4. Check that API calls go to `grinite-tech.onrender.com`
 5. Verify no CORS errors ✅
 
 ## Troubleshooting
