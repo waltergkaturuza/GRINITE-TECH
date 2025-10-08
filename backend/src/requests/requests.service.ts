@@ -4,6 +4,7 @@ import { Repository, Like, ILike } from 'typeorm';
 import { ProjectRequest, RequestDocument, RequestMessage, RequestStatus } from './entities/request.entity';
 import { CreateRequestDto, UpdateRequestDto, CreateMessageDto } from './dto/request.dto';
 import { User } from '../users/entities/user.entity';
+import { EmailService } from '../email/email.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -18,6 +19,7 @@ export class RequestsService {
     private messageRepository: Repository<RequestMessage>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private emailService: EmailService,
   ) {}
 
   async create(createRequestDto: CreateRequestDto, files?: any[]): Promise<ProjectRequest> {
@@ -149,6 +151,30 @@ export class RequestsService {
     });
 
     const savedMessage = await this.messageRepository.save(message);
+
+    // Send email notification if this is an admin reply to a client
+    if (createMessageDto.senderType === 'admin' && !createMessageDto.isInternal) {
+      try {
+        const emailResult = await this.emailService.sendReplyEmail({
+          to: request.email,
+          subject: `Reply to your project request - ${request.serviceInterested}`,
+          message: createMessageDto.message,
+          senderName: createMessageDto.senderName,
+          senderEmail: createMessageDto.senderEmail,
+          requestId: request.id,
+          clientName: request.fullName,
+        });
+
+        if (emailResult.success) {
+          console.log(`Email sent successfully to ${request.email} for request ${request.id}`);
+        } else {
+          console.error(`Failed to send email: ${emailResult.error}`);
+        }
+      } catch (error) {
+        console.error('Error sending reply email:', error);
+        // Don't throw the error - we still want to save the message even if email fails
+      }
+    }
 
     // Handle file attachments if any (implement later)
     // if (files && files.length > 0) {

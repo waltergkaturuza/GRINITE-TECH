@@ -55,6 +55,8 @@ Click **"Advanced"** → **"Add Environment Variable"** and add these:
 | `JWT_SECRET` | Generate a random string (use: https://generate-secret.vercel.app/32) |
 | `FRONTEND_URL` | `https://grinite-tech-frontend.vercel.app` |
 | `ALLOWED_ORIGINS` | `https://grinite-tech-frontend.vercel.app,https://granite-tech-frontend.vercel.app` |
+| `GMAIL_USER` | Your Gmail address (e.g., walter@granitetech.com) |
+| `GMAIL_APP_PASSWORD` | Your Gmail App Password (16 characters) |
 
 ### How to Get Your Neon DATABASE_URL:
 1. Go to https://console.neon.tech

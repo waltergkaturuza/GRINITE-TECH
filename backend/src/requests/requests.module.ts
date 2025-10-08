@@ -5,6 +5,7 @@ import { RequestsService } from './requests.service';
 import { RequestsController } from './requests.controller';
 import { ProjectRequest, RequestDocument, RequestMessage, MessageAttachment } from './entities/request.entity';
 import { User } from '../users/entities/user.entity';
+import { EmailModule } from '../email/email.module';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
@@ -59,6 +60,7 @@ import { extname } from 'path';
         }
       },
     }),
+    EmailModule,
   ],
   controllers: [RequestsController],
   providers: [RequestsService],

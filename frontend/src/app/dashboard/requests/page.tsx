@@ -70,6 +70,7 @@ export default function RequestsPage() {
   const [isReplyFormOpen, setIsReplyFormOpen] = useState(false)
   const [replyMessage, setReplyMessage] = useState('')
   const [sendingReply, setSendingReply] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [filters, setFilters] = useState({
     status: '',
     search: '',
@@ -79,6 +80,12 @@ export default function RequestsPage() {
   const [stats, setStats] = useState<any>(null)
 
   useEffect(() => {
+    // Load current user from localStorage
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setCurrentUser(JSON.parse(userData))
+    }
+    
     loadRequests()
     loadStats()
   }, [filters])
@@ -134,13 +141,14 @@ export default function RequestsPage() {
   }
 
   const handleSendReply = async () => {
-    if (!selectedRequest || !replyMessage.trim()) return
+    if (!selectedRequest || !replyMessage.trim() || !currentUser) return
 
     try {
       setSendingReply(true)
       const response = await requestsAPI.addMessage(selectedRequest.id, {
         message: replyMessage.trim(),
-        senderName: 'Admin', // This should come from current user context
+        senderName: `${currentUser.firstName} ${currentUser.lastName}`,
+        senderEmail: currentUser.email,
         senderType: 'admin'
       })
 
