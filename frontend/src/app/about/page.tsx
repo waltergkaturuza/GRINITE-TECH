@@ -248,6 +248,58 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Directors Section */}
+      <section className="py-12 md:py-20 bg-white">
+        <div className="wide-container px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-granite-800 mb-4">Company Directors</h2>
+            <p className="text-lg md:text-xl text-granite-600 max-w-3xl mx-auto px-4">
+              Leadership team committed to excellence and innovation
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
+            {/* Director 1 */}
+            <div className="bg-gradient-to-br from-granite-50 to-white rounded-xl md:rounded-2xl shadow-lg border border-granite-200 p-4 md:p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="bg-gradient-to-br from-crimson-500 to-crimson-600 p-3 md:p-4 rounded-xl flex-shrink-0">
+                  <UserGroupIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg md:text-xl font-bold text-granite-800 mb-2 break-words">Greenford Walter Katuruza</h3>
+                  <p className="text-crimson-600 font-semibold mb-3 text-sm md:text-base">Director</p>
+                  <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-granite-600">
+                    <p className="break-words"><span className="font-semibold">ID:</span> 47-175650E47</p>
+                    <p><span className="font-semibold">Nationality:</span> Zimbabwe</p>
+                    <p className="break-words"><span className="font-semibold">Address:</span> 6240 Westlea Harare</p>
+                    <p><span className="font-semibold">Appointed:</span> 26/11/2025</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Director 2 */}
+            <div className="bg-gradient-to-br from-granite-50 to-white rounded-xl md:rounded-2xl shadow-lg border border-granite-200 p-4 md:p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="bg-gradient-to-br from-crimson-500 to-crimson-600 p-3 md:p-4 rounded-xl flex-shrink-0">
+                  <UserGroupIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg md:text-xl font-bold text-granite-800 mb-2 break-words">Pardon Mhembere</h3>
+                  <p className="text-crimson-600 font-semibold mb-3 text-sm md:text-base">Director & Secretary</p>
+                  <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-granite-600">
+                    <p className="break-words"><span className="font-semibold">ID:</span> 68-2000402J68</p>
+                    <p><span className="font-semibold">Nationality:</span> Zimbabwe</p>
+                    <p className="break-words"><span className="font-semibold">Address:</span> 5799 Clusters Chipadze Bindura</p>
+                    <p><span className="font-semibold">Appointed:</span> 26/11/2025</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20">
         <div className="wide-container px-4 sm:px-6 lg:px-8 text-center">

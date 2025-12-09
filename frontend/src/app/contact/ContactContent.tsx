@@ -396,9 +396,18 @@ export default function ContactContent() {
                     <PhoneIcon className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-granite-900">Phone</h3>
-                    <p className="text-granite-600">+263 XXX XXX XXX</p>
-                    <p className="text-granite-600">+263 XXX XXX XXX</p>
+                    <h3 className="font-semibold text-granite-900 mb-2">Phone</h3>
+                    <div className="space-y-1">
+                      <p className="text-granite-600">
+                        <a href="tel:+263777937721" className="hover:text-crimson-600 transition-colors block py-1">+263 777 937 721</a>
+                      </p>
+                      <p className="text-granite-600">
+                        <a href="tel:+263717935866" className="hover:text-crimson-600 transition-colors block py-1">+263 717 935 866</a>
+                      </p>
+                      <p className="text-granite-600">
+                        <a href="tel:+263774211041" className="hover:text-crimson-600 transition-colors block py-1">+263 774 211 041</a>
+                      </p>
+                    </div>
                   </div>
                 </div>
 

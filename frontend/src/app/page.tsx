@@ -133,10 +133,19 @@ export default function HomePage() {
             </div>
             <div>
               <h4 className="font-semibold mb-4 text-olive-300">Contact</h4>
-              <ul className="space-y-2 text-gray-300">
-                <li className="hover:text-olive-300 transition-colors duration-200">support@quantistech.co.zw</li>
-                <li className="hover:text-olive-300 transition-colors duration-200">+1 (555) 123-4567</li>
-                <li className="hover:text-olive-300 transition-colors duration-200">Live Chat</li>
+              <ul className="space-y-2 text-gray-300 text-sm sm:text-base">
+                <li className="hover:text-olive-300 transition-colors duration-200 break-words">
+                  <a href="mailto:support@quantistech.co.zw" className="block py-1">support@quantistech.co.zw</a>
+                </li>
+                <li className="hover:text-olive-300 transition-colors duration-200">
+                  <a href="tel:+263777937721" className="block py-1">+263 777 937 721</a>
+                </li>
+                <li className="hover:text-olive-300 transition-colors duration-200">
+                  <a href="tel:+263717935866" className="block py-1">+263 717 935 866</a>
+                </li>
+                <li className="hover:text-olive-300 transition-colors duration-200">
+                  <a href="tel:+263774211041" className="block py-1">+263 774 211 041</a>
+                </li>
               </ul>
             </div>
           </div>
