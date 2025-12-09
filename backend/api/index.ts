@@ -34,7 +34,7 @@ export default async function handler(req: any, res: any) {
     
     // Return service information
     return res.status(200).json({
-      message: 'GRANITE TECH API',
+      message: 'Quantis Technologies API',
       version: '1.0.0',
       status: 'operational',
       note: 'Full API functionality requires database configuration. Please see deployment documentation.',

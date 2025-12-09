@@ -1,7 +1,7 @@
 {
   "name": "granite-tech-backend",
   "version": "1.0.0",
-  "description": "Backend API for GRANITE TECH system",
+  "description": "Backend API for Quantis Technologies system",
   "main": "dist/main.js",
   "scripts": {
     "build": "nest build",

@@ -1,4 +1,4 @@
-// Main exports for the GRANITE TECH AI Chatbot system
+// Main exports for the Quantis Technologies AI Chatbot system
 export { default as Chatbot } from './Chatbot'
 export { default as EnhancedChatbot } from './EnhancedChatbot'
 export { default as ChatbotWrapper } from './ChatbotWrapper'

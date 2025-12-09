@@ -386,8 +386,8 @@ export default function ContactContent() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-granite-900">Email</h3>
-                    <p className="text-granite-600">hello@granitetech.co.zw</p>
-                    <p className="text-granite-600">support@granitetech.co.zw</p>
+                    <p className="text-granite-600">hello@quantistech.co.zw</p>
+                    <p className="text-granite-600">support@quantistech.co.zw</p>
                   </div>
                 </div>
 

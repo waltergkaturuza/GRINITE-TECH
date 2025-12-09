@@ -1,4 +1,4 @@
-# GRANITE TECH Render.com Deployment
+# Quantis Technologies Render.com Deployment
 
 ## Quick Deployment Guide
 

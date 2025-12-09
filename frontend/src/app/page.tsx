@@ -95,7 +95,7 @@ export default function HomePage() {
             Ready to Transform Your <span className="text-yellow-900">Business</span>?
           </h2>
           <p className="text-xl text-gray-200 mb-8">
-            Join hundreds of satisfied clients who trust GRANITE TECH
+            Join hundreds of satisfied clients who trust Quantis Technologies
           </p>
           <Link href="/contact" className="bg-white text-granite-800 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
             Get Started Today
@@ -108,7 +108,7 @@ export default function HomePage() {
         <div className="wide-container px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4 text-yellow-900">GRANITE TECH</h3>
+              <h3 className="text-lg font-semibold mb-4 text-yellow-900">Quantis Technologies</h3>
               <p className="text-gray-300">
                 Comprehensive business solutions for the modern world.
               </p>
@@ -134,7 +134,7 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold mb-4 text-olive-300">Contact</h4>
               <ul className="space-y-2 text-gray-300">
-                <li className="hover:text-olive-300 transition-colors duration-200">support@granite-tech.com</li>
+                <li className="hover:text-olive-300 transition-colors duration-200">support@quantistech.co.zw</li>
                 <li className="hover:text-olive-300 transition-colors duration-200">+1 (555) 123-4567</li>
                 <li className="hover:text-olive-300 transition-colors duration-200">Live Chat</li>
               </ul>
@@ -142,7 +142,7 @@ export default function HomePage() {
           </div>
           <div className="border-t border-granite-700 mt-8 pt-8 text-center">
             <p className="text-gray-400">
-              &copy; 2024 <span className="text-crimson-300">GRANITE TECH</span>. All rights reserved.
+              &copy; 2024 <span className="text-crimson-300">Quantis Technologies</span>. All rights reserved.
             </p>
           </div>
         </div>

@@ -1,4 +1,4 @@
-# GRANITE TECH - Vercel Deployment Configuration
+# Quantis Technologies - Vercel Deployment Configuration
 
 ## ✅ NEON DATABASE CONNECTED
 # Use the pooled connection for better performance with Vercel

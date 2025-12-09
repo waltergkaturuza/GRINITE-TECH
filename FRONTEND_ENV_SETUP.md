@@ -11,7 +11,7 @@ Add these variables:
 ```
 NEXT_PUBLIC_API_URL=https://grinite-tech-backend.vercel.app/api/v1
 NEXT_PUBLIC_APP_URL=https://grinite-tech-frontend.vercel.app
-NEXT_PUBLIC_APP_NAME=GRANITE TECH
+NEXT_PUBLIC_APP_NAME=Quantis Technologies
 NEXT_PUBLIC_APP_VERSION=1.0.0
 NODE_ENV=production
 ```

@@ -1,4 +1,4 @@
-# GRANITE TECH System
+# Quantis Technologies System
 
 A comprehensive business management platform featuring:
 - Public-facing e-commerce website
@@ -48,4 +48,4 @@ granite-tech-system/
 
 ## License
 
-Proprietary - GRANITE TECH
+Proprietary - Quantis Technologies

@@ -58,7 +58,7 @@ const EnhancedChatbot: React.FC<ChatbotProps> = ({
       const welcomeMessage: ChatMessage = {
         id: `msg_${Date.now()}`,
         sessionId: session.id,
-        content: customPrompt || initialMessage || "Hello! I'm GRANITE TECH's AI assistant. I can help you learn about our services, pricing, and answer any questions you have. How can I assist you today?",
+        content: customPrompt || initialMessage || "Hello! I'm Quantis Technologies' AI assistant. I can help you learn about our services, pricing, and answer any questions you have. How can I assist you today?",
         sender: 'bot',
         timestamp: new Date(),
         metadata: {
@@ -239,7 +239,7 @@ const EnhancedChatbot: React.FC<ChatbotProps> = ({
   const handleShare = (message: ChatMessage) => {
     if (navigator.share) {
       navigator.share({
-        title: 'GRANITE TECH AI Response',
+        title: 'Quantis Technologies AI Response',
         text: message.content,
         url: window.location.href
       })
@@ -275,7 +275,7 @@ const EnhancedChatbot: React.FC<ChatbotProps> = ({
                 <SparklesIcon className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-semibold">GRANITE TECH AI</h3>
+                <h3 className="font-semibold">Quantis Technologies AI</h3>
                 <p className="text-xs text-crimson-100">
                   {isTyping ? 'Typing...' : 'Online • Ready to help'}
                 </p>
@@ -387,7 +387,7 @@ const EnhancedChatbot: React.FC<ChatbotProps> = ({
               </button>
             </div>
             <p className="text-xs text-granite-500 mt-2 text-center">
-              Powered by GRANITE TECH AI • Ask me anything!
+              Powered by Quantis Technologies AI • Ask me anything!
             </p>
           </div>
         </div>

@@ -139,12 +139,12 @@ app.post('/api/products', (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'GRANITE TECH API is running' });
+  res.json({ status: 'OK', message: 'Quantis Technologies API is running' });
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 GRANITE TECH API Server running on port ${PORT}`);
+  console.log(`🚀 Quantis Technologies API Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🛍️ Products API: http://localhost:${PORT}/api/products`);
 });

@@ -42,7 +42,7 @@ export class EmailService {
       const htmlContent = this.generateReplyEmailTemplate(options);
 
       const mailOptions = {
-        from: `"${options.senderName} - Granite Tech" <${process.env.GMAIL_USER}>`,
+        from: `"${options.senderName} - Quantis Technologies" <${process.env.GMAIL_USER}>`,
         to: options.to,
         subject: options.subject,
         html: htmlContent,
@@ -67,7 +67,7 @@ export class EmailService {
       const htmlContent = this.generateRequestNotificationTemplate(options.requestData);
 
       const mailOptions = {
-        from: `"Granite Tech System" <${process.env.GMAIL_USER}>`,
+        from: `"Quantis Technologies System" <${process.env.GMAIL_USER}>`,
         to: options.to,
         subject: options.subject,
         html: htmlContent,
@@ -94,11 +94,11 @@ export class EmailService {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Reply from Granite Tech</title>
+        <title>Reply from Quantis Technologies</title>
       </head>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #1f2937, #374151); color: white; padding: 30px; border-radius: 10px 10px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">🏗️ Granite Tech</h1>
+          <h1 style="margin: 0; font-size: 28px;">🔷 Quantis Technologies</h1>
           <p style="margin: 5px 0 0 0; opacity: 0.9;">Professional Development Services</p>
         </div>
         
@@ -127,9 +127,9 @@ export class EmailService {
           <hr style="border: none; height: 1px; background: #e5e7eb; margin: 30px 0;">
           
           <p style="color: #6b7280; font-size: 14px; margin: 0;">
-            <strong>Granite Tech</strong><br>
+            <strong>Quantis Technologies</strong><br>
             Professional Web & Software Development<br>
-            📧 walter@granitetech.com | 🌐 www.granitetech.com
+            📧 info@quantistech.co.zw | 🌐 www.quantistech.co.zw
           </p>
           
           <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">
@@ -148,11 +148,11 @@ export class EmailService {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>New Project Request - Granite Tech</title>
+        <title>New Project Request - Quantis Technologies</title>
       </head>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #1f2937, #374151); color: white; padding: 30px; border-radius: 10px 10px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">🏗️ Granite Tech</h1>
+          <h1 style="margin: 0; font-size: 28px;">🔷 Quantis Technologies</h1>
           <p style="margin: 5px 0 0 0; opacity: 0.9;">New Project Request Received</p>
         </div>
         

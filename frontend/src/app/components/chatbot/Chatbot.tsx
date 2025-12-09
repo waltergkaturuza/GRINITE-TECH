@@ -22,13 +22,13 @@ interface Message {
 // Mock AI responses for the chatbot
 const mockResponses = {
   greeting: [
-    "Hello! I'm GRANITE TECH's AI assistant. How can I help you today?",
-    "Hi there! Welcome to GRANITE TECH. What can I assist you with?",
+    "Hello! I'm Quantis Technologies' AI assistant. How can I help you today?",
+    "Hi there! Welcome to Quantis Technologies. What can I assist you with?",
     "Greetings! I'm here to help you learn about our services and answer your questions."
   ],
   services: [
     "We offer comprehensive web development, mobile app development, e-commerce solutions, API development, cloud infrastructure setup, and analytics dashboards. Which service interests you most?",
-    "GRANITE TECH specializes in: Website Development ($1,999+), E-commerce Solutions ($4,999+), Mobile Apps ($7,999+), API Development ($2,999+), Cloud Infrastructure ($3,499+), and Analytics Dashboards ($3,999+). Would you like details about any specific service?"
+    "Quantis Technologies specializes in: Website Development ($1,999+), E-commerce Solutions ($4,999+), Mobile Apps ($7,999+), API Development ($2,999+), Cloud Infrastructure ($3,499+), and Analytics Dashboards ($3,999+). Would you like details about any specific service?"
   ],
   pricing: [
     "Our pricing starts at $1,999 for starter websites and goes up to $7,999 for mobile app development. All projects include ongoing support and maintenance. Would you like a detailed quote?",
@@ -58,7 +58,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm GRANITE TECH's AI assistant. I can help you learn about our services, pricing, and answer any questions you have. How can I assist you today?",
+      content: "Hello! I'm Quantis Technologies' AI assistant. I can help you learn about our services, pricing, and answer any questions you have. How can I assist you today?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -145,7 +145,7 @@ const Chatbot = () => {
     setMessages([
       {
         id: '1',
-        content: "Hello! I'm GRANITE TECH's AI assistant. I can help you learn about our services, pricing, and answer any questions you have. How can I assist you today?",
+        content: "Hello! I'm Quantis Technologies' AI assistant. I can help you learn about our services, pricing, and answer any questions you have. How can I assist you today?",
         sender: 'bot',
         timestamp: new Date()
       }
@@ -164,7 +164,7 @@ const Chatbot = () => {
                 <ComputerDesktopIcon className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-semibold">GRANITE TECH AI</h3>
+                <h3 className="font-semibold">Quantis Technologies AI</h3>
                 <p className="text-xs text-crimson-100">Online • Ready to help</p>
               </div>
             </div>

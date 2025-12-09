@@ -8,10 +8,10 @@ import ChatbotWrapper from './components/chatbot/ChatbotWrapper'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'GRANITE TECH - Comprehensive Business Solutions',
+  title: 'Quantis Technologies - Comprehensive Business Solutions',
   description: 'Professional web development, digital products, and business automation solutions.',
-  keywords: 'web development, digital products, business automation, GRANITE TECH',
-  authors: [{ name: 'GRANITE TECH Team' }],
+  keywords: 'web development, digital products, business automation, Quantis Technologies',
+  authors: [{ name: 'Quantis Technologies Team' }],
 }
 
 export const viewport = {

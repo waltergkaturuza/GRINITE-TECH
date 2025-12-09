@@ -2,7 +2,7 @@
 
 ## Overview
 
-The GRANITE TECH system now includes a comprehensive project tracking system with **hierarchical progress tracking**:
+The Quantis Technologies system now includes a comprehensive project tracking system with **hierarchical progress tracking**:
 
 ```
 📁 Project (e.g., "SIRTIS SAYWHAT ERP")

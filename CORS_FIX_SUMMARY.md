@@ -90,7 +90,7 @@ curl https://grinite-tech-backend.vercel.app/api/v1/users `
 **Response:**
 ```json
 {
-  "message": "GRANITE TECH API",
+  "message": "Quantis Technologies API",
   "version": "1.0.0",
   "status": "operational",
   "note": "Full API functionality requires database configuration...",
@@ -152,7 +152,7 @@ Until full API is restored, frontend should handle the current response format:
 ```typescript
 // Current response from all endpoints:
 {
-  message: "GRANITE TECH API",
+  message: "Quantis Technologies API",
   version: "1.0.0",
   status: "operational",
   note: "Full API functionality requires database configuration..."

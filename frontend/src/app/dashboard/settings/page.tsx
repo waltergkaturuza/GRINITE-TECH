@@ -20,7 +20,7 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-gray-300">Company Name</label>
                 <input
                   type="text"
-                  defaultValue="GRANITE TECH"
+                  defaultValue="Quantis Technologies"
                   className="mt-1 block w-full px-3 py-2 border border-granite-600 rounded-md shadow-sm bg-granite-700 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
                 />
               </div>
@@ -28,7 +28,7 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-gray-300">Email</label>
                 <input
                   type="email"
-                  defaultValue="admin@granitetech.com"
+                  defaultValue="admin@quantistech.co.zw"
                   className="mt-1 block w-full px-3 py-2 border border-granite-600 rounded-md shadow-sm bg-granite-700 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
                 />
               </div>

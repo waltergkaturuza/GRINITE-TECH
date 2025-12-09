@@ -51,7 +51,7 @@ export default function Navigation() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-granite-800 to-crimson-900 bg-clip-text text-transparent">
-              GRANITE TECH
+              QUANTIS TECHNOLOGIES
             </Link>
           </div>
 

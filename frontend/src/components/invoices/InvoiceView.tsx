@@ -82,7 +82,7 @@ export default function InvoiceView({ invoice, onClose, onEdit }: InvoiceViewPro
           {/* Company Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-granite-800">
-              {invoice.company_name || 'Granite Tech Solutions'}
+              {invoice.company_name || 'Quantis Technologies'}
             </h1>
             {invoice.company_address && (
               <p className="text-gray-600 mt-2">{invoice.company_address}</p>

@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // GRANITE TECH Brand Colors
+        // Quantis Technologies Brand Colors
         granite: {
           // Rich Black theme
           50: '#f5f5f5',

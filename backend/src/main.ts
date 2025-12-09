@@ -30,7 +30,7 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('GRANITE TECH API')
+    .setTitle('Quantis Technologies API')
     .setDescription('Comprehensive business management platform API')
     .setVersion('1.0')
     .addBearerAuth()
@@ -42,7 +42,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
   
-  console.log(`🚀 GRANITE TECH Backend running on port ${port}`);
+  console.log(`🚀 Quantis Technologies Backend running on port ${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
 

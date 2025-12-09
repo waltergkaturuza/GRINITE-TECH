@@ -80,12 +80,12 @@ export class ChatbotService {
     
     const responses: Record<ChatbotIntent, string[]> = {
       greeting: [
-        "Hello! Welcome to GRANITE TECH. I'm here to help you explore our services and answer any questions you might have. What can I assist you with today?",
-        "Hi there! Thanks for visiting GRANITE TECH. I'm your AI assistant, ready to help you learn about our development services, pricing, and how we can bring your ideas to life.",
-        "Greetings! I'm GRANITE TECH's AI assistant. Whether you're looking for web development, mobile apps, or custom solutions, I'm here to guide you. How can I help?"
+        "Hello! Welcome to Quantis Technologies. I'm here to help you explore our services and answer any questions you might have. What can I assist you with today?",
+        "Hi there! Thanks for visiting Quantis Technologies. I'm your AI assistant, ready to help you learn about our development services, pricing, and how we can bring your ideas to life.",
+        "Greetings! I'm Quantis Technologies' AI assistant. Whether you're looking for web development, mobile apps, or custom solutions, I'm here to guide you. How can I help?"
       ],
       services: [
-        "GRANITE TECH offers comprehensive digital solutions including:\n\n🌐 **Website Development** (Starting at $1,999)\n📱 **Mobile App Development** (Starting at $7,999)\n🛒 **E-commerce Solutions** (Starting at $4,999)\n⚡ **API Development** (Starting at $2,999)\n☁️ **Cloud Infrastructure** (Starting at $3,499)\n📊 **Analytics Dashboards** (Starting at $3,999)\n\nWhich service interests you most?",
+        "Quantis Technologies offers comprehensive digital solutions including:\n\n🌐 **Website Development** (Starting at $1,999)\n📱 **Mobile App Development** (Starting at $7,999)\n🛒 **E-commerce Solutions** (Starting at $4,999)\n⚡ **API Development** (Starting at $2,999)\n☁️ **Cloud Infrastructure** (Starting at $3,499)\n📊 **Analytics Dashboards** (Starting at $3,999)\n\nWhich service interests you most?",
         "We specialize in creating cutting-edge digital solutions:\n\n• Custom website development with modern frameworks\n• Native and cross-platform mobile applications\n• Scalable e-commerce platforms\n• RESTful and GraphQL API development\n• Cloud deployment and infrastructure\n• Business intelligence dashboards\n\nAll projects include ongoing support and maintenance. What type of project are you considering?"
       ],
       pricing: [
@@ -94,7 +94,7 @@ export class ChatbotService {
       ],
       contact: [
         "Ready to start your project? Here's how to reach us:\n\n📧 **Email**: Contact form on our website\n📞 **Phone**: Available during business hours\n💬 **Live Chat**: Right here with me!\n🕒 **Response Time**: Within 24 hours\n\nWhat's the best way for our team to follow up with you?",
-        "Let's connect! GRANITE TECH is here to help:\n\n• Use our contact form for detailed project discussions\n• Chat with me for immediate questions\n• Schedule a consultation call\n• Email us for quotes and proposals\n\nWe pride ourselves on quick responses and personalized service. How would you prefer to continue our conversation?"
+        "Let's connect! Quantis Technologies is here to help:\n\n• Use our contact form for detailed project discussions\n• Chat with me for immediate questions\n• Schedule a consultation call\n• Email us for quotes and proposals\n\nWe pride ourselves on quick responses and personalized service. How would you prefer to continue our conversation?"
       ],
       portfolio: [
         "We're proud of our diverse portfolio:\n\n🏆 **150+ Projects Completed**\n🏢 **Industries**: Healthcare, Finance, E-commerce, Education, SaaS\n🌟 **Highlights**:\n   • Custom CRM systems\n   • E-commerce platforms processing $1M+ annually\n   • Mobile apps with 100K+ downloads\n   • Enterprise cloud migrations\n\nWhat industry or project type interests you? I can share relevant case studies!",
@@ -106,15 +106,15 @@ export class ChatbotService {
       ],
       support: [
         "I'm here to help! What specific challenge are you facing?\n\n• **Technical questions** about our services\n• **Project planning** and requirements\n• **Pricing and timeline** estimates\n• **Portfolio examples** in your industry\n• **Getting started** with your project\n\nJust let me know what you need assistance with, and I'll provide detailed guidance!",
-        "No problem! I'm designed to help with any questions about GRANITE TECH:\n\n• Service capabilities and technical details\n• Project scoping and planning\n• Pricing and proposal requests\n• Timeline and process questions\n• Portfolio and case study requests\n\nWhat specific area can I help clarify for you?"
+        "No problem! I'm designed to help with any questions about Quantis Technologies:\n\n• Service capabilities and technical details\n• Project scoping and planning\n• Pricing and proposal requests\n• Timeline and process questions\n• Portfolio and case study requests\n\nWhat specific area can I help clarify for you?"
       ],
       technical: [
         "Our technical expertise includes:\n\n**Frontend**: React, Next.js, Vue.js, Angular, TypeScript\n**Backend**: Node.js, Python, .NET, Java, PHP\n**Mobile**: React Native, Flutter, Native iOS/Android\n**Database**: PostgreSQL, MongoDB, MySQL, Redis\n**Cloud**: AWS, Azure, Google Cloud, Docker, Kubernetes\n**APIs**: REST, GraphQL, WebSocket, Microservices\n\nWhat technology stack are you considering for your project?",
         "We stay current with cutting-edge technologies:\n\n🔧 **Modern Frameworks**: Latest versions of React, Vue, Angular\n🗄️ **Scalable Databases**: SQL and NoSQL solutions\n☁️ **Cloud-Native**: Serverless, containers, microservices\n🔒 **Security**: OAuth, JWT, encryption, GDPR compliance\n📱 **Cross-Platform**: Hybrid and native mobile development\n⚡ **Performance**: CDN, caching, optimization\n\nNeed technical consulting for your project architecture?"
       ],
       business: [
-        "About GRANITE TECH:\n\n🏢 **Founded**: Dedicated to digital excellence\n👥 **Team**: Experienced full-stack developers, designers, and project managers\n🎯 **Mission**: Transforming business ideas into powerful digital solutions\n🌍 **Reach**: Serving clients globally\n🏆 **Achievement**: 150+ successful projects, 98% client satisfaction\n\nWe combine technical expertise with business acumen to deliver solutions that drive growth. What brings you to GRANITE TECH today?",
-        "GRANITE TECH is your trusted technology partner:\n\n• **Experience**: Years of successful project delivery\n• **Expertise**: Full-stack development across all major technologies\n• **Approach**: Client-focused, agile, and transparent\n• **Quality**: Rigorous testing and best practices\n• **Support**: Long-term partnerships beyond project delivery\n\nWe're not just developers – we're strategic partners invested in your success. How can we help achieve your business goals?"
+        "About Quantis Technologies:\n\n🏢 **Founded**: Dedicated to digital excellence\n👥 **Team**: Experienced full-stack developers, designers, and project managers\n🎯 **Mission**: Transforming business ideas into powerful digital solutions\n🌍 **Reach**: Serving clients globally\n🏆 **Achievement**: 150+ successful projects, 98% client satisfaction\n\nWe combine technical expertise with business acumen to deliver solutions that drive growth. What brings you to Quantis Technologies today?",
+        "Quantis Technologies is your trusted technology partner:\n\n• **Experience**: Years of successful project delivery\n• **Expertise**: Full-stack development across all major technologies\n• **Approach**: Client-focused, agile, and transparent\n• **Quality**: Rigorous testing and best practices\n• **Support**: Long-term partnerships beyond project delivery\n\nWe're not just developers – we're strategic partners invested in your success. How can we help achieve your business goals?"
       ],
       default: [
         "That's a great question! I'd love to help you with that. Could you provide a bit more detail about what you're looking for?\n\nI can assist with:\n• Service information and capabilities\n• Pricing and project estimates\n• Technical questions\n• Portfolio examples\n• Getting started with your project",

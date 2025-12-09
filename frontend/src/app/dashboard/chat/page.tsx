@@ -182,7 +182,7 @@ export default function ChatPage() {
         const aiResponse: Message = {
           id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           content: generateAIResponse(newMessage.content),
-          sender: 'Granite Tech AI',
+          sender: 'Quantis Technologies AI',
           timestamp: new Date().toISOString(),
           isUser: false
         }
@@ -210,7 +210,7 @@ export default function ChatPage() {
   const generateAIResponse = (userMessage: string): string => {
     // Simple AI response simulation - in real app, this would call an AI service
     const responses = [
-      "Thank you for your message! I'm here to help you with your Granite Tech questions.",
+      "Thank you for your message! I'm here to help you with your Quantis Technologies questions.",
       "That's a great question! Let me provide you with some information about our services.",
       "I understand your concern. Our team specializes in solving complex technical challenges.",
       "Absolutely! We have extensive experience in that area. Would you like to schedule a consultation?",
@@ -472,7 +472,7 @@ export default function ChatPage() {
                       <div className="flex items-center space-x-2">
                         <UserCircleIcon className="h-6 w-6 text-gray-300" />
                         <div>
-                          <p className="text-sm font-medium mb-1">Granite Tech AI</p>
+                          <p className="text-sm font-medium mb-1">Quantis Technologies AI</p>
                           <div className="flex space-x-1">
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>

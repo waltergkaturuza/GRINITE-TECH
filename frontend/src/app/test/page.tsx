@@ -44,7 +44,7 @@ export default function TestPage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900 mb-4">
-            GRANITE TECH
+            QUANTIS TECHNOLOGIES
           </h1>
           <h2 className="text-2xl text-white mb-2">Authentication Flow Test</h2>
           <p className="text-gray-300">Testing end-to-end authentication between frontend and backend</p>

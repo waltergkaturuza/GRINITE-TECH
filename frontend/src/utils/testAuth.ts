@@ -2,7 +2,7 @@ import { authAPI } from '../lib/api'
 
 export const testAuthFlow = async () => {
   try {
-    console.log('🧪 Testing GRANITE TECH Authentication Flow...')
+    console.log('🧪 Testing Quantis Technologies Authentication Flow...')
     
     // Test Registration
     console.log('1. Testing user registration...')

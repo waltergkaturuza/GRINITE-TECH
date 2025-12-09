@@ -72,7 +72,7 @@ export default function SignupPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900">
-              GRANITE TECH
+              QUANTIS TECHNOLOGIES
             </h1>
           </Link>
           <p className="mt-2 text-gray-300">Create your account</p>

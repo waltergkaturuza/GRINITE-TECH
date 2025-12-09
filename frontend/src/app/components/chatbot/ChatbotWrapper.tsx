@@ -21,7 +21,7 @@ const ChatbotWrapper = () => {
       position="bottom-right"
       theme="default"
       enablePersistence={true}
-      customPrompt="Hello! I'm GRANITE TECH's AI assistant. I can help you learn about our services, get pricing information, explore our portfolio, and answer any questions about our development process. How can I assist you today?"
+      customPrompt="Hello! I'm Quantis Technologies' AI assistant. I can help you learn about our services, get pricing information, explore our portfolio, and answer any questions about our development process. How can I assist you today?"
       onMessageSent={handleMessageSent}
       onSessionStart={handleSessionStart}
       onError={handleError}

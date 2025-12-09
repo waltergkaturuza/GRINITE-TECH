@@ -363,7 +363,7 @@ export default function TrackRequestPage() {
                             <span className="text-sm font-medium text-gray-900">
                               {msg.senderType === 'client' ? 'You' : 
                                msg.senderType === 'system' ? 'System' : 
-                               'GRANITE TECH Team'}
+                               'Quantis Technologies Team'}
                             </span>
                             <span className="text-xs text-gray-500">{formatDate(msg.sentAt)}</span>
                           </div>

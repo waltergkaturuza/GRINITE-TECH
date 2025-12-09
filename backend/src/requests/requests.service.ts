@@ -251,7 +251,7 @@ export class RequestsService {
       const systemMessage = this.messageRepository.create({
         request,
         senderName: 'System',
-        senderEmail: 'system@granitetech.co.zw',
+        senderEmail: 'system@quantistech.co.zw',
         senderType: 'system',
         message,
         isRead: false,

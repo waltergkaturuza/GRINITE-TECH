@@ -1,4 +1,4 @@
-# GRANITE TECH Color Palette & Design System
+# Quantis Technologies Color Palette & Design System
 
 ## Brand Colors
 
@@ -159,4 +159,4 @@ color: #FFFFFF;
 4. **Warm & Approachable**: Peach tones for client-facing, friendly interactions
 5. **High Contrast**: Ensure excellent readability and accessibility
 
-This color system creates a cohesive, professional, and visually striking brand identity for GRANITE TECH that works across all digital touchpoints.
+This color system creates a cohesive, professional, and visually striking brand identity for Quantis Technologies that works across all digital touchpoints.

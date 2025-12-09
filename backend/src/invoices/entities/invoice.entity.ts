@@ -93,7 +93,7 @@ export class Invoice {
   billing_phone: string;
 
   // Company information for invoice header
-  @Column({ default: 'Granite Tech Solutions' })
+  @Column({ default: 'Quantis Technologies' })
   company_name: string;
 
   @Column('text', { nullable: true })

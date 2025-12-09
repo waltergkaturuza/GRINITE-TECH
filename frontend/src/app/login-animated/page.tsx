@@ -62,7 +62,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-yellow-400 mb-2 animate-pulse">
-              GRANITE TECH
+              QUANTIS TECHNOLOGIES
             </h1>
           </Link>
           <p className="text-gray-300 text-lg">Welcome back</p>
