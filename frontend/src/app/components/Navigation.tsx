@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bars3Icon, XMarkIcon, UserIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
@@ -52,8 +53,20 @@ export default function Navigation() {
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-granite-800 to-crimson-900 bg-clip-text text-transparent">
-              QUANTIS TECHNOLOGIES
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="relative h-9 w-9 sm:h-10 sm:w-10">
+                <Image
+                  src="/quantistech-logo.png"
+                  alt="Quantis Technologies logo"
+                  fill
+                  sizes="40px"
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <span className="hidden sm:inline text-xl font-bold bg-gradient-to-r from-granite-800 to-crimson-900 bg-clip-text text-transparent">
+                Quantis Technologies
+              </span>
             </Link>
           </div>
 

@@ -80,14 +80,23 @@ export default function InvoiceView({ invoice, onClose, onEdit }: InvoiceViewPro
         {/* Invoice Content */}
         <div className="p-8 bg-white text-gray-900">
           {/* Company Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-granite-800">
-              {invoice.company_name || 'Quantis Technologies'}
-            </h1>
-            {invoice.company_address && (
-              <p className="text-gray-600 mt-2">{invoice.company_address}</p>
-            )}
-            <div className="flex justify-center space-x-4 mt-2 text-sm text-gray-600">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <img
+                src="/quantistech-logo.png"
+                alt="Quantis Technologies logo"
+                className="h-12 w-12 object-contain"
+              />
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-granite-800">
+                  {invoice.company_name || 'Quantis Technologies'}
+                </h1>
+                {invoice.company_address && (
+                  <p className="text-gray-600 mt-1 text-sm md:text-base">{invoice.company_address}</p>
+                )}
+              </div>
+            </div>
+            <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end space-y-1 text-xs md:text-sm text-gray-600">
               {invoice.company_email && <span>Email: {invoice.company_email}</span>}
               {invoice.company_phone && <span>Phone: {invoice.company_phone}</span>}
               {invoice.company_website && <span>Web: {invoice.company_website}</span>}
