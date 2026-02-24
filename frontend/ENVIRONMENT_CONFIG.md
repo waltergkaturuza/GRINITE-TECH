@@ -9,11 +9,19 @@ This project uses different environment configurations for different deployment 
 - `.env.production` - Template for production environment (Vercel)
 - `.env.example` - Example configuration file
 
-## Production URLs (Vercel Deployment)
+## Production URLs (Custom Domain)
+
+**Backend API:** https://api.quantistechnologies.co.zw/api/v1
+**Frontend App:** https://quantistechnologies.co.zw
+**Socket.IO:** https://api.quantistechnologies.co.zw
+
+## Legacy URLs (Vercel Default - Fallback)
 
 **Backend API:** https://granite-tech-backend.vercel.app/api/v1
 **Frontend App:** https://granite-tech-frontend.vercel.app
 **Socket.IO:** https://granite-tech-backend.vercel.app
+
+**Note:** For custom domain setup instructions, see `CUSTOM_DOMAIN_SETUP.md`
 
 ## Local Development URLs
 

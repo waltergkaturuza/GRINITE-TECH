@@ -4,6 +4,8 @@
 const DEFAULT_ORIGINS = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  'https://quantistechnologies.co.zw',
+  'https://www.quantistechnologies.co.zw',
   'https://grinite-tech-frontend.vercel.app',
   'https://granite-tech-frontend.vercel.app',
   process.env.FRONTEND_URL,

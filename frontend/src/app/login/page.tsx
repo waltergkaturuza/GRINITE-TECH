@@ -1,10 +1,11 @@
-﻿'use client'
+'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
+import { trackEvent, trackPageView } from '@/lib/analytics'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,6 +14,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    trackPageView('/login')
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,8 +28,10 @@ export default function LoginPage() {
       const data = await authAPI.login(email, password)
       localStorage.setItem('token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
+      trackEvent('login_success')
       router.push('/dashboard')
     } catch (err: any) {
+      trackEvent('login_failed')
       setError(err.response?.data?.message || 'Login failed')
     } finally {
       setIsLoading(false)

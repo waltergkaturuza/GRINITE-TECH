@@ -89,12 +89,6 @@ export default function Navigation() {
             ) : (
               <div className="flex items-center space-x-4">
                 <button 
-                  onClick={openLoginModal}
-                  className="text-granite-700 hover:text-crimson-900 transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-granite-100"
-                >
-                  Login
-                </button>
-                <button 
                   onClick={openSignupModal}
                   className="bg-gradient-to-r from-crimson-900 to-crimson-800 hover:from-crimson-800 hover:to-crimson-700 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium"
                 >
@@ -180,12 +174,6 @@ export default function Navigation() {
                 </>
               ) : (
                 <>
-                  <button 
-                    onClick={openLoginModal}
-                    className="block w-full text-left px-3 py-2 text-granite-700 hover:text-crimson-900 transition-colors duration-200"
-                  >
-                    Login
-                  </button>
                   <button 
                     onClick={openSignupModal}
                     className="block px-3 py-2 bg-gradient-to-r from-crimson-900 to-crimson-800 text-white rounded-lg font-medium mx-3"

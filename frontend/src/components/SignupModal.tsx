@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
 import Modal from './Modal'
+import { trackEvent } from '@/lib/analytics'
 
 interface SignupModalProps {
   isOpen: boolean
@@ -52,9 +53,11 @@ export default function SignupModal({ isOpen, closeModal, openLoginModal }: Sign
       const data = await authAPI.register(userData)
       localStorage.setItem('token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
+      trackEvent('signup_success', { source: 'modal' })
       closeModal()
       router.push('/dashboard')
     } catch (err: any) {
+      trackEvent('signup_failed', { source: 'modal' })
       setError(err.response?.data?.message || 'Registration failed')
     } finally {
       setIsLoading(false)

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
+import { trackEvent, trackPageView } from '@/lib/analytics'
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -21,6 +22,10 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    trackPageView('/signup')
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -57,8 +62,10 @@ export default function SignupPage() {
 
       localStorage.setItem('token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
+      trackEvent('signup_success')
       router.push('/dashboard')
     } catch (err: any) {
+      trackEvent('signup_failed')
       setError(err.response?.data?.message || 'Registration failed')
     } finally {
       setIsLoading(false)

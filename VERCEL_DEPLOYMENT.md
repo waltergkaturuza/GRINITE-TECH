@@ -19,9 +19,11 @@ NODE_ENV=production
 Import same repo → Select "frontend" folder only
 Add these environment variables:
 ```
-NEXT_PUBLIC_API_URL=https://granite-tech-backend.vercel.app/api/v1
-NEXT_PUBLIC_SITE_URL=https://granite-tech-frontend.vercel.app
+NEXT_PUBLIC_API_URL=https://api.quantistechnologies.co.zw/api/v1
+NEXT_PUBLIC_SITE_URL=https://quantistechnologies.co.zw
 ```
+
+**Note:** For custom domain setup, see `CUSTOM_DOMAIN_SETUP.md`
 
 ### 3. OPTIONAL: Stripe Integration
 If you want payment processing, add:

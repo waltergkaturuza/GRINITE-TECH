@@ -12,6 +12,7 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline'
 import { requestsAPI } from '@/lib/api'
+import { trackEvent, trackPageView } from '@/lib/analytics'
 
 const services = [
   { id: 'web-development', name: 'Web Development' },
@@ -42,6 +43,8 @@ export default function ContactContent() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    trackPageView('/contact')
+
     // Pre-fill service if coming from a specific service page
     const serviceParam = searchParams.get('service')
     if (serviceParam) {
@@ -83,6 +86,10 @@ export default function ContactContent() {
       const result = await requestsAPI.submitRequest(formData, files)
       
       if (result.success) {
+        trackEvent('request_submitted', {
+          serviceInterested: formData.serviceInterested,
+          projectBudget: formData.projectBudget,
+        })
         setIsSubmitted(true)
         setFormData({
           fullName: '',
@@ -96,9 +103,11 @@ export default function ContactContent() {
         })
         setFiles([])
       } else {
+        trackEvent('request_failed', { reason: result.message })
         setError(result.message || 'Failed to send message. Please try again.')
       }
     } catch (err: any) {
+      trackEvent('request_failed', { reason: err.response?.data?.message })
       setError(err.response?.data?.message || 'Failed to send message. Please try again.')
       console.error('Form submission error:', err)
     } finally {

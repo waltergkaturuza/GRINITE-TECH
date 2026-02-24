@@ -18,6 +18,6 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://grinite-tech-frontend.vercel.app
+        value: https://quantistechnologies.co.zw
       - key: ALLOWED_ORIGINS
-        value: https://grinite-tech-frontend.vercel.app,https://granite-tech-frontend.vercel.app
+        value: https://quantistechnologies.co.zw,https://www.quantistechnologies.co.zw,https://grinite-tech-frontend.vercel.app,https://granite-tech-frontend.vercel.app

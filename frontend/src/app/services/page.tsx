@@ -9,6 +9,7 @@ import {
   FunnelIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
+import { trackPageView } from '@/lib/analytics'
 
 interface Service {
   id: string
@@ -53,6 +54,8 @@ export default function ServicesPage() {
 
   // Fetch services from API
   useEffect(() => {
+    trackPageView('/services')
+
     const fetchServices = async () => {
       try {
         setLoading(true)

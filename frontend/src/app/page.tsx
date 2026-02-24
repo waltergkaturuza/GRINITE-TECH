@@ -1,8 +1,13 @@
 import Link from 'next/link'
 import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline'
 import Navigation from './components/Navigation'
+import { useEffect } from 'react'
+import { trackPageView } from '@/lib/analytics'
 
 export default function HomePage() {
+  useEffect(() => {
+    trackPageView('/')
+  }, [])
   return (
     <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
       {/* Navigation */}
@@ -149,9 +154,14 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-granite-700 mt-8 pt-8 text-center">
+          <div className="border-t border-granite-700 mt-8 pt-8 text-center space-y-2">
             <p className="text-gray-400">
               &copy; 2024 <span className="text-crimson-300">Quantis Technologies</span>. All rights reserved.
+            </p>
+            <p className="text-gray-500 text-sm">
+              <Link href="/login" className="hover:text-crimson-300 underline underline-offset-2">
+                Admin / Staff Login
+              </Link>
             </p>
           </div>
         </div>

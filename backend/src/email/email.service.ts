@@ -129,7 +129,7 @@ export class EmailService {
           <p style="color: #6b7280; font-size: 14px; margin: 0;">
             <strong>Quantis Technologies</strong><br>
             Professional Web & Software Development<br>
-            📧 info@quantistech.co.zw | 🌐 www.quantistech.co.zw
+            📧 info@quantistechnologies.co.zw | 🌐 www.quantistechnologies.co.zw
           </p>
           
           <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">
