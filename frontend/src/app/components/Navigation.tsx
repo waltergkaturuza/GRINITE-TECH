@@ -15,6 +15,7 @@ export default function Navigation() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isServicesOpen, setIsServicesOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -80,9 +81,66 @@ export default function Navigation() {
               <MagnifyingGlassIcon className="h-5 w-5" />
               <span className="text-xs text-granite-500">Search</span>
             </button>
-            <Link href="/services" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
-              Services
-            </Link>
+            <div
+              className="relative"
+              onMouseEnter={() => setIsServicesOpen(true)}
+              onMouseLeave={() => setIsServicesOpen(false)}
+            >
+              <button
+                className="inline-flex items-center text-granite-700 hover:text-crimson-900 transition-colors duration-200"
+              >
+                <span>Services</span>
+                <svg
+                  className="ml-1 h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5.5 7.5L10 12L14.5 7.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {isServicesOpen && (
+                <div className="absolute left-0 mt-2 w-64 rounded-xl shadow-lg bg-white border border-granite-200 py-2 z-50">
+                  <Link
+                    href="/services"
+                    className="block px-4 py-2 text-sm text-granite-700 hover:bg-granite-50 hover:text-crimson-900"
+                  >
+                    All services
+                  </Link>
+                  <div className="my-1 h-px bg-granite-100" />
+                  <Link
+                    href="/services/custom-software"
+                    className="block px-4 py-2 text-sm text-granite-700 hover:bg-granite-50 hover:text-crimson-900"
+                  >
+                    Custom software
+                  </Link>
+                  <Link
+                    href="/services/mobile-apps"
+                    className="block px-4 py-2 text-sm text-granite-700 hover:bg-granite-50 hover:text-crimson-900"
+                  >
+                    Mobile apps
+                  </Link>
+                  <Link
+                    href="/services/business-automation"
+                    className="block px-4 py-2 text-sm text-granite-700 hover:bg-granite-50 hover:text-crimson-900"
+                  >
+                    Business automation
+                  </Link>
+                  <Link
+                    href="/services/ecommerce"
+                    className="block px-4 py-2 text-sm text-granite-700 hover:bg-granite-50 hover:text-crimson-900"
+                  >
+                    E‑commerce & digital products
+                  </Link>
+                </div>
+              )}
+            </div>
             <Link href="/products" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
               Products
             </Link>

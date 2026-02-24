@@ -313,6 +313,94 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Strategic Service Areas */}
+      <section className="pb-20 bg-white">
+        <div className="wide-container">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold text-granite-900 mb-3">
+              Strategic Service Areas
+            </h2>
+            <p className="text-granite-600 max-w-2xl mx-auto">
+              Deep‑dive into our core capabilities across custom software, mobile, automation, and commerce.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Link
+              href="/services/custom-software"
+              className="group rounded-2xl border border-granite-200 bg-white p-5 hover:border-crimson-300 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-lg font-semibold text-granite-900 mb-2">
+                  Custom Software
+                </h3>
+                <p className="text-sm text-granite-600 mb-3">
+                  Web and cloud systems tailored to how your business actually works.
+                </p>
+              </div>
+              <span className="inline-flex items-center text-sm font-medium text-crimson-700 group-hover:text-crimson-800">
+                Explore solutions
+                <ArrowRightIcon className="ml-1 h-4 w-4" />
+              </span>
+            </Link>
+
+            <Link
+              href="/services/mobile-apps"
+              className="group rounded-2xl border border-granite-200 bg-white p-5 hover:border-crimson-300 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-lg font-semibold text-granite-900 mb-2">
+                  Mobile Apps
+                </h3>
+                <p className="text-sm text-granite-600 mb-3">
+                  Cross‑platform apps that keep customers and teams connected on the move.
+                </p>
+              </div>
+              <span className="inline-flex items-center text-sm font-medium text-crimson-700 group-hover:text-crimson-800">
+                Explore solutions
+                <ArrowRightIcon className="ml-1 h-4 w-4" />
+              </span>
+            </Link>
+
+            <Link
+              href="/services/business-automation"
+              className="group rounded-2xl border border-granite-200 bg-white p-5 hover:border-crimson-300 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-lg font-semibold text-granite-900 mb-2">
+                  Business Automation
+                </h3>
+                <p className="text-sm text-granite-600 mb-3">
+                  Reduce manual work with workflows, integrations, and smart dashboards.
+                </p>
+              </div>
+              <span className="inline-flex items-center text-sm font-medium text-crimson-700 group-hover:text-crimson-800">
+                Explore solutions
+                <ArrowRightIcon className="ml-1 h-4 w-4" />
+              </span>
+            </Link>
+
+            <Link
+              href="/services/ecommerce"
+              className="group rounded-2xl border border-granite-200 bg-white p-5 hover:border-crimson-300 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-lg font-semibold text-granite-900 mb-2">
+                  E‑Commerce & Digital Products
+                </h3>
+                <p className="text-sm text-granite-600 mb-3">
+                  Online stores, subscriptions, and digital marketplaces built for growth.
+                </p>
+              </div>
+              <span className="inline-flex items-center text-sm font-medium text-crimson-700 group-hover:text-crimson-800">
+                Explore solutions
+                <ArrowRightIcon className="ml-1 h-4 w-4" />
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-granite-900 to-granite-800">
         <div className="wide-container text-center">

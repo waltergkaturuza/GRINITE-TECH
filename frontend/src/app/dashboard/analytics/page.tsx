@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { 
   ChartBarIcon,
   ArrowTrendingUpIcon,
-  UsersIcon
+  UsersIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import api from '@/lib/api';
 
@@ -67,6 +68,74 @@ export default function AnalyticsPage() {
         </p>
       </div>
 
+      {/* Business KPIs (original financial analytics) */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CurrencyDollarIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-blue-100 truncate">Total Revenue</dt>
+                  <dd className="text-lg font-medium text-white">$87,500</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-green-600 to-green-700 overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <UsersIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-green-100 truncate">Active Clients</dt>
+                  <dd className="text-lg font-medium text-white">12</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-yellow-600 to-yellow-700 overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ChartBarIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-yellow-100 truncate">Projects</dt>
+                  <dd className="text-lg font-medium text-white">25</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-purple-100 truncate">Growth</dt>
+                  <dd className="text-lg font-medium text-white">+23%</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Page visits & events tracking */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 overflow-hidden shadow rounded-lg">
           <div className="p-5">
