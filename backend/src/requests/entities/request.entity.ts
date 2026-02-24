@@ -32,7 +32,8 @@ export class ProjectRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  // Nullable for existing rows; new requests will always set this
+  @Column({ unique: true, nullable: true })
   trackingId: string;
 
   @Column()
