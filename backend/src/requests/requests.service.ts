@@ -217,9 +217,30 @@ export class RequestsService {
   }
 
   private async saveRequestDocuments(request: ProjectRequest, files: any[]): Promise<void> {
+    // In serverless (read-only) environments like Vercel, skip writing to disk
+    const isReadOnlyFs =
+      process.env.VERCEL === '1' || process.env.VERCEL === 'true' || process.env.SERVERLESS === 'true';
+
+    if (isReadOnlyFs) {
+      // Optionally still record metadata without a physical file path
+      for (const file of files) {
+        const document = this.documentRepository.create({
+          request,
+          originalName: file.originalname,
+          fileName: file.originalname,
+          filePath: '',
+          fileSize: file.size,
+          mimeType: file.mimetype,
+        });
+
+        await this.documentRepository.save(document);
+      }
+
+      return;
+    }
+
     const uploadDir = path.join(process.cwd(), 'uploads', 'requests', request.id);
-    
-    // Create directory if it doesn't exist
+
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -227,11 +248,9 @@ export class RequestsService {
     for (const file of files) {
       const fileName = `${Date.now()}-${file.originalname}`;
       const filePath = path.join(uploadDir, fileName);
-      
-      // Save file to disk
+
       fs.writeFileSync(filePath, file.buffer);
 
-      // Save file info to database
       const document = this.documentRepository.create({
         request,
         originalName: file.originalname,

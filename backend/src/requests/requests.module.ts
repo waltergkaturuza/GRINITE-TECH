@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { RequestsService } from './requests.service';
 import { RequestsController } from './requests.controller';
 import { ProjectRequest, RequestDocument, RequestMessage, MessageAttachment } from './entities/request.entity';
 import { User } from '../users/entities/user.entity';
 import { EmailModule } from '../email/email.module';
-import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 @Module({
@@ -19,17 +19,7 @@ import { extname } from 'path';
       User,
     ]),
     MulterModule.register({
-      storage: diskStorage({
-        destination: './uploads/temp',
-        filename: (req, file, cb) => {
-          // Generate a unique filename
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       limits: {
         fileSize: 10 * 1024 * 1024, // 10MB limit
         files: 10, // Maximum 10 files
