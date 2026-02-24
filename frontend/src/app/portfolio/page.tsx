@@ -20,8 +20,17 @@ export default function Portfolio() {
     async function fetchData() {
       try {
         setLoading(true)
-        const projectsResponse = await projectsAPI.getProjects()
-        setProjects(projectsResponse || [])
+        const projectsResponse: any = await projectsAPI.getProjects()
+
+        const list = Array.isArray(projectsResponse?.data)
+          ? projectsResponse.data
+          : Array.isArray(projectsResponse?.projects)
+          ? projectsResponse.projects
+          : Array.isArray(projectsResponse)
+          ? projectsResponse
+          : []
+
+        setProjects(list)
       } catch (err) {
         console.error('Error fetching data:', err)
         setError('Failed to load portfolio data')

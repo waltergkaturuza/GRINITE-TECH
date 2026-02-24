@@ -115,11 +115,21 @@ export default function ProjectsPage() {
       if (statusFilter) params.status = statusFilter
       if (typeFilter) params.type = typeFilter
 
-      const response = await projectsAPI.getProjects(params)
-      setProjects(response.projects || [])
-      
+      const response: any = await projectsAPI.getProjects(params)
+
+      // Normalise backend shape: support {success,data}, {projects}, or raw array
+      const list: Project[] = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response?.projects)
+        ? response.projects
+        : Array.isArray(response)
+        ? response
+        : []
+
+      setProjects(list)
+
       // Calculate stats from loaded projects
-      const projectStats = calculateStats(response.projects || [])
+      const projectStats = calculateStats(list)
       setStats(projectStats)
     } catch (error) {
       console.error('Error loading projects:', error)
@@ -142,10 +152,12 @@ export default function ProjectsPage() {
 
   const loadClients = async () => {
     try {
-      const response = await usersAPI.getUsers({ role: 'client' })
-      setClients(response || [])
+      const response: any = await usersAPI.getUsers({ role: 'client' })
+      const list = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : []
+      setClients(list)
     } catch (error) {
       console.error('Error loading clients:', error)
+      setClients([])
     }
   }
 
