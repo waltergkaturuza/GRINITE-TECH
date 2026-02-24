@@ -1,18 +1,24 @@
 'use client'
 
 import EnhancedChatbot from './EnhancedChatbot'
+import { trackEvent } from '@/lib/analytics'
 
 const ChatbotWrapper = () => {
   const handleMessageSent = (message: any) => {
-    // Analytics tracking could go here
-    console.log('Message sent:', message.content)
+    trackEvent('chat_message_sent', {
+      length: message?.content?.length ?? 0,
+    })
   }
 
   const handleSessionStart = (session: any) => {
-    console.log('Chat session started:', session.id)
+    trackEvent('chat_session_started', {
+      sessionId: session?.id,
+      initialUrl: typeof window !== 'undefined' ? window.location.pathname : undefined,
+    })
   }
 
   const handleError = (error: string) => {
+    trackEvent('chat_error', { error })
     console.error('Chatbot error:', error)
   }
 

@@ -154,7 +154,7 @@ export class ChatbotService {
     const suggestedActions = [
       { label: "View Our Services", action: "navigate", url: "/services" },
       { label: "See Portfolio", action: "navigate", url: "/portfolio" },
-      { label: "Get Quote", action: "navigate", url: "/contact" },
+      { label: "Get Quote", action: "navigate", url: "/contact?source=chat" },
       { label: "Learn About Process", action: "chat", url: "#" }
     ]
 
