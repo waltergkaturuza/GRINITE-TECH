@@ -3,15 +3,17 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bars3Icon, XMarkIcon, UserIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, UserIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import LoginModal from '@/components/LoginModal'
 import SignupModal from '@/components/SignupModal'
+import SearchCommand from '@/components/SearchCommand'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -57,6 +59,14 @@ export default function Navigation() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="text-granite-500 hover:text-crimson-900 transition-colors duration-200 flex items-center space-x-1 px-2 py-1 rounded-lg hover:bg-granite-100"
+              aria-label="Search"
+            >
+              <MagnifyingGlassIcon className="h-5 w-5" />
+              <span className="text-xs text-granite-500">Search</span>
+            </button>
             <Link href="/services" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
               Services
             </Link>
@@ -186,6 +196,9 @@ export default function Navigation() {
           </div>
         )}
       </div>
+
+      {/* Search overlay */}
+      <SearchCommand isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Modals */}
       <LoginModal 
