@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline'
 import Navigation from './components/Navigation'
