@@ -57,7 +57,7 @@ export default function Navigation() {
             <Link href="/" className="flex items-center space-x-3">
               <div className="relative h-9 w-9 sm:h-10 sm:w-10">
                 <Image
-                  src="/quantistech-logo.png"
+                  src="/logo.png"
                   alt="Quantis Technologies logo"
                   fill
                   sizes="40px"

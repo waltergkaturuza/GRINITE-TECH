@@ -83,7 +83,7 @@ export default function InvoiceView({ invoice, onClose, onEdit }: InvoiceViewPro
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div className="flex items-center space-x-4">
               <img
-                src="/quantistech-logo.png"
+                src="/logo.png"
                 alt="Quantis Technologies logo"
                 className="h-12 w-12 object-contain"
               />

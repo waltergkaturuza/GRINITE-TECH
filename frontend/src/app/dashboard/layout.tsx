@@ -183,7 +183,7 @@ export default function DashboardLayout({
 
         {/* Page header */}
         <header className="bg-white/5 backdrop-blur-sm border-b border-white/10">
-          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-bold text-white">Dashboard</h1>
@@ -221,10 +221,8 @@ export default function DashboardLayout({
 
         {/* Main content area */}
         <main className="flex-1">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
+          <div className="py-6 px-4 sm:px-6 lg:px-8">
+            {children}
           </div>
         </main>
       </div>
