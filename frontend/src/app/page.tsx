@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline'
 import Navigation from './components/Navigation'
 import { useEffect } from 'react'
@@ -18,6 +19,21 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-granite-800/90 via-crimson-900/80 to-jungle-900/90"></div>
+
+        {/* Floating logo top-left */}
+        <div className="absolute top-8 left-8 sm:top-12 sm:left-12 z-10">
+          <div className="relative w-28 h-28 sm:w-36 sm:h-36 lg:w-44 lg:h-44 drop-shadow-xl">
+            <Image
+              src="/logo.png"
+              alt="Quantis Technologies"
+              fill
+              sizes="(max-width: 640px) 112px, (max-width: 1024px) 144px, 176px"
+              className="object-contain opacity-95"
+              priority
+            />
+          </div>
+        </div>
+
         <div className="wide-container px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
