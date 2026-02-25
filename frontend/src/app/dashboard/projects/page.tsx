@@ -8,17 +8,15 @@ import {
   FolderIcon, 
   PlusIcon, 
   MagnifyingGlassIcon,
-  FunnelIcon,
   PencilIcon,
   TrashIcon,
-  CalendarIcon,
   CurrencyDollarIcon,
   ClockIcon,
   UserIcon,
   ChartBarIcon,
-  DocumentTextIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
+import ProjectFormModal from './ProjectFormModal'
 
 // Types
 interface Project {
@@ -87,19 +85,6 @@ export default function ProjectsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
-
-  // Form state
-  const [projectForm, setProjectForm] = useState({
-    title: '',
-    description: '',
-    type: 'website',
-    status: 'planning',
-    budget: '',
-    startDate: '',
-    endDate: '',
-    estimatedHours: '',
-    clientId: ''
-  })
 
   // Load data
   useEffect(() => {
@@ -187,28 +172,20 @@ export default function ProjectsPage() {
 
 
 
-  const handleCreateProject = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleCreateProject = async (projectData: Record<string, any>) => {
     try {
-      const projectData = {
-        ...projectForm,
-        budget: projectForm.budget ? parseFloat(projectForm.budget) : undefined,
-        estimatedHours: projectForm.estimatedHours ? parseInt(projectForm.estimatedHours) : undefined
-      }
-      
-      await projectsAPI.createProject(projectData)
-      setIsCreateModalOpen(false)
-      setProjectForm({
-        title: '',
-        description: '',
-        type: 'website',
-        status: 'planning',
-        budget: '',
-        startDate: '',
-        endDate: '',
-        estimatedHours: '',
-        clientId: ''
+      await projectsAPI.createProject({
+        title: projectData.title,
+        description: projectData.description,
+        type: projectData.type,
+        status: projectData.status,
+        budget: projectData.budget,
+        startDate: projectData.startDate,
+        endDate: projectData.endDate,
+        estimatedHours: projectData.estimatedHours,
+        clientId: projectData.clientId,
       })
+      setIsCreateModalOpen(false)
       loadProjects()
     } catch (error) {
       console.error('Error creating project:', error)
@@ -216,17 +193,9 @@ export default function ProjectsPage() {
     }
   }
 
-  const handleUpdateProject = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleUpdateProject = async (projectData: Record<string, any>) => {
     if (!editingProject) return
-
     try {
-      const projectData = {
-        ...projectForm,
-        budget: projectForm.budget ? parseFloat(projectForm.budget) : undefined,
-        estimatedHours: projectForm.estimatedHours ? parseInt(projectForm.estimatedHours) : undefined
-      }
-      
       await projectsAPI.updateProject(editingProject.id, projectData)
       setIsEditModalOpen(false)
       setEditingProject(null)
@@ -251,17 +220,6 @@ export default function ProjectsPage() {
 
   const openEditModal = (project: Project) => {
     setEditingProject(project)
-    setProjectForm({
-      title: project.title,
-      description: project.description || '',
-      type: project.type,
-      status: project.status,
-      budget: project.budget?.toString() || '',
-      startDate: project.startDate || '',
-      endDate: project.endDate || '',
-      estimatedHours: project.estimatedHours?.toString() || '',
-      clientId: project.client?.id || ''
-    })
     setIsEditModalOpen(true)
   }
 
@@ -560,334 +518,27 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {/* Create Project Modal */}
+      {/* Create Project Modal - SERTIS style */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Create New Project</h3>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateProject} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Project Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={projectForm.title}
-                    onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter project title"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={projectForm.description}
-                    onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Project description..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Project Type *
-                  </label>
-                  <select
-                    required
-                    value={projectForm.type}
-                    onChange={(e) => setProjectForm({ ...projectForm, type: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {PROJECT_TYPES.map(type => (
-                      <option key={type.value} value={type.value}>{type.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status *
-                  </label>
-                  <select
-                    required
-                    value={projectForm.status}
-                    onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {PROJECT_STATUSES.map(status => (
-                      <option key={status.value} value={status.value}>{status.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Client
-                  </label>
-                  <select
-                    value={projectForm.clientId}
-                    onChange={(e) => setProjectForm({ ...projectForm, clientId: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select a client</option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>
-                        {client.firstName} {client.lastName} ({client.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Budget ($)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={projectForm.budget}
-                    onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={projectForm.startDate}
-                    onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={projectForm.endDate}
-                    onChange={(e) => setProjectForm({ ...projectForm, endDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Estimated Hours
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={projectForm.estimatedHours}
-                    onChange={(e) => setProjectForm({ ...projectForm, estimatedHours: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                >
-                  Create Project
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <ProjectFormModal
+          mode="create"
+          projectTypes={PROJECT_TYPES}
+          clients={clients}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateProject}
+        />
       )}
 
-      {/* Edit Project Modal */}
+      {/* Edit Project Modal - SERTIS style */}
       {isEditModalOpen && editingProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Edit Project</h3>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateProject} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Project Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={projectForm.title}
-                    onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={projectForm.description}
-                    onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Project Type *
-                  </label>
-                  <select
-                    required
-                    value={projectForm.type}
-                    onChange={(e) => setProjectForm({ ...projectForm, type: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {PROJECT_TYPES.map(type => (
-                      <option key={type.value} value={type.value}>{type.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status *
-                  </label>
-                  <select
-                    required
-                    value={projectForm.status}
-                    onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {PROJECT_STATUSES.map(status => (
-                      <option key={status.value} value={status.value}>{status.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Client
-                  </label>
-                  <select
-                    value={projectForm.clientId}
-                    onChange={(e) => setProjectForm({ ...projectForm, clientId: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select a client</option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>
-                        {client.firstName} {client.lastName} ({client.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Budget ($)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={projectForm.budget}
-                    onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={projectForm.startDate}
-                    onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={projectForm.endDate}
-                    onChange={(e) => setProjectForm({ ...projectForm, endDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Estimated Hours
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={projectForm.estimatedHours}
-                    onChange={(e) => setProjectForm({ ...projectForm, estimatedHours: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                >
-                  Update Project
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <ProjectFormModal
+          mode="edit"
+          project={editingProject}
+          projectTypes={PROJECT_TYPES}
+          clients={clients}
+          onClose={() => { setIsEditModalOpen(false); setEditingProject(null) }}
+          onSubmit={handleUpdateProject}
+        />
       )}
     </div>
   )

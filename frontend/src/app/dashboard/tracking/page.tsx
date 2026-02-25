@@ -582,7 +582,7 @@ export default function ProjectTrackingPage() {
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false)
   
   const [filters, setFilters] = useState({
-    status: 'active',
+    status: '', // empty = fetch all existing projects
     priority: '',
     search: ''
   })
@@ -608,12 +608,12 @@ export default function ProjectTrackingPage() {
       setLoading(true)
       setError(null)
       
-      // Map frontend status to backend (active -> in_progress)
+      // Map frontend status to backend (active -> in_progress); empty = all existing projects
       const apiStatus = filters.status === 'active' ? 'in_progress' : filters.status || undefined
       const res = await projectsAPI.getProjects({
         status: apiStatus,
         search: filters.search || undefined,
-        limit: 100,
+        limit: 500, // fetch all existing projects
       })
       const rawProjects = Array.isArray(res) ? res : res.projects ?? res.data ?? []
       const list: Project[] = Array.isArray(rawProjects) ? rawProjects : []
