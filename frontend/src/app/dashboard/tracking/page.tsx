@@ -3,6 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { projectsAPI } from '@/lib/api'
+import {
+  Bars3Icon,
+  Squares2X2Icon,
+  CalendarDaysIcon,
+  FunnelIcon,
+  ChevronUpDownIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline'
+import ProjectDetailsModal from './ProjectDetailsModal'
+import EditProjectModal from './EditProjectModal'
 import { 
   ClockIcon,
   CheckCircleIcon,
@@ -572,10 +582,13 @@ export default function ProjectTrackingPage() {
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false)
   
   const [filters, setFilters] = useState({
-    status: '',
+    status: 'active',
     priority: '',
     search: ''
   })
+  const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'timeline'>('list')
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   useEffect(() => {
     loadProjects()
@@ -595,14 +608,18 @@ export default function ProjectTrackingPage() {
       setLoading(true)
       setError(null)
       
-      // Get projects from API
-      const response = await projectsAPI.getProjects({
-        status: filters.status || undefined,
-        search: filters.search || undefined
+      // Map frontend status to backend (active -> in_progress)
+      const apiStatus = filters.status === 'active' ? 'in_progress' : filters.status || undefined
+      const res = await projectsAPI.getProjects({
+        status: apiStatus,
+        search: filters.search || undefined,
+        limit: 100,
       })
+      const rawProjects = Array.isArray(res) ? res : res.projects ?? res.data ?? []
+      const list: Project[] = Array.isArray(rawProjects) ? rawProjects : []
       
       // Transform projects to include tracking data
-      const projectsWithTracking: ProjectTrackingData[] = response.data.map((project: Project) => ({
+      const projectsWithTracking: ProjectTrackingData[] = list.map((project: Project) => ({
         ...project,
         // Convert backend status to frontend status
         status: mapBackendStatus(project.status),
@@ -899,11 +916,41 @@ export default function ProjectTrackingPage() {
     )
   })
 
+  const handleSaveProject = async (data: Record<string, any>) => {
+    if (!selectedProject) return
+    const payload: Record<string, any> = {
+      title: data.title,
+      description: data.description,
+      status: data.status === 'active' ? 'in_progress' : data.status,
+      budget: data.budget,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      completionPercentage: data.completionPercentage,
+    }
+    try {
+      await projectsAPI.updateProject(selectedProject.id, payload)
+      loadProjects()
+      setIsEditModalOpen(false)
+      const updated = { ...selectedProject, ...payload, ...data }
+      setSelectedProject(updated)
+      setProjects(projects.map(p => p.id === selectedProject.id ? updated : p))
+    } catch (e) {
+      console.error('Failed to update project:', e)
+    }
+  }
+
+  const statusCounts = {
+    active: projects.filter(p => p.status === 'active').length,
+    planning: projects.filter(p => p.status === 'planning').length,
+    onHold: projects.filter(p => p.status === 'paused').length,
+    completed: projects.filter(p => p.status === 'completed').length,
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading project tracking data...</p>
         </div>
       </div>
@@ -911,227 +958,236 @@ export default function ProjectTrackingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Project Tracking</h1>
-          <p className="mt-2 text-gray-600">Monitor project progress, timelines, and budgets</p>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* SERTIS-style orange header */}
+      <div className="bg-orange-500 flex-shrink-0">
+        <div className="flex items-center gap-4 px-4 py-4">
+          <div className="bg-white/20 rounded-lg p-2">
+            <Bars3Icon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">Project Management</h1>
+            <p className="text-orange-100 text-sm">Manage and track all your projects with advanced filtering and multiple view modes</p>
+          </div>
         </div>
+      </div>
 
-        {/* Show project list if no project selected */}
-        {!selectedProject ? (
-          <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <FolderIcon className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Total Projects</p>
-                    <p className="text-2xl font-semibold text-gray-900">{projects.length}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <PlayIcon className="h-8 w-8 text-green-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Active</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {projects.filter(p => p.status === 'active').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <CheckCircleIcon className="h-8 w-8 text-green-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Completed</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {projects.filter(p => p.status === 'completed').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <CurrencyDollarIcon className="h-8 w-8 text-green-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Total Budget</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      ${projects.reduce((sum, p) => sum + (p.budget || 0), 0).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {/* Two-column layout */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left sidebar - project list */}
+        <aside className="w-72 border-r border-gray-200 bg-gray-50 flex flex-col flex-shrink-0">
+          <div className="p-3 space-y-3">
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500"
+            />
+            <div className="flex gap-2">
+              <button className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 ${
+                !filters.status ? 'bg-orange-500 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}>
+                <FunnelIcon className="w-4 h-4" />
+                Filters
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, status: filters.status === 'active' ? '' : 'active' })}
+                className={`px-3 py-2 rounded-lg text-sm font-medium ${filters.status === 'active' ? 'bg-orange-500 text-white' : 'bg-white border border-gray-300 text-gray-700'}`}
+              >
+                Active
+              </button>
             </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select
-                    value={filters.status}
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">All Statuses</option>
-                    {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                      <option key={key} value={key}>
-                        {config.label}
-                      </option>
-                    ))}
-                  </select>
+          </div>
+          <div className="flex-1 overflow-y-auto px-3 pb-4">
+            <p className="text-xs text-gray-500 mb-2">Showing {filteredProjects.length} of {projects.length} projects</p>
+            <div className="space-y-1">
+              {filteredProjects.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigateToProject(p)}
+                  className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm ${
+                    selectedProject?.id === p.id ? 'bg-orange-50 border border-orange-200' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <input type="checkbox" className="rounded" onClick={(e) => e.stopPropagation()} />
+                  <span className="flex-1 truncate font-medium text-gray-900">{p.title}</span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                  <select
-                    value={filters.priority}
-                    onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">All Priorities</option>
-                    {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-                      <option key={key} value={key}>
-                        {config.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                  <input
-                    type="text"
-                    value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                    placeholder="Search projects or clients..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={() => setFilters({ status: '', priority: '', search: '' })}
-                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
+          </div>
+        </aside>
 
-            {/* Project List */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* Main content */}
+        <main className="flex-1 overflow-auto">
+          {/* Toolbar */}
+          <div className="border-b border-gray-200 bg-white px-4 py-3 flex flex-wrap items-center gap-4">
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-48 focus:ring-orange-500 focus:border-orange-500"
+            />
+            <button className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-1">
+              <FunnelIcon className="w-4 h-4" /> Filters
+            </button>
+            <button
+              onClick={() => setFilters({ ...filters, status: 'active' })}
+              className={`px-3 py-2 rounded-lg text-sm font-medium ${filters.status === 'active' ? 'bg-orange-500 text-white' : 'border border-gray-300 text-gray-700'}`}
+            >
+              Active
+            </button>
+            <button className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-1">
+              <ChevronUpDownIcon className="w-4 h-4" /> Sort
+            </button>
+            <div className="flex-1" />
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              {[
+                { id: 'list' as const, label: 'List', Icon: Bars3Icon },
+                { id: 'kanban' as const, label: 'Kanban', Icon: Squares2X2Icon },
+                { id: 'timeline' as const, label: 'Timeline', Icon: CalendarDaysIcon },
+              ].map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setViewMode(id)}
+                  className={`px-4 py-2 text-sm font-medium flex items-center gap-2 ${
+                    viewMode === id ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Summary bar */}
+          <div className="px-4 py-2 border-b border-gray-200 flex items-center gap-4 text-sm text-gray-600">
+            <span>Showing {filteredProjects.length} of {projects.length} projects</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Active {statusCounts.active}</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Planning {statusCounts.planning}</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500" /> On Hold {statusCounts.onHold}</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-500" /> Completed {statusCounts.completed}</span>
+          </div>
+
+          {/* Content area - List view when no project selected, or detail view */}
+          {!selectedProject ? (
+            viewMode === 'list' ? (
+              <>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Project
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Priority
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Progress
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Timeline
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Budget
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="px-4 py-2 w-8"><input type="checkbox" className="rounded" /></th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Manager</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Budget</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">HEALTH</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProjects.map((project) => (
-                      <tr key={project.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                            <div className="text-sm text-gray-500">
-                              {project.client ? `${project.client.firstName} ${project.client.lastName}` : 'No client assigned'}
+                    {filteredProjects.map((project) => {
+                      const daysLeft = project.endDate ? Math.ceil((new Date(project.endDate).getTime() - Date.now()) / 86400000) : null
+                      return (
+                        <tr key={project.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3"><input type="checkbox" className="rounded" /></td>
+                          <td className="px-4 py-3">
+                            <div>
+                              <div className="font-medium text-gray-900">{project.title}</div>
+                              <div className="text-xs text-gray-500">{project.description || '—'}</div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getStatusBadge(project.status)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getPriorityBadge(project.priority)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-3">
-                              <div
-                                className="bg-blue-600 h-2 rounded-full"
-                                style={{ width: `${project.completionPercentage}%` }}
-                              ></div>
+                          </td>
+                          <td className="px-4 py-3">{getStatusBadge(project.status)}</td>
+                          <td className="px-4 py-3">{getPriorityBadge(project.priority)}</td>
+                          <td className="px-4 py-3">
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${project.completionPercentage}%` }} />
+                                </div>
+                                <span className="text-sm">{project.completionPercentage}%</span>
+                              </div>
+                              <div className="text-xs text-gray-500">0/0 tasks</div>
                             </div>
-                            <span className="text-sm text-gray-900">{project.completionPercentage}%</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {project.startDate ? formatDate(project.startDate) : 'No start date'} - {project.endDate ? formatDate(project.endDate) : 'No end date'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            ${project.spentBudget.toLocaleString()} / ${(project.budget || 0).toLocaleString()}
-                          </div>
-                          <div className="w-16 bg-gray-200 rounded-full h-1 mt-1">
-                            <div
-                              className="bg-green-600 h-1 rounded-full"
-                              style={{ width: `${Math.min((project.spentBudget / (project.budget || 1)) * 100, 100)}%` }}
-                            ></div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => navigateToProject(project)}
-                            className="text-blue-600 hover:text-blue-900 mr-2"
-                          >
-                            View Details
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-xs font-medium text-orange-800">
+                                {project.client ? `${project.client.firstName?.[0] || ''}${project.client.lastName?.[0] || ''}`.toUpperCase() || '—' : '—'}
+                              </div>
+                              <span className="text-sm text-gray-900">
+                                {project.client ? `${project.client.firstName || ''} ${project.client.lastName || ''}`.trim() : '—'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-sm">
+                              <div>${(project.budget || 0).toLocaleString()}</div>
+                              <div className="text-xs text-gray-500">Spent ${project.spentBudget?.toLocaleString() || '0'}</div>
+                              <div className="text-xs text-gray-500">Remaining ${((project.budget || 0) - (project.spentBudget || 0)).toLocaleString()}</div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center gap-1 text-sm text-green-700">
+                              <span className="w-2 h-2 rounded-full bg-green-500" /> Healthy
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-sm">
+                              <div>{project.endDate ? formatDate(project.endDate) : '—'}</div>
+                              <div className="text-xs text-gray-500">
+                                {daysLeft != null ? (daysLeft > 0 ? `${daysLeft} days left` : 'Overdue') : ''}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => { setSelectedProject(project); setIsDetailsModalOpen(true) }}
+                                className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"
+                                title="View details"
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => { setSelectedProject(project); setIsEditModalOpen(true) }}
+                                className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"
+                                title="Edit"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
-
               {filteredProjects.length === 0 && !loading && (
                 <div className="text-center py-12">
                   <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {filters.status || filters.priority || filters.search 
-                      ? 'Try adjusting your filters.' 
-                      : 'No projects are currently being tracked.'
-                    }
-                  </p>
+                  <p className="mt-1 text-sm text-gray-500">Try adjusting your filters.</p>
                 </div>
               )}
-            </div>
-          </>
-        ) : (
+              </>
+            ) : viewMode === 'kanban' ? (
+              <div className="p-4">
+                <p className="text-gray-500 text-sm">Kanban view – coming soon</p>
+              </div>
+            ) : (
+              <div className="p-4">
+                <p className="text-gray-500 text-sm">Timeline view – coming soon</p>
+              </div>
+            )
+        ) : selectedProject ? (
           /* Detailed Project View */
           <div className="space-y-6">
             {/* Project Header */}
@@ -1149,13 +1205,16 @@ export default function ProjectTrackingPage() {
                   {getPriorityBadge(selectedProject.priority)}
                 </div>
                 <div className="flex space-x-2">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
-                    <PencilIcon className="w-4 h-4 inline mr-2" />
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
+                  >
+                    <PencilIcon className="w-4 h-4" />
                     Edit Project
                   </button>
                 </div>
               </div>
-              <p className="text-gray-600 mb-4">{selectedProject.description}</p>
+              <p className="text-gray-600 mb-4">{selectedProject.description || '—'}</p>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <span className="text-gray-500">Client:</span>
@@ -1394,7 +1453,8 @@ export default function ProjectTrackingPage() {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
+        </main>
       </div>
 
       {/* Task Modal */}
@@ -1416,6 +1476,22 @@ export default function ProjectTrackingPage() {
           isOpen={isTeamModalOpen}
           onClose={() => setIsTeamModalOpen(false)}
           onSubmit={handleAddTeamMember}
+        />
+      )}
+
+      {/* SERTIS-style modals */}
+      {isDetailsModalOpen && selectedProject && (
+        <ProjectDetailsModal
+          project={selectedProject}
+          onClose={() => setIsDetailsModalOpen(false)}
+          onEdit={() => { setIsDetailsModalOpen(false); setIsEditModalOpen(true) }}
+        />
+      )}
+      {isEditModalOpen && selectedProject && (
+        <EditProjectModal
+          project={selectedProject}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleSaveProject}
         />
       )}
     </div>
