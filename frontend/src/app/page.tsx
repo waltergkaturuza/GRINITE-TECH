@@ -20,15 +20,15 @@ export default function HomePage() {
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-granite-800/90 via-crimson-900/80 to-jungle-900/90"></div>
 
-        {/* Floating logo top-left */}
-        <div className="absolute top-8 left-8 sm:top-12 sm:left-12 z-10">
-          <div className="relative w-28 h-28 sm:w-36 sm:h-36 lg:w-44 lg:h-44 drop-shadow-xl">
+        {/* Floating logo top-left - large with rounded corners */}
+        <div className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-10 w-[min(85vw,420px)] h-[min(50vh,420px)] max-w-full max-h-[70%]">
+          <div className="relative w-full h-full bg-white/95 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-2xl flex items-center justify-center">
             <Image
               src="/logo.png"
               alt="Quantis Technologies"
               fill
-              sizes="(max-width: 640px) 112px, (max-width: 1024px) 144px, 176px"
-              className="object-contain opacity-95"
+              sizes="(max-width: 640px) 200px, (max-width: 1024px) 280px, 420px"
+              className="object-contain p-4"
               priority
             />
           </div>
