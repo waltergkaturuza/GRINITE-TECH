@@ -33,8 +33,9 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
     ? `${project.client.firstName || ''} ${project.client.lastName || ''}`.trim() || project.client.email
     : '—'
 
-  // Use milestones as Objectives for Results Framework (SERTIS-style)
-  const objectives = project.milestones || []
+  // Prefer metadata.resultsFramework (full cascading), fallback to milestones
+  const rf = project.metadata?.resultsFramework
+  const objectives = Array.isArray(rf) && rf.length > 0 ? rf : (project.milestones || []).map((m: any) => ({ id: m.id, title: m.name, description: m.description, outcomes: [] }))
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -62,10 +63,10 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
             </span>
           </div>
 
-          {project.description && (
+          {(project.projectGoal || project.description) && (
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-1">Project Goal</h3>
-              <p className="text-gray-600">{project.description}</p>
+              <p className="text-gray-600">{project.projectGoal || project.description}</p>
             </div>
           )}
 
@@ -105,19 +106,45 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
             </div>
           </div>
 
-          {/* Results Framework (milestones as objectives) */}
+          {/* Results Framework - Objective → Outcomes → Outputs with indicators */}
           {objectives.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Results Framework</h3>
               <div className="space-y-4">
                 {objectives.map((obj: any, idx: number) => (
                   <div key={obj.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="bg-blue-50 px-4 py-2 flex items-center justify-between">
-                      <span className="font-medium text-gray-900">Objective {idx + 1}: {obj.name}</span>
-                      <span className="text-sm text-gray-600">{obj.progress ?? 0}%</span>
+                    <div className="bg-blue-50 px-4 py-2">
+                      <span className="font-medium text-gray-900">Objective {idx + 1}: {obj.title || obj.name}</span>
+                      {obj.description && <p className="text-sm text-gray-600 mt-1">{obj.description}</p>}
                     </div>
-                    {obj.description && (
-                      <div className="px-4 py-2 text-sm text-gray-600">{obj.description}</div>
+                    {obj.outcomes?.length > 0 && (
+                      <div className="border-t border-gray-100 divide-y divide-gray-100">
+                        {obj.outcomes.map((out: any, oi: number) => (
+                          <div key={out.id} className="px-4 py-3 bg-green-50/50">
+                            <p className="font-medium text-gray-800">Outcome {oi + 1}: {out.title}</p>
+                            {out.description && <p className="text-sm text-gray-600 mt-0.5">{out.description}</p>}
+                            {out.indicators?.length > 0 && (
+                              <div className="mt-2 ml-2 text-sm">
+                                <span className="font-medium text-gray-700">Indicators: </span>
+                                {out.indicators.map((i: any) => i.description || '—').join('; ')}
+                              </div>
+                            )}
+                            {out.outputs?.length > 0 && (
+                              <div className="mt-2 space-y-2">
+                                {out.outputs.map((op: any, pi: number) => (
+                                  <div key={op.id} className="ml-2 p-2 bg-amber-50 rounded border border-amber-100">
+                                    <p className="font-medium text-gray-800">Output {pi + 1}: {op.title}</p>
+                                    {op.description && <p className="text-xs text-gray-600">{op.description}</p>}
+                                    {op.indicators?.length > 0 && (
+                                      <p className="text-xs text-gray-600 mt-1">Indicators: {op.indicators.map((i: any) => i.description || '—').join('; ')}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -127,12 +154,14 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
 
           {/* Summary */}
           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-            <span><span className="text-blue-600 font-medium">1</span> Objectives</span>
-            <span><span className="text-green-600 font-medium">{objectives.length}</span> Outcomes</span>
-            <span><span className="text-orange-600 font-medium">{objectives.reduce((s: number, o: any) => s + (o.modules?.length || 0), 0)}</span> Outputs</span>
+            <span><span className="text-blue-600 font-medium">{objectives.length}</span> Objectives</span>
+            <span><span className="text-green-600 font-medium">{objectives.reduce((s: number, o: any) => s + (o.outcomes?.length || 0), 0)}</span> Outcomes</span>
+            <span><span className="text-orange-600 font-medium">{objectives.reduce((s: number, o: any) => s + (o.outcomes || []).reduce((a: number, u: any) => a + (u.outputs?.length || 0), 0), 0)}</span> Outputs</span>
             <span><span className="font-medium text-gray-900">{objectives.reduce((s: number, o: any) => {
-              const mods = o.modules || []
-              return s + mods.reduce((a: number, m: any) => a + (m.features?.length || 0), 0)
+              const outs = o.outcomes || []
+              const outInd = outs.reduce((a: number, u: any) => a + (u.indicators?.length || 0), 0)
+              const opInd = outs.reduce((a: number, u: any) => a + (u.outputs || []).reduce((b: number, p: any) => b + (p.indicators?.length || 0), 0), 0)
+              return s + outInd + opInd
             }, 0)}</span> Total Indicators</span>
           </div>
         </div>

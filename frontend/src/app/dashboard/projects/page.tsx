@@ -16,7 +16,7 @@ import {
   ChartBarIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
-import ProjectFormModal from './ProjectFormModal'
+import CreateEditProjectForm from './CreateEditProjectForm'
 
 // Types
 interface Project {
@@ -175,15 +175,8 @@ export default function ProjectsPage() {
   const handleCreateProject = async (projectData: Record<string, any>) => {
     try {
       await projectsAPI.createProject({
-        title: projectData.title,
-        description: projectData.description,
-        type: projectData.type,
-        status: projectData.status,
-        budget: projectData.budget,
-        startDate: projectData.startDate,
-        endDate: projectData.endDate,
-        estimatedHours: projectData.estimatedHours,
-        clientId: projectData.clientId,
+        ...projectData,
+        budget: projectData.totalBudget ?? projectData.budget,
       })
       setIsCreateModalOpen(false)
       loadProjects()
@@ -518,24 +511,26 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {/* Create Project Modal - SERTIS style */}
+      {/* Create Project Modal - SERTIS-style multi-step with Results Framework */}
       {isCreateModalOpen && (
-        <ProjectFormModal
+        <CreateEditProjectForm
           mode="create"
           projectTypes={PROJECT_TYPES}
           clients={clients}
+          users={clients}
           onClose={() => setIsCreateModalOpen(false)}
           onSubmit={handleCreateProject}
         />
       )}
 
-      {/* Edit Project Modal - SERTIS style */}
+      {/* Edit Project Modal - SERTIS-style multi-step with Results Framework */}
       {isEditModalOpen && editingProject && (
-        <ProjectFormModal
+        <CreateEditProjectForm
           mode="edit"
           project={editingProject}
           projectTypes={PROJECT_TYPES}
           clients={clients}
+          users={clients}
           onClose={() => { setIsEditModalOpen(false); setEditingProject(null) }}
           onSubmit={handleUpdateProject}
         />

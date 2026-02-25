@@ -25,10 +25,11 @@ export class ProjectsService {
   ) {}
 
   async create(createProjectDto: CreateProjectDto, user: User): Promise<Project> {
+    const { clientId, ...dto } = createProjectDto;
     const project = this.projectRepository.create({
-      ...createProjectDto,
-      client: createProjectDto.clientId 
-        ? await this.userRepository.findOne({ where: { id: createProjectDto.clientId } })
+      ...dto,
+      client: clientId
+        ? await this.userRepository.findOne({ where: { id: clientId } })
         : null,
     });
 
@@ -98,11 +99,12 @@ export class ProjectsService {
 
   async update(id: string, updateProjectDto: UpdateProjectDto, user: User): Promise<Project> {
     const project = await this.findOne(id, user);
+    const { clientId, ...dto } = updateProjectDto as UpdateProjectDto & { clientId?: string };
 
     // If clientId is being updated, fetch the new client
-    if (updateProjectDto.clientId) {
+    if (clientId) {
       const client = await this.userRepository.findOne({
-        where: { id: updateProjectDto.clientId }
+        where: { id: clientId }
       });
       if (client) {
         project.client = client;
@@ -110,7 +112,7 @@ export class ProjectsService {
     }
 
     // Update other fields
-    Object.assign(project, updateProjectDto);
+    Object.assign(project, dto);
 
     return this.projectRepository.save(project);
   }

@@ -137,17 +137,7 @@ export const projectsAPI = {
     const response = await api.get(`/projects/${id}`)
     return response.data
   },
-  createProject: async (projectData: {
-    title: string
-    description?: string
-    type: string
-    status?: string
-    budget?: number
-    startDate?: string
-    endDate?: string
-    estimatedHours?: number
-    clientId?: string
-  }) => {
+  createProject: async (projectData: Record<string, unknown>) => {
     const response = await api.post('/projects', projectData)
     return response.data
   },
@@ -157,12 +147,17 @@ export const projectsAPI = {
     type: string
     status: string
     budget: number
+    totalBudget: number
     startDate: string
     endDate: string
     estimatedHours: number
     actualHours: number
     completionPercentage: number
     clientId: string
+    projectCode: string
+    projectGoal: string
+    fundingSource: string
+    metadata: Record<string, any>
   }>) => {
     const response = await api.patch(`/projects/${id}`, projectData)
     return response.data

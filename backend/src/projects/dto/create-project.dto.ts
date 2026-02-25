@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsNumber, IsDateString, IsEnum } from 'class-validator';
-import { ProjectStatus, ProjectType } from '../entities/project.entity';
+import { ProjectStatus } from '../entities/project.entity';
 
 export class CreateProjectDto {
   @IsString()
@@ -7,7 +7,15 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsString()
+  projectCode?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  projectGoal?: string;
 
   @IsString()
   type: string;
@@ -35,4 +43,15 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   clientId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  totalBudget?: number;
+
+  @IsOptional()
+  @IsString()
+  fundingSource?: string;
+
+  @IsOptional()
+  metadata?: Record<string, any>;
 }

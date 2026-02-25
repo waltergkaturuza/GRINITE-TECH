@@ -38,6 +38,21 @@ export class Project {
   @Column('text', { nullable: true })
   description: string;
 
+  @Column({ nullable: true })
+  projectCode: string;
+
+  @Column('text', { nullable: true })
+  projectGoal: string;
+
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  totalBudget: number;
+
+  @Column({ nullable: true })
+  fundingSource: string;
+
+  @Column('jsonb', { nullable: true })
+  metadata: Record<string, any>;
+
   @Column({
     type: 'text',
     default: 'website'
