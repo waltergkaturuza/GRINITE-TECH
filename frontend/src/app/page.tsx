@@ -21,16 +21,16 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-granite-800/90 via-crimson-900/80 to-jungle-900/90"></div>
 
         <div className="wide-container px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,380px)_1fr] gap-8 lg:gap-12 items-center">
-            {/* Logo - left side, rounded corners */}
-            <div className="flex justify-center lg:justify-start order-2 lg:order-1">
-              <div className="relative w-full max-w-[min(85vw,380px)] aspect-square max-h-[min(45vh,380px)]">
-                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-2xl flex items-center justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,300px)_1fr] gap-8 lg:gap-12 items-center">
+            {/* Logo - top on mobile, left on desktop; slightly smaller; pushed left */}
+            <div className="flex justify-center lg:justify-start order-1 lg:-ml-4">
+              <div className="relative w-full max-w-[min(75vw,300px)] aspect-square max-h-[min(40vh,300px)]">
+                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-3xl p-5 sm:p-6 shadow-2xl flex items-center justify-center">
                   <Image
                     src="/logo.png"
                     alt="Quantis Technologies"
                     fill
-                    sizes="(max-width: 640px) 200px, (max-width: 1024px) 280px, 380px"
+                    sizes="(max-width: 640px) 200px, (max-width: 1024px) 260px, 300px"
                     className="object-contain p-4"
                     priority
                   />
@@ -38,8 +38,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Hero text - right side */}
-            <div className="text-center lg:text-left order-1 lg:order-2">
+            {/* Hero text - below logo on mobile, right on desktop */}
+            <div className="text-center lg:text-left order-2">
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
                 Comprehensive Business
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900"> Solutions</span>
