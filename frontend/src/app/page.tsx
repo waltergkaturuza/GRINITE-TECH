@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import Navigation from './components/Navigation'
 import { useEffect } from 'react'
 import { trackPageView } from '@/lib/analytics'
@@ -61,54 +61,90 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Core Capabilities - 6 Strategic Pillars */}
       <section className="py-20 bg-white relative">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-crimson-900 to-transparent"></div>
         <div className="wide-container px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-granite-800 mb-4">
-              Everything You Need to <span className="text-crimson-900">Succeed</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-granite-800 mb-4">
+              Core <span className="text-crimson-900">Capabilities</span>
             </h2>
-            <p className="text-xl text-granite-600">
-              Comprehensive solutions tailored to your business needs
+            <p className="text-xl text-granite-600 max-w-2xl mx-auto">
+              Integrated systems designed for scale, security, and performance.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="card group hover:border-crimson-200 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-crimson-900 to-crimson-700 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                <CheckIcon className="h-6 w-6 text-white" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
+              <div className="relative h-40 bg-gradient-to-br from-granite-100 to-granite-50 rounded-t-lg overflow-hidden">
+                <Image src="/pillar-enterprise-systems.png" alt="Enterprise Systems Engineering" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
-              <h3 className="text-xl font-semibold text-granite-800 mb-2">
-                Web Development
-              </h3>
-              <p className="text-granite-600">
-                Custom websites and web applications built with modern technologies
-              </p>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">Enterprise Systems Engineering</h3>
+                <p className="text-granite-600 text-sm leading-relaxed">
+                  Custom-built platforms, portals, and mission-critical systems engineered for scalability, performance, and security.
+                </p>
+              </div>
             </div>
 
-            <div className="card group hover:border-jungle-200 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-jungle-900 to-olive-900 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                <CheckIcon className="h-6 w-6 text-white" />
+            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
+              <div className="relative h-40 bg-gradient-to-br from-sky-50 to-blue-50 rounded-t-lg overflow-hidden">
+                <Image src="/pillar-cloud-devops.png" alt="Cloud Infrastructure & DevOps" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
-              <h3 className="text-xl font-semibold text-granite-800 mb-2">
-                Digital Products
-              </h3>
-              <p className="text-granite-600">
-                Templates, tools, and digital assets to accelerate your business
-              </p>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">Cloud Infrastructure & DevOps</h3>
+                <p className="text-granite-600 text-sm leading-relaxed">
+                  Cloud migration, CI/CD pipelines, infrastructure as code, and managed hosting for enterprise workloads.
+                </p>
+              </div>
             </div>
 
-            <div className="card group hover:border-yellow-200 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-900 to-peach-900 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                <CheckIcon className="h-6 w-6 text-granite-800" />
+            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
+              <div className="relative h-40 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-t-lg overflow-hidden">
+                <Image src="/pillar-data-intelligence.png" alt="Data Intelligence & Analytics" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
-              <h3 className="text-xl font-semibold text-granite-800 mb-2">
-                Business Automation
-              </h3>
-              <p className="text-granite-600">
-                Streamline operations with custom automation solutions
-              </p>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">Data Intelligence & Analytics</h3>
+                <p className="text-granite-600 text-sm leading-relaxed">
+                  Executive dashboards, KPI tracking, data warehousing, and real-time analytics for informed decision-making.
+                </p>
+              </div>
+            </div>
+
+            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
+              <div className="relative h-40 bg-gradient-to-br from-emerald-50 to-green-50 rounded-t-lg overflow-hidden">
+                <Image src="/pillar-automation-integration.png" alt="Process Automation & Integration" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">Process Automation & Integration</h3>
+                <p className="text-granite-600 text-sm leading-relaxed">
+                  Workflow automation, ERP integrations, API development, and intelligent systems that streamline operations and eliminate inefficiencies.
+                </p>
+              </div>
+            </div>
+
+            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
+              <div className="relative h-40 bg-gradient-to-br from-crimson-900 to-crimson-800 rounded-t-lg flex items-center justify-center">
+                <ShieldCheckIcon className="h-20 w-20 text-white/90" />
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">Cybersecurity & Compliance</h3>
+                <p className="text-granite-600 text-sm leading-relaxed">
+                  Security audits, penetration testing, data encryption, identity management, and compliance advisory (GDPR, POPIA).
+                </p>
+              </div>
+            </div>
+
+            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
+              <div className="relative h-40 bg-gradient-to-br from-violet-50 to-purple-50 rounded-t-lg overflow-hidden">
+                <Image src="/pillar-digital-platforms.png" alt="Digital Platform Development" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">Digital Platform Development</h3>
+                <p className="text-granite-600 text-sm leading-relaxed">
+                  End-to-end digital ecosystems including e-commerce, SaaS platforms, service portals, and enterprise tools.
+                </p>
+              </div>
             </div>
           </div>
         </div>
