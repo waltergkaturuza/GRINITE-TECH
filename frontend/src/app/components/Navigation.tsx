@@ -51,21 +51,21 @@ export default function Navigation() {
   return (
     <nav className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-granite-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-20">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
+              <div className="relative h-14 w-14 sm:h-[4.5rem] sm:w-[4.5rem] flex-shrink-0">
                 <Image
                   src="/logo.png"
                   alt="Quantis Technologies logo"
                   fill
-                  sizes="56px"
+                  sizes="72px"
                   className="object-contain"
                   priority
                 />
               </div>
-              <span className="hidden sm:inline text-xl font-bold bg-gradient-to-r from-granite-800 to-crimson-900 bg-clip-text text-transparent">
+              <span className="hidden sm:inline text-xl sm:text-2xl font-bold bg-gradient-to-r from-granite-800 to-crimson-900 bg-clip-text text-transparent">
                 Quantis Technologies
               </span>
             </Link>
