@@ -231,6 +231,11 @@ export class RequestsController {
       res.setHeader('Content-Type', document.mimeType);
       res.setHeader('Content-Disposition', `attachment; filename="${document.originalName}"`);
       
+      // Blob URL - redirect to the URL
+      if (document.filePath.startsWith('http://') || document.filePath.startsWith('https://')) {
+        return res.redirect(document.filePath);
+      }
+      
       return res.sendFile(document.filePath);
     } catch (error) {
       return res.status(404).json({

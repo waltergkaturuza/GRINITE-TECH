@@ -1,5 +1,23 @@
-import { IsString, IsEmail, IsOptional, IsEnum, IsNumber, IsDateString } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsEnum, IsNumber, IsDateString, IsArray, ValidateNested } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { RequestStatus, RequestPriority } from '../entities/request.entity';
+
+export class BlobDocumentDto {
+  @IsString()
+  url: string;
+
+  @IsString()
+  pathname: string;
+
+  @IsString()
+  originalName: string;
+
+  @IsNumber()
+  fileSize: number;
+
+  @IsString()
+  mimeType: string;
+}
 
 export class CreateRequestDto {
   @IsString()
@@ -31,6 +49,18 @@ export class CreateRequestDto {
   @IsOptional()
   @IsEnum(RequestPriority)
   priority?: RequestPriority;
+
+  /** Pre-uploaded Blob documents (Inquiries/category/date/file-name) */
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value == null) return []
+    if (typeof value === 'string') return JSON.parse(value || '[]')
+    return Array.isArray(value) ? value : []
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BlobDocumentDto)
+  documents?: BlobDocumentDto[];
 }
 
 export class UpdateRequestDto {

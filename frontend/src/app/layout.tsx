@@ -8,9 +8,9 @@ import ChatbotWrapper from './components/chatbot/ChatbotWrapper'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Quantis Technologies - Comprehensive Business Solutions',
-  description: 'Professional web development, digital products, and business automation solutions.',
-  keywords: 'web development, digital products, business automation, Quantis Technologies',
+  title: 'Quantis Technologies - Engineering Digital Infrastructure',
+  description: 'Systems engineering company delivering enterprise platforms, automation solutions, data intelligence, and secure cloud infrastructure for governments and forward-thinking organizations.',
+  keywords: 'systems engineering, enterprise platforms, automation, data intelligence, cloud infrastructure, Quantis Technologies',
   authors: [{ name: 'Quantis Technologies Team' }],
 }
 

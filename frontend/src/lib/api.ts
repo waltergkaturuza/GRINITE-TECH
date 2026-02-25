@@ -339,22 +339,34 @@ export const chatAPI = {
   },
 }
 
+export interface BlobDocument {
+  url: string
+  pathname: string
+  originalName: string
+  fileSize: number
+  mimeType: string
+}
+
 export const requestsAPI = {
-  submitRequest: async (requestData: any, files?: File[]) => {
+  /** Submit request with optional pre-uploaded Blob documents (Inquiries/category/date/file-name) */
+  submitRequest: async (requestData: any, files?: File[] | BlobDocument[]) => {
     const formData = new FormData()
-    
+
     Object.keys(requestData).forEach(key => {
       if (requestData[key] !== null && requestData[key] !== undefined) {
         formData.append(key, requestData[key])
       }
     })
-    
+
     if (files && files.length > 0) {
-      files.forEach(file => {
-        formData.append('files', file)
-      })
+      const first = files[0]
+      if (first instanceof File) {
+        files.forEach(f => formData.append('files', f as File))
+      } else {
+        formData.append('documents', JSON.stringify(files))
+      }
     }
-    
+
     const response = await api.post('/requests', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

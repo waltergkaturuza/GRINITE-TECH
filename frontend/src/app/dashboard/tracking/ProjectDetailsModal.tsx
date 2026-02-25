@@ -1,14 +1,15 @@
 'use client'
 
-import { XMarkIcon, PencilIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, PencilIcon, DocumentArrowDownIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 
 interface ProjectDetailsModalProps {
   project: any
   onClose: () => void
   onEdit: () => void
+  onGoToTracking?: () => void
 }
 
-export default function ProjectDetailsModal({ project, onClose, onEdit }: ProjectDetailsModalProps) {
+export default function ProjectDetailsModal({ project, onClose, onEdit, onGoToTracking }: ProjectDetailsModalProps) {
   if (!project) return null
 
   const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
@@ -36,6 +37,14 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
   // Prefer metadata.resultsFramework (full cascading), fallback to milestones
   const rf = project.metadata?.resultsFramework
   const objectives = Array.isArray(rf) && rf.length > 0 ? rf : (project.milestones || []).map((m: any) => ({ id: m.id, title: m.name, description: m.description, outcomes: [] }))
+  const meta = project.metadata || {}
+  const categories = (meta.categories as string[]) || []
+  const countries = (meta.countries as string[]) || []
+  const provinces = (meta.provinces as string[]) || []
+  const methodologies = (meta.methodologies as string[]) || []
+  const implementingOrgs = (meta.implementingOrgs as string[]) || []
+  const supportingDocs = (meta.supportingDocuments as { url: string; name: string }[]) || []
+  const fundingDocs = (meta.fundingDocuments as { url: string; name: string }[]) || []
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -70,6 +79,58 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
             </div>
           )}
 
+          {/* Project Code & Type */}
+          {(project.projectCode || project.type) && (
+            <div className="flex flex-wrap gap-4 text-sm">
+              {project.projectCode && (
+                <p><span className="font-medium text-gray-700">Project Code:</span> {project.projectCode}</p>
+              )}
+              {project.type && (
+                <p><span className="font-medium text-gray-700">Type:</span> <span className="capitalize">{project.type.replace(/_/g, ' ')}</span></p>
+              )}
+            </div>
+          )}
+
+          {/* Categories */}
+          {categories.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Categories</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {categories.map((c: string, i: number) => (
+                  <span key={i} className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-800">
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Location */}
+          {(countries.length > 0 || provinces.length > 0) && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-1">Location</h3>
+              <p className="text-sm text-gray-600">
+                {countries.length > 0 && <span>Countries: {countries.join(', ')}</span>}
+                {provinces.length > 0 && <span className={countries.length ? ' ml-2' : ''}>Provinces: {provinces.join(', ')}</span>}
+              </p>
+            </div>
+          )}
+
+          {/* Evaluation & Methodologies */}
+          {(meta.evaluationFrequency || methodologies.length > 0 || implementingOrgs.length > 0) && (
+            <div className="space-y-2">
+              {meta.evaluationFrequency && (
+                <p className="text-sm"><span className="font-medium text-gray-700">Evaluation frequency:</span> {meta.evaluationFrequency}</p>
+              )}
+              {methodologies.length > 0 && (
+                <p className="text-sm"><span className="font-medium text-gray-700">Methodologies:</span> {methodologies.join(', ')}</p>
+              )}
+              {implementingOrgs.length > 0 && (
+                <p className="text-sm"><span className="font-medium text-gray-700">Implementing orgs:</span> {implementingOrgs.join(', ')}</p>
+              )}
+            </div>
+          )}
+
           {/* Key metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
@@ -84,7 +145,10 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
             </div>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-xs font-medium text-gray-500 uppercase">Budget</p>
-              <p className="text-lg font-semibold text-gray-900 mt-1">{formatCurrency(project.budget)}</p>
+              <p className="text-lg font-semibold text-gray-900 mt-1">{formatCurrency(project.totalBudget ?? project.budget)}</p>
+              {project.fundingSource && (
+                <p className="text-sm text-gray-500 mt-1">Funding: {project.fundingSource}</p>
+              )}
               {project.spentBudget != null && (
                 <p className="text-sm text-gray-500">Spent: {formatCurrency(project.spentBudget)}</p>
               )}
@@ -101,10 +165,50 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Project Information</h3>
             <div className="space-y-1 text-sm text-gray-600">
-              <p><span className="font-medium text-gray-700">Project Manager:</span> {clientName}</p>
+              <p><span className="font-medium text-gray-700">Client:</span> {clientName}</p>
+              {project.client?.email && (
+                <p><span className="font-medium text-gray-700">Email:</span> {project.client.email}</p>
+              )}
               <p><span className="font-medium text-gray-700">Currency:</span> USD</p>
             </div>
           </div>
+
+          {/* Documents */}
+          {(supportingDocs.length > 0 || fundingDocs.length > 0) && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Documents</h3>
+              <div className="space-y-2">
+                {supportingDocs.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">Supporting documents</p>
+                    <ul className="space-y-1">
+                      {supportingDocs.map((d: { url: string; name: string }, i: number) => (
+                        <li key={i}>
+                          <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
+                            {d.name}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {fundingDocs.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">Funding documents</p>
+                    <ul className="space-y-1">
+                      {fundingDocs.map((d: { url: string; name: string }, i: number) => (
+                        <li key={i}>
+                          <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
+                            {d.name}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Results Framework - Objective → Outcomes → Outputs with indicators */}
           {objectives.length > 0 && (
@@ -169,7 +273,16 @@ export default function ProjectDetailsModal({ project, onClose, onEdit }: Projec
         {/* Footer */}
         <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between bg-gray-50">
           <p className="text-xs text-gray-500">Project ID: {project.id}</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {onGoToTracking && (
+              <button
+                onClick={onGoToTracking}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 text-sm font-medium flex items-center gap-2"
+              >
+                <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                Go to Tracking
+              </button>
+            )}
             <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 text-sm font-medium flex items-center gap-2">
               <DocumentArrowDownIcon className="w-4 h-4" />
               Export PDF

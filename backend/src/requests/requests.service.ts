@@ -38,14 +38,17 @@ export class RequestsService {
   }
 
   async create(createRequestDto: CreateRequestDto, files?: any[]): Promise<ProjectRequest> {
+    const { documents: blobDocuments, ...dto } = createRequestDto;
     const request = this.requestRepository.create({
-      ...createRequestDto,
+      ...dto,
       trackingId: this.generateTrackingId(),
     });
     const savedRequest = await this.requestRepository.save(request);
 
-    // Handle file uploads if any
-    if (files && files.length > 0) {
+    // Pre-uploaded Blob documents (Inquiries/category/date/file-name)
+    if (blobDocuments && blobDocuments.length > 0) {
+      await this.saveBlobDocuments(savedRequest, blobDocuments);
+    } else if (files && files.length > 0) {
       await this.saveRequestDocuments(savedRequest, files);
     }
 
@@ -234,6 +237,23 @@ export class RequestsService {
     };
   }
 
+  private async saveBlobDocuments(
+    request: ProjectRequest,
+    documents: { url: string; pathname: string; originalName: string; fileSize: number; mimeType: string }[],
+  ): Promise<void> {
+    for (const doc of documents) {
+      const document = this.documentRepository.create({
+        request,
+        originalName: doc.originalName,
+        fileName: doc.pathname.split('/').pop() || doc.originalName,
+        filePath: doc.url, // Blob URL - files live in Vercel Blob
+        fileSize: doc.fileSize,
+        mimeType: doc.mimeType,
+      });
+      await this.documentRepository.save(document);
+    }
+  }
+
   private async saveRequestDocuments(request: ProjectRequest, files: any[]): Promise<void> {
     // In serverless (read-only) environments like Vercel, skip writing to disk
     const isReadOnlyFs =
@@ -309,6 +329,20 @@ export class RequestsService {
       throw new NotFoundException('Document not found');
     }
 
+    if (!document.filePath) {
+      throw new NotFoundException('File not found');
+    }
+
+    // Blob URL (stored in Vercel Blob)
+    if (document.filePath.startsWith('http://') || document.filePath.startsWith('https://')) {
+      return {
+        filePath: document.filePath,
+        originalName: document.originalName,
+        mimeType: document.mimeType,
+      };
+    }
+
+    // Local file
     if (!fs.existsSync(document.filePath)) {
       throw new NotFoundException('File not found on disk');
     }

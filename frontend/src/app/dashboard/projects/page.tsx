@@ -17,6 +17,7 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline'
 import CreateEditProjectForm from './CreateEditProjectForm'
+import ProjectDetailsModal from '../tracking/ProjectDetailsModal'
 
 // Types
 interface Project {
@@ -84,7 +85,9 @@ export default function ProjectsPage() {
   const [typeFilter, setTypeFilter] = useState('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
+  const [viewingProject, setViewingProject] = useState<Project | null>(null)
 
   // Load data
   useEffect(() => {
@@ -214,6 +217,17 @@ export default function ProjectsPage() {
   const openEditModal = (project: Project) => {
     setEditingProject(project)
     setIsEditModalOpen(true)
+  }
+
+  const openDetailsModal = async (project: Project) => {
+    try {
+      const full = await projectsAPI.getProject(project.id)
+      setViewingProject(full)
+      setIsDetailsModalOpen(true)
+    } catch {
+      setViewingProject(project)
+      setIsDetailsModalOpen(true)
+    }
   }
 
   const trackProject = (project: Project) => {
@@ -481,9 +495,9 @@ export default function ProjectsPage() {
                     <td className="px-6 py-4 text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => trackProject(project)}
+                          onClick={() => openDetailsModal(project)}
                           className="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50"
-                          title="Track project"
+                          title="View project details"
                         >
                           <EyeIcon className="h-4 w-4" />
                         </button>
@@ -533,6 +547,25 @@ export default function ProjectsPage() {
           users={clients}
           onClose={() => { setIsEditModalOpen(false); setEditingProject(null) }}
           onSubmit={handleUpdateProject}
+        />
+      )}
+
+      {/* Project Details Modal - full info as entered in creation form */}
+      {isDetailsModalOpen && viewingProject && (
+        <ProjectDetailsModal
+          project={viewingProject}
+          onClose={() => { setIsDetailsModalOpen(false); setViewingProject(null) }}
+          onEdit={() => {
+            setIsDetailsModalOpen(false)
+            setEditingProject(viewingProject)
+            setViewingProject(null)
+            setIsEditModalOpen(true)
+          }}
+          onGoToTracking={() => {
+            setIsDetailsModalOpen(false)
+            setViewingProject(null)
+            trackProject(viewingProject)
+          }}
         />
       )}
     </div>

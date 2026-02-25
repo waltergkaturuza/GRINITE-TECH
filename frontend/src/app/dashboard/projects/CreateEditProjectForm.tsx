@@ -11,6 +11,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline'
+import BlobFileUpload from '@/components/BlobFileUpload'
 import {
   PROJECT_CATEGORIES,
   EVALUATION_FREQUENCY,
@@ -118,6 +119,8 @@ export default function CreateEditProjectForm({
     teamMemberIds: [] as string[],
   })
 
+  const [supportingDocuments, setSupportingDocuments] = useState<{ url: string; pathname: string; name: string }[]>([])
+  const [fundingDocuments, setFundingDocuments] = useState<{ url: string; pathname: string; name: string }[]>([])
   const [objectives, setObjectives] = useState<Objective[]>([])
 
   const allUsers = users.length > 0 ? users : clients
@@ -144,6 +147,8 @@ export default function CreateEditProjectForm({
         fundingSource: project.fundingSource ?? '',
         teamMemberIds: (project.metadata?.teamMemberIds as string[]) ?? [],
       })
+      setSupportingDocuments((project.metadata?.supportingDocuments as { url: string; pathname: string; name: string }[]) || [])
+      setFundingDocuments((project.metadata?.fundingDocuments as { url: string; pathname: string; name: string }[]) || [])
       const rf = project.metadata?.resultsFramework as Objective[]
       if (rf?.length) setObjectives(rf)
       if (project.metadata?.projectDurationYears) setProjectDurationYears(project.metadata.projectDurationYears)
@@ -353,6 +358,8 @@ export default function CreateEditProjectForm({
       teamMemberIds: form.teamMemberIds,
       resultsFramework: objectives,
       projectDurationYears: projectDurationYears,
+      supportingDocuments,
+      fundingDocuments,
     }
     const payload: Record<string, any> = {
       title: form.title,
@@ -491,11 +498,32 @@ export default function CreateEditProjectForm({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Supporting Documents</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500 hover:border-gray-400 transition-colors cursor-pointer">
-                  <DocumentTextIcon className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm font-medium">Upload detailed project summary</p>
-                  <p className="text-xs mt-1">PDF, DOC, DOCX up to 10MB</p>
-                </div>
+                <BlobFileUpload
+                  uploadType={{ type: 'project', projectName: form.title || 'new-project', subfolder: 'supporting' }}
+                  onUploaded={(url, pathname, file) =>
+                    setSupportingDocuments(prev => [...prev, { url, pathname, name: file.name }])
+                  }
+                  label="Upload detailed project summary"
+                  hint="PDF, DOC, DOCX up to 10MB"
+                />
+                {supportingDocuments.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-sm text-gray-600">
+                    {supportingDocuments.map((d, i) => (
+                      <li key={i} className="flex items-center justify-between">
+                        <a href={d.url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
+                          {d.name}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setSupportingDocuments(prev => prev.filter((_, j) => j !== i))}
+                          className="text-red-600 hover:text-red-800 text-xs"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div>
@@ -710,11 +738,33 @@ export default function CreateEditProjectForm({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Funding Source Details &amp; Budget Breakdown</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500">
-                  <DocumentTextIcon className="w-10 h-10 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm">Upload budget breakdown documents</p>
-                  <p className="text-xs mt-1">PDF, XLSX, DOCX up to 10MB</p>
-                </div>
+                <BlobFileUpload
+                  uploadType={{ type: 'project', projectName: form.title || 'new-project', subfolder: 'funding' }}
+                  onUploaded={(url, pathname, file) =>
+                    setFundingDocuments(prev => [...prev, { url, pathname, name: file.name }])
+                  }
+                  label="Upload budget breakdown documents"
+                  hint="PDF, XLSX, DOCX up to 10MB"
+                  accept=".pdf,.xlsx,.xls,.docx,.doc"
+                />
+                {fundingDocuments.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-sm text-gray-600">
+                    {fundingDocuments.map((d, i) => (
+                      <li key={i} className="flex items-center justify-between">
+                        <a href={d.url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
+                          {d.name}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setFundingDocuments(prev => prev.filter((_, j) => j !== i))}
+                          className="text-red-600 hover:text-red-800 text-xs"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">

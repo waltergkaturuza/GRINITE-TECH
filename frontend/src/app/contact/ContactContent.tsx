@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { 
+import {
   EnvelopeIcon,
   PhoneIcon,
   MapPinIcon,
@@ -11,7 +11,8 @@ import {
   DocumentArrowUpIcon,
   TrashIcon
 } from '@heroicons/react/24/outline'
-import { requestsAPI } from '@/lib/api'
+import { requestsAPI, type BlobDocument } from '@/lib/api'
+import BlobFileUpload from '@/components/BlobFileUpload'
 import { trackEvent, trackPageView } from '@/lib/analytics'
 
 const services = [
@@ -37,7 +38,7 @@ export default function ContactContent() {
     projectTimeline: '',
     description: ''
   })
-  const [files, setFiles] = useState<File[]>([])
+  const [uploadedDocs, setUploadedDocs] = useState<BlobDocument[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -60,21 +61,8 @@ export default function ContactContent() {
     }))
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || [])
-    const validFiles = selectedFiles.filter(file => {
-      const maxSize = 10 * 1024 * 1024 // 10MB
-      if (file.size > maxSize) {
-        setError(`File ${file.name} is too large. Maximum size is 10MB.`)
-        return false
-      }
-      return true
-    })
-    setFiles(prev => [...prev, ...validFiles])
-  }
-
-  const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index))
+  const removeDoc = (index: number) => {
+    setUploadedDocs(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,7 +71,7 @@ export default function ContactContent() {
     setError('')
 
     try {
-      const result = await requestsAPI.submitRequest(formData, files)
+      const result = await requestsAPI.submitRequest(formData, uploadedDocs)
       
       if (result.success) {
         trackEvent('request_submitted', {
@@ -101,7 +89,7 @@ export default function ContactContent() {
           projectTimeline: '',
           description: ''
         })
-        setFiles([])
+        setUploadedDocs([])
       } else {
         trackEvent('request_failed', { reason: result.message })
         setError(result.message || 'Failed to send message. Please try again.')
@@ -310,51 +298,47 @@ export default function ContactContent() {
                 />
               </div>
 
-              {/* File Upload Section */}
+              {/* File Upload (Blob: Inquiries/category/date/file-name) */}
               <div>
                 <label className="block text-sm font-medium text-granite-700 mb-2">
                   Attachments (Optional)
                 </label>
-                <div className="w-full border-2 border-dashed border-granite-300 rounded-lg p-6 text-center hover:border-crimson-500 transition-colors">
-                  <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-granite-400" />
-                  <div className="mt-4">
-                    <label htmlFor="files" className="cursor-pointer">
-                      <span className="mt-2 block text-sm font-medium text-granite-900">
-                        Drop files here or click to upload
-                      </span>
-                      <span className="mt-1 block text-xs text-granite-500">
-                        PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, Images, ZIP up to 10MB each
-                      </span>
-                    </label>
-                    <input
-                      id="files"
-                      name="files"
-                      type="file"
-                      multiple
-                      onChange={handleFileChange}
-                      className="sr-only"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp,.zip"
-                    />
-                  </div>
-                </div>
-
-                {/* File List */}
-                {files.length > 0 && (
+                <BlobFileUpload
+                  uploadType={{
+                    type: 'inquiry',
+                    category: formData.serviceInterested || 'general',
+                  }}
+                  onUploaded={(url, pathname, file) =>
+                    setUploadedDocs(prev => [
+                      ...prev,
+                      {
+                        url,
+                        pathname,
+                        originalName: file.name,
+                        fileSize: file.size,
+                        mimeType: file.type || 'application/octet-stream',
+                      },
+                    ])
+                  }
+                  label="Drop files here or click to upload"
+                  hint="PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, Images, ZIP up to 10MB each"
+                />
+                {uploadedDocs.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    {files.map((file, index) => (
+                    {uploadedDocs.map((doc, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <DocumentArrowUpIcon className="h-5 w-5 text-gray-400" />
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                            <p className="text-sm font-medium text-gray-900">{doc.originalName}</p>
                             <p className="text-xs text-gray-500">
-                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                              {(doc.fileSize / 1024 / 1024).toFixed(2)} MB
                             </p>
                           </div>
                         </div>
                         <button
                           type="button"
-                          onClick={() => removeFile(index)}
+                          onClick={() => removeDoc(index)}
                           className="text-red-600 hover:text-red-800 transition-colors"
                         >
                           <TrashIcon className="h-5 w-5" />

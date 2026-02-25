@@ -41,20 +41,19 @@ export default function HomePage() {
             {/* Hero text - below logo on mobile, right on desktop */}
             <div className="text-center lg:text-left order-2">
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-                Comprehensive Business
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900"> Solutions</span>
+                Engineering Digital Infrastructure for
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900"> a Smarter Future.</span>
               </h1>
               <p className="text-xl text-gray-200 mb-8 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
-                From web development to digital products, we provide end-to-end solutions 
-                that help your business thrive in the digital world.
+                Quantis Technologies is a systems engineering company delivering enterprise platforms, automation solutions, data intelligence, and secure cloud infrastructure for governments and forward-thinking organizations.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/contact" className="bg-crimson-900 hover:bg-crimson-800 text-white font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
-                  Start Your Project
+                  Build With Quantis
                   <ArrowRightIcon className="ml-2 h-5 w-5 inline" />
                 </Link>
                 <Link href="/portfolio" className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200">
-                  View Our Work
+                  Explore Our Solutions
                 </Link>
               </div>
             </div>
