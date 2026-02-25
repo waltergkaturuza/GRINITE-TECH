@@ -55,12 +55,12 @@ export default function Navigation() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="relative h-9 w-9 sm:h-10 sm:w-10">
+              <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
                 <Image
                   src="/logo.png"
                   alt="Quantis Technologies logo"
                   fill
-                  sizes="40px"
+                  sizes="56px"
                   className="object-contain"
                   priority
                 />
