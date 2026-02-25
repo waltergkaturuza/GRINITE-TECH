@@ -17,41 +17,46 @@ export default function HomePage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="py-20 relative overflow-hidden">
+      <section className="py-16 sm:py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-granite-800/90 via-crimson-900/80 to-jungle-900/90"></div>
 
-        {/* Floating logo top-left - large with rounded corners */}
-        <div className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-10 w-[min(85vw,420px)] h-[min(50vh,420px)] max-w-full max-h-[70%]">
-          <div className="relative w-full h-full bg-white/95 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-2xl flex items-center justify-center">
-            <Image
-              src="/logo.png"
-              alt="Quantis Technologies"
-              fill
-              sizes="(max-width: 640px) 200px, (max-width: 1024px) 280px, 420px"
-              className="object-contain p-4"
-              priority
-            />
-          </div>
-        </div>
-
         <div className="wide-container px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Comprehensive Business
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900"> Solutions</span>
-            </h1>
-            <p className="text-xl text-gray-200 mb-8 max-w-3xl mx-auto">
-              From web development to digital products, we provide end-to-end solutions 
-              that help your business thrive in the digital world.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/contact" className="bg-crimson-900 hover:bg-crimson-800 text-white font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
-                Start Your Project
-                <ArrowRightIcon className="ml-2 h-5 w-5 inline" />
-              </Link>
-              <Link href="/portfolio" className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200">
-                View Our Work
-              </Link>
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,380px)_1fr] gap-8 lg:gap-12 items-center">
+            {/* Logo - left side, rounded corners */}
+            <div className="flex justify-center lg:justify-start order-2 lg:order-1">
+              <div className="relative w-full max-w-[min(85vw,380px)] aspect-square max-h-[min(45vh,380px)]">
+                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-2xl flex items-center justify-center">
+                  <Image
+                    src="/logo.png"
+                    alt="Quantis Technologies"
+                    fill
+                    sizes="(max-width: 640px) 200px, (max-width: 1024px) 280px, 380px"
+                    className="object-contain p-4"
+                    priority
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Hero text - right side */}
+            <div className="text-center lg:text-left order-1 lg:order-2">
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+                Comprehensive Business
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900"> Solutions</span>
+              </h1>
+              <p className="text-xl text-gray-200 mb-8 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
+                From web development to digital products, we provide end-to-end solutions 
+                that help your business thrive in the digital world.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link href="/contact" className="bg-crimson-900 hover:bg-crimson-800 text-white font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
+                  Start Your Project
+                  <ArrowRightIcon className="ml-2 h-5 w-5 inline" />
+                </Link>
+                <Link href="/portfolio" className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200">
+                  View Our Work
+                </Link>
+              </div>
             </div>
           </div>
         </div>
