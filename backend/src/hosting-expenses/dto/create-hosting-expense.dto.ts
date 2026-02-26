@@ -75,4 +75,13 @@ export class CreateHostingExpenseDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @ApiPropertyOptional({ description: 'Link to provider dashboard or hosting panel' })
+  @IsOptional()
+  @IsString()
+  hostingLink?: string;
+
+  @ApiPropertyOptional({ description: 'Attachment URLs (url, name)[]' })
+  @IsOptional()
+  attachmentUrls?: { url: string; name: string }[];
 }

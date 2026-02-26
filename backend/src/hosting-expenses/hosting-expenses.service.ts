@@ -26,6 +26,8 @@ export class HostingExpensesService {
       paymentMethod: dto.paymentMethod,
       status: dto.status || 'draft',
       category: dto.category || 'hosting',
+      hostingLink: dto.hostingLink,
+      attachmentUrls: dto.attachmentUrls || [],
     });
     return this.hostingExpenseRepository.save(entity);
   }
@@ -90,6 +92,8 @@ export class HostingExpensesService {
     if (dto.paymentMethod !== undefined) updateData.paymentMethod = dto.paymentMethod;
     if (dto.status !== undefined) updateData.status = dto.status;
     if (dto.category !== undefined) updateData.category = dto.category;
+    if (dto.hostingLink !== undefined) updateData.hostingLink = dto.hostingLink;
+    if (dto.attachmentUrls !== undefined) updateData.attachmentUrls = dto.attachmentUrls;
 
     await this.hostingExpenseRepository.update(id, updateData);
     return this.findOne(id);
@@ -105,6 +109,7 @@ export class HostingExpensesService {
     totalCount: number;
     byProject: { projectId: string; projectTitle: string; total: number }[];
     byProvider: { provider: string; total: number }[];
+    byMonth: { month: string; total: number; count: number }[];
   }> {
     const expenses = await this.hostingExpenseRepository.find({
       relations: ['project'],
@@ -139,7 +144,20 @@ export class HostingExpensesService {
       .map(([provider, total]) => ({ provider, total }))
       .sort((a, b) => b.total - a.total);
 
-    return { totalAmount, totalCount, byProject, byProvider };
+    const byMonthMap = new Map<string, { total: number; count: number }>();
+    for (const e of expenses) {
+      const d = e.paymentDate || e.createdAt;
+      const key = d ? new Date(d).toISOString().slice(0, 7) : 'unknown';
+      const current = byMonthMap.get(key) || { total: 0, count: 0 };
+      current.total += Number(e.amount || 0);
+      current.count += 1;
+      byMonthMap.set(key, current);
+    }
+    const byMonth = Array.from(byMonthMap.entries())
+      .map(([month, data]) => ({ month, ...data }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    return { totalAmount, totalCount, byProject, byProvider, byMonth };
   }
 
   async getUpcomingRenewals(limit = 10): Promise<HostingExpense[]> {

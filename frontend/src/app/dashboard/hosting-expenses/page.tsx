@@ -13,8 +13,12 @@ import {
   FolderIcon,
   ArrowDownTrayIcon,
   BellAlertIcon,
+  LinkIcon,
+  PaperClipIcon,
 } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 import { hostingExpensesAPI, projectsAPI } from '@/lib/api'
+import { uploadToBlob } from '@/lib/blobStorage'
 
 interface HostingExpense {
   id: string
@@ -31,6 +35,8 @@ interface HostingExpense {
   paymentMethod?: string
   status: string
   category: string
+  hostingLink?: string
+  attachmentUrls?: { url: string; name: string }[]
   createdAt: string
 }
 
@@ -67,6 +73,8 @@ const defaultForm = {
   paymentMethod: '',
   status: 'draft',
   category: 'hosting',
+  hostingLink: '',
+  attachmentUrls: [] as { url: string; name: string }[],
 }
 
 export default function HostingExpensesPage() {
@@ -92,7 +100,9 @@ export default function HostingExpensesPage() {
     totalCount: number
     byProject: { projectId: string; projectTitle: string; total: number }[]
     byProvider: { provider: string; total: number }[]
+    byMonth?: { month: string; total: number; count: number }[]
   } | null>(null)
+  const [uploadingFile, setUploadingFile] = useState(false)
 
   useEffect(() => {
     loadExpenses()
@@ -190,6 +200,8 @@ export default function HostingExpensesPage() {
       paymentMethod: e.paymentMethod || '',
       status: e.status || 'draft',
       category: e.category || 'hosting',
+      hostingLink: e.hostingLink || '',
+      attachmentUrls: e.attachmentUrls || [],
     })
     setShowModal(true)
   }
@@ -211,6 +223,8 @@ export default function HostingExpensesPage() {
         paymentMethod: form.paymentMethod || undefined,
         status: form.status,
         category: form.category,
+        hostingLink: form.hostingLink || undefined,
+        attachmentUrls: form.attachmentUrls?.length ? form.attachmentUrls : undefined,
       }
       if (editing) {
         await hostingExpensesAPI.update(editing.id, payload)
@@ -401,6 +415,37 @@ export default function HostingExpensesPage() {
         </div>
       )}
 
+      {/* Expenditures over time */}
+      {stats?.byMonth && stats.byMonth.length > 0 && (
+        <div className="rounded-lg border border-white/10 bg-white/5 p-5">
+          <h3 className="mb-4 text-sm font-medium text-gray-400">
+            Expenditures over time
+          </h3>
+          <div className="flex items-end gap-2 h-48">
+            {stats.byMonth.map((m) => {
+              const max = Math.max(...stats.byMonth!.map((x) => x.total), 1)
+              const pct = (m.total / max) * 100
+              const label = m.month ? `${m.month.slice(0, 4)}-${m.month.slice(5)}` : '—'
+              return (
+                <div
+                  key={m.month}
+                  className="flex-1 flex flex-col items-center gap-1"
+                  title={`${label}: ${formatCurrency(m.total)}`}
+                >
+                  <div
+                    className="w-full min-h-[4px] rounded-t bg-gradient-to-t from-blue-600 to-cyan-500 transition-all"
+                    style={{ height: `${Math.max(pct, 4)}%` }}
+                  />
+                  <span className="text-[10px] text-gray-500 rotate-0 truncate max-w-full">
+                    {label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* By project & by provider charts */}
       {stats && (stats.byProject.length > 0 || stats.byProvider.length > 0) && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -559,6 +604,9 @@ export default function HostingExpensesPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-400">
                     Payment date
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-400">
+                    Link
+                  </th>
                   <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-400">
                     Actions
                   </th>
@@ -595,6 +643,31 @@ export default function HostingExpensesPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-400">
                       {formatDate(exp.paymentDate)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {exp.hostingLink ? (
+                          <a
+                            href={exp.hostingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:underline flex items-center gap-1"
+                            title="Hosting link"
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                          </a>
+                        ) : null}
+                        {exp.attachmentUrls?.length ? (
+                          <span
+                            className="flex items-center gap-1 text-gray-400"
+                            title={`${exp.attachmentUrls.length} attachment(s)`}
+                          >
+                            <PaperClipIcon className="h-4 w-4" />
+                            {exp.attachmentUrls.length}
+                          </span>
+                        ) : null}
+                        {!exp.hostingLink && !exp.attachmentUrls?.length ? '—' : null}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
@@ -680,6 +753,16 @@ export default function HostingExpensesPage() {
                       </option>
                     ))}
                   </select>
+                  {form.projectId && (
+                    <Link
+                      href={`/dashboard/tracking?id=${form.projectId}`}
+                      target="_blank"
+                      className="mt-1 inline-flex items-center gap-1 text-xs text-blue-400 hover:underline"
+                    >
+                      <LinkIcon className="h-3 w-3" />
+                      Open project tracking
+                    </Link>
+                  )}
                 </div>
                 <div>
                   <label className="mb-1 block text-sm text-gray-400">
@@ -852,6 +935,102 @@ export default function HostingExpensesPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm text-gray-400">
+                  Hosting / provider link
+                </label>
+                <input
+                  type="url"
+                  value={form.hostingLink}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, hostingLink: e.target.value }))
+                  }
+                  placeholder="https://..."
+                  className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-gray-500"
+                />
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Link to provider dashboard or hosting panel
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm text-gray-400">
+                  Attach documents
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,image/*"
+                    className="hidden"
+                    id="hosting-expense-upload"
+                    onChange={async (e) => {
+                      const files = e.target.files
+                      if (!files?.length) return
+                      setUploadingFile(true)
+                      for (const file of Array.from(files)) {
+                        try {
+                          const res = await uploadToBlob(file, {
+                            type: 'hostingExpense',
+                            provider: form.provider || undefined,
+                            expenseId: editing?.id || 'new',
+                          })
+                          setForm((f) => ({
+                            ...f,
+                            attachmentUrls: [
+                              ...(f.attachmentUrls || []),
+                              { url: res.url, name: file.name },
+                            ],
+                          }))
+                        } catch (err) {
+                          alert(err instanceof Error ? err.message : 'Upload failed')
+                        }
+                      }
+                      setUploadingFile(false)
+                      e.target.value = ''
+                    }}
+                  />
+                  <label
+                    htmlFor="hosting-expense-upload"
+                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-white/20 px-4 py-3 text-sm text-gray-400 hover:border-white/40 hover:bg-white/5 ${uploadingFile ? 'opacity-60 pointer-events-none' : ''}`}
+                  >
+                    <PaperClipIcon className="h-4 w-4" />
+                    {uploadingFile ? 'Uploading…' : 'Choose files (PDF, DOC, images)'}
+                  </label>
+                  {form.attachmentUrls?.length ? (
+                    <ul className="space-y-1">
+                      {form.attachmentUrls.map((a, i) => (
+                        <li
+                          key={i}
+                          className="flex items-center justify-between rounded bg-white/5 px-3 py-2 text-sm"
+                        >
+                          <a
+                            href={a.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="truncate text-blue-400 hover:underline"
+                          >
+                            {a.name}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((f) => ({
+                                ...f,
+                                attachmentUrls: f.attachmentUrls?.filter((_, j) => j !== i) || [],
+                              }))
+                            }
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               </div>
 

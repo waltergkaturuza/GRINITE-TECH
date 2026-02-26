@@ -75,6 +75,12 @@ export class HostingExpense {
   })
   category: string;
 
+  @Column('text', { nullable: true })
+  hostingLink: string;
+
+  @Column('jsonb', { nullable: true })
+  attachmentUrls: { url: string; name: string }[];
+
   @CreateDateColumn()
   createdAt: Date;
 
