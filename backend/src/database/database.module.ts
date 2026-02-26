@@ -13,6 +13,8 @@ import { ChatSession } from '../chatbot/entities/chat-session.entity';
 import { ProjectRequest, RequestDocument, RequestMessage, MessageAttachment } from '../requests/entities/request.entity';
 import { AnalyticsEvent, PageView } from '../analytics/analytics.entity';
 import { HostingExpense } from '../hosting-expenses/entities/hosting-expense.entity';
+import { LedgerAccount } from '../ledger/entities/ledger-account.entity';
+import { LedgerEntry } from '../ledger/entities/ledger-entry.entity';
 
 @Module({
   imports: [
@@ -26,7 +28,7 @@ import { HostingExpense } from '../hosting-expenses/entities/hosting-expense.ent
           return {
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
-            entities: [User, Project, Milestone, ProjectModule, Feature, ProjectType, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment, PageView, AnalyticsEvent, HostingExpense],
+            entities: [User, Project, Milestone, ProjectModule, Feature, ProjectType, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment, PageView, AnalyticsEvent, HostingExpense, LedgerAccount, LedgerEntry],
             synchronize: true, // Temporarily enabled to create schema
             ssl: {
               rejectUnauthorized: false
@@ -38,7 +40,7 @@ import { HostingExpense } from '../hosting-expenses/entities/hosting-expense.ent
           return {
             type: 'better-sqlite3',
             database: ':memory:',
-            entities: [User, Project, Milestone, ProjectModule, Feature, ProjectType, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment, PageView, AnalyticsEvent, HostingExpense],
+            entities: [User, Project, Milestone, ProjectModule, Feature, ProjectType, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment, PageView, AnalyticsEvent, HostingExpense, LedgerAccount, LedgerEntry],
             synchronize: true, // Only for development
             logging: true,
           };

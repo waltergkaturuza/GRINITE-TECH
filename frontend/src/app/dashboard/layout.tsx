@@ -20,7 +20,8 @@ import {
   ClipboardDocumentListIcon,
   BriefcaseIcon,
   ClockIcon,
-  ServerStackIcon
+  ServerStackIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline'
 
 export default function DashboardLayout({
@@ -65,6 +66,7 @@ export default function DashboardLayout({
     { name: 'Chat', href: '/dashboard/chat', icon: ChatBubbleLeftRightIcon, current: false },
     { name: 'Invoices', href: '/dashboard/invoices', icon: DocumentTextIcon, current: false },
     { name: 'Hosting Expenses', href: '/dashboard/hosting-expenses', icon: ServerStackIcon, current: false },
+    { name: 'Accounts', href: '/dashboard/accounts', icon: BanknotesIcon, current: false },
     { name: 'Settings', href: '/dashboard/settings', icon: CogIcon, current: false },
   ]
 

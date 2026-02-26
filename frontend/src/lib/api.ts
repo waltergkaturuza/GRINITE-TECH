@@ -613,6 +613,53 @@ export const hostingExpensesAPI = {
   },
 }
 
+export const ledgerAPI = {
+  getAccounts: async () => {
+    const response = await api.get('/ledger/accounts')
+    return response.data
+  },
+  getAccountsWithBalances: async () => {
+    const response = await api.get('/ledger/accounts/balances')
+    return response.data
+  },
+  getAccount: async (id: string) => {
+    const response = await api.get(`/ledger/accounts/${id}`)
+    return response.data
+  },
+  getAccountBalance: async (id: string) => {
+    const response = await api.get(`/ledger/accounts/${id}/balance`)
+    return response.data
+  },
+  createAccount: async (data: Record<string, any>) => {
+    const response = await api.post('/ledger/accounts', data)
+    return response.data
+  },
+  updateAccount: async (id: string, data: Record<string, any>) => {
+    const response = await api.patch(`/ledger/accounts/${id}`, data)
+    return response.data
+  },
+  deleteAccount: async (id: string) => {
+    const response = await api.delete(`/ledger/accounts/${id}`)
+    return response.data
+  },
+  getEntries: async (accountId: string, params?: { limit?: number; offset?: number }) => {
+    const response = await api.get(`/ledger/accounts/${accountId}/entries`, { params })
+    return response.data
+  },
+  createEntry: async (data: Record<string, any>) => {
+    const response = await api.post('/ledger/entries', data)
+    return response.data
+  },
+  updateEntry: async (id: string, data: Record<string, any>) => {
+    const response = await api.patch(`/ledger/entries/${id}`, data)
+    return response.data
+  },
+  deleteEntry: async (id: string) => {
+    const response = await api.delete(`/ledger/entries/${id}`)
+    return response.data
+  },
+}
+
 export const adminAPI = {
   getStats: async () => {
     const response = await api.get('/admin/stats')
