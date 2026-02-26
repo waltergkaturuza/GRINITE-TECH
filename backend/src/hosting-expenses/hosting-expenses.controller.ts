@@ -32,6 +32,20 @@ export class HostingExpensesController {
     return this.hostingExpensesService.create(dto);
   }
 
+  @Get('stats')
+  @ApiOperation({ summary: 'Get hosting expense statistics' })
+  getStats() {
+    return this.hostingExpensesService.getStats();
+  }
+
+  @Get('upcoming-renewals')
+  @ApiOperation({ summary: 'Get upcoming hosting renewals' })
+  getUpcomingRenewals(@Query('limit') limit?: string) {
+    return this.hostingExpensesService.getUpcomingRenewals(
+      limit ? parseInt(limit, 10) : 10,
+    );
+  }
+
   @Get()
   @ApiOperation({ summary: 'List hosting expenses with filters' })
   findAll(

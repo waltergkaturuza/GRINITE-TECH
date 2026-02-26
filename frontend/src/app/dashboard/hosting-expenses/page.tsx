@@ -1,13 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   ServerStackIcon,
   PlusIcon,
   PencilIcon,
   TrashIcon,
   XMarkIcon,
-  MagnifyingGlassIcon,
+  CurrencyDollarIcon,
+  ChartBarIcon,
+  FolderIcon,
+  ArrowDownTrayIcon,
+  BellAlertIcon,
 } from '@heroicons/react/24/outline'
 import { hostingExpensesAPI, projectsAPI } from '@/lib/api'
 
@@ -65,6 +70,7 @@ const defaultForm = {
 }
 
 export default function HostingExpensesPage() {
+  const searchParams = useSearchParams()
   const [expenses, setExpenses] = useState<HostingExpense[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,6 +85,14 @@ export default function HostingExpensesPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(1)
   const limit = 20
+  const [exporting, setExporting] = useState(false)
+  const [upcomingRenewals, setUpcomingRenewals] = useState<HostingExpense[]>([])
+  const [stats, setStats] = useState<{
+    totalAmount: number
+    totalCount: number
+    byProject: { projectId: string; projectTitle: string; total: number }[]
+    byProvider: { provider: string; total: number }[]
+  } | null>(null)
 
   useEffect(() => {
     loadExpenses()
@@ -87,6 +101,37 @@ export default function HostingExpensesPage() {
   useEffect(() => {
     loadProjects()
   }, [])
+
+  useEffect(() => {
+    const pid = searchParams?.get('projectId')
+    if (pid) setProjectFilter(pid)
+  }, [searchParams])
+
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  useEffect(() => {
+    loadUpcomingRenewals()
+  }, [])
+
+  const loadUpcomingRenewals = async () => {
+    try {
+      const list = await hostingExpensesAPI.getUpcomingRenewals(5)
+      setUpcomingRenewals(Array.isArray(list) ? list : [])
+    } catch {
+      setUpcomingRenewals([])
+    }
+  }
+
+  const loadStats = async () => {
+    try {
+      const res = await hostingExpensesAPI.getStats()
+      setStats(res)
+    } catch {
+      setStats(null)
+    }
+  }
 
   const loadExpenses = async () => {
     setLoading(true)
@@ -174,6 +219,8 @@ export default function HostingExpensesPage() {
       }
       setShowModal(false)
       loadExpenses()
+      loadStats()
+      loadUpcomingRenewals()
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to save expense')
     } finally {
@@ -186,6 +233,8 @@ export default function HostingExpensesPage() {
       await hostingExpensesAPI.delete(id)
       setDeleteConfirm(null)
       loadExpenses()
+      loadStats()
+      loadUpcomingRenewals()
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to delete')
     }
@@ -199,6 +248,48 @@ export default function HostingExpensesPage() {
   const formatDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'
 
+  const handleExportCSV = async () => {
+    setExporting(true)
+    try {
+      const params: Record<string, any> = { page: 1, limit: 5000 }
+      if (projectFilter) params.projectId = projectFilter
+      if (statusFilter) params.status = statusFilter
+      if (providerFilter) params.provider = providerFilter
+      const res = await hostingExpensesAPI.getAll(params)
+      const list = res.expenses || []
+      const headers = ['Provider', 'Project', 'Amount', 'Currency', 'Category', 'Status', 'Billing Start', 'Billing End', 'Payment Date', 'Description', 'Invoice Ref']
+      const rows = list.map((e: HostingExpense) => [
+        e.provider ?? '',
+        e.project?.title ?? '',
+        e.amount ?? '',
+        e.currency ?? 'USD',
+        e.category ?? '',
+        e.status ?? '',
+        e.billingPeriodStart ?? '',
+        e.billingPeriodEnd ?? '',
+        e.paymentDate ?? '',
+        (e.description ?? '').replace(/"/g, '""'),
+        e.invoiceReference ?? '',
+      ])
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((r: string[]) => r.map((c: string | number) => `"${String(c)}"`).join(',')),
+      ].join('\n')
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `hosting-expenses-${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Export failed:', err)
+      alert('Failed to export CSV')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const totalPages = Math.ceil(totalCount / limit) || 1
 
   return (
@@ -210,14 +301,165 @@ export default function HostingExpensesPage() {
             Track hosting and infrastructure payments for projects
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          <PlusIcon className="h-5 w-5" />
-          Add Expense
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportCSV}
+            disabled={exporting}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/10 disabled:opacity-50"
+          >
+            <ArrowDownTrayIcon className="h-5 w-5" />
+            {exporting ? 'Exporting…' : 'Export CSV'}
+          </button>
+          <button
+            onClick={openCreate}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <PlusIcon className="h-5 w-5" />
+            Add Expense
+          </button>
+        </div>
       </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-white/10 bg-gradient-to-br from-blue-900/30 to-blue-800/20 p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-500/20 p-2">
+              <CurrencyDollarIcon className="h-6 w-6 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Total paid</p>
+              <p className="text-xl font-semibold text-white">
+                {stats ? formatCurrency(stats.totalAmount) : '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-gradient-to-br from-green-900/30 to-green-800/20 p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-green-500/20 p-2">
+              <ServerStackIcon className="h-6 w-6 text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Paid expenses</p>
+              <p className="text-xl font-semibold text-white">
+                {stats?.totalCount ?? '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-gradient-to-br from-amber-900/30 to-amber-800/20 p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-amber-500/20 p-2">
+              <ChartBarIcon className="h-6 w-6 text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Top provider</p>
+              <p className="text-xl font-semibold text-white truncate max-w-[140px]">
+                {stats?.byProvider?.[0]?.provider ?? '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-gradient-to-br from-purple-900/30 to-purple-800/20 p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-purple-500/20 p-2">
+              <FolderIcon className="h-6 w-6 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Projects with costs</p>
+              <p className="text-xl font-semibold text-white">
+                {stats?.byProject?.length ?? 0}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Upcoming renewals */}
+      {upcomingRenewals.length > 0 && (
+        <div className="rounded-lg border border-amber-900/30 bg-amber-900/10 p-5">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-200">
+            <BellAlertIcon className="h-5 w-5" />
+            Upcoming renewals (next billing end)
+          </h3>
+          <ul className="space-y-2">
+            {upcomingRenewals.map((e) => (
+              <li
+                key={e.id}
+                className="flex items-center justify-between rounded border border-white/5 bg-white/5 px-3 py-2 text-sm"
+              >
+                <span className="text-gray-300">
+                  {e.provider || '—'} · {e.project?.title || 'Unassigned'}
+                </span>
+                <span className="text-amber-200">
+                  {formatDate(e.billingPeriodEnd)} · {formatCurrency(Number(e.amount), e.currency)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* By project & by provider charts */}
+      {stats && (stats.byProject.length > 0 || stats.byProvider.length > 0) && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="rounded-lg border border-white/10 bg-white/5 p-5">
+            <h3 className="mb-4 text-sm font-medium text-gray-400">
+              Hosting cost by project
+            </h3>
+            <div className="space-y-3">
+              {stats.byProject.slice(0, 6).map((p) => {
+                const max = Math.max(...stats.byProject.map((x) => x.total), 1)
+                const pct = (p.total / max) * 100
+                return (
+                  <div key={p.projectId || '_none'} className="flex items-center gap-3">
+                    <span className="w-32 truncate text-sm text-gray-300">
+                      {p.projectTitle}
+                    </span>
+                    <div className="flex-1 h-6 rounded bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full rounded bg-gradient-to-r from-blue-600 to-blue-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-white w-20 text-right">
+                      {formatCurrency(p.total)}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/5 p-5">
+            <h3 className="mb-4 text-sm font-medium text-gray-400">
+              Hosting cost by provider
+            </h3>
+            <div className="space-y-3">
+              {stats.byProvider.slice(0, 6).map((p) => {
+                const max = Math.max(...stats.byProvider.map((x) => x.total), 1)
+                const pct = (p.total / max) * 100
+                return (
+                  <div key={p.provider} className="flex items-center gap-3">
+                    <span className="w-32 truncate text-sm text-gray-300">
+                      {p.provider}
+                    </span>
+                    <div className="flex-1 h-6 rounded bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full rounded bg-gradient-to-r from-green-600 to-green-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-white w-20 text-right">
+                      {formatCurrency(p.total)}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="rounded-lg border border-white/10 bg-white/5 p-4">

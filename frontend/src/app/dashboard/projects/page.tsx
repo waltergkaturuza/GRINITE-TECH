@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { projectsAPI, usersAPI } from '@/lib/api'
+import { projectsAPI, usersAPI, hostingExpensesAPI } from '@/lib/api'
 import { EXPANDED_PROJECT_TYPES, PROJECT_CATEGORIES } from '../../../constants/projectTypes'
+import Link from 'next/link'
 import { 
   FolderIcon, 
   PlusIcon, 
@@ -14,7 +15,8 @@ import {
   ClockIcon,
   UserIcon,
   ChartBarIcon,
-  EyeIcon
+  EyeIcon,
+  ServerStackIcon
 } from '@heroicons/react/24/outline'
 import CreateEditProjectForm from './CreateEditProjectForm'
 import ProjectDetailsModal from '../tracking/ProjectDetailsModal'
@@ -89,12 +91,34 @@ export default function ProjectsPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [viewingProject, setViewingProject] = useState<Project | null>(null)
+  const [hostingByProject, setHostingByProject] = useState<Record<string, number>>({})
 
   // Load data
   useEffect(() => {
     loadProjects()
     loadClients()
   }, [searchTerm, statusFilter, typeFilter])
+
+  useEffect(() => {
+    loadHostingStats()
+  }, [])
+
+  const [totalHostingCost, setTotalHostingCost] = useState(0)
+
+  const loadHostingStats = async () => {
+    try {
+      const res = await hostingExpensesAPI.getStats()
+      const map: Record<string, number> = {}
+      for (const p of res?.byProject || []) {
+        if (p.projectId) map[p.projectId] = p.total
+      }
+      setHostingByProject(map)
+      setTotalHostingCost(res?.totalAmount ?? 0)
+    } catch {
+      setHostingByProject({})
+      setTotalHostingCost(0)
+    }
+  }
 
   const loadProjects = async () => {
     try {
@@ -291,7 +315,7 @@ export default function ProjectsPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -326,6 +350,21 @@ export default function ProjectsPage() {
               <p className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.totalBudget)}</p>
             </div>
           </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <ServerStackIcon className="h-8 w-8 text-teal-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total Hosting</p>
+              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalHostingCost)}</p>
+            </div>
+          </div>
+          <Link href="/dashboard/hosting-expenses" className="mt-2 block text-xs text-blue-600 hover:underline">
+            View hosting expenses →
+          </Link>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -425,6 +464,9 @@ export default function ProjectsPage() {
                   Budget
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Hosting
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Progress
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -438,7 +480,7 @@ export default function ProjectsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                       <span className="ml-3">Loading projects...</span>
@@ -447,7 +489,7 @@ export default function ProjectsPage() {
                 </tr>
               ) : projects.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
                     <FolderIcon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
                     <p className="text-gray-500 mb-4">Get started by creating your first project.</p>
@@ -493,6 +535,18 @@ export default function ProjectsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {(project.budget ?? project.totalBudget) ? formatCurrency(Number(project.budget ?? project.totalBudget) || 0) : 'Not set'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {hostingByProject[project.id] != null ? (
+                        <Link
+                          href={`/dashboard/hosting-expenses?projectId=${project.id}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {formatCurrency(hostingByProject[project.id])}
+                        </Link>
+                      ) : (
+                        '—'
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">

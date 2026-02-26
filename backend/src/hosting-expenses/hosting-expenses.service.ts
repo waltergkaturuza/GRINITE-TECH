@@ -99,4 +99,62 @@ export class HostingExpensesService {
     await this.findOne(id);
     await this.hostingExpenseRepository.delete(id);
   }
+
+  async getStats(): Promise<{
+    totalAmount: number;
+    totalCount: number;
+    byProject: { projectId: string; projectTitle: string; total: number }[];
+    byProvider: { provider: string; total: number }[];
+  }> {
+    const expenses = await this.hostingExpenseRepository.find({
+      relations: ['project'],
+      where: { status: 'paid' },
+    });
+
+    const totalAmount = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    const totalCount = expenses.length;
+
+    const byProjectMap = new Map<string, { projectTitle: string; total: number }>();
+    for (const e of expenses) {
+      const key = e.projectId || '_none';
+      const title = e.project?.title || 'Unassigned';
+      const current = byProjectMap.get(key) || { projectTitle: title, total: 0 };
+      current.total += Number(e.amount || 0);
+      byProjectMap.set(key, current);
+    }
+    const byProject = Array.from(byProjectMap.entries())
+      .map(([projectId, { projectTitle, total }]) => ({
+        projectId: projectId === '_none' ? '' : projectId,
+        projectTitle,
+        total,
+      }))
+      .sort((a, b) => b.total - a.total);
+
+    const byProviderMap = new Map<string, number>();
+    for (const e of expenses) {
+      const p = e.provider || 'Other';
+      byProviderMap.set(p, (byProviderMap.get(p) || 0) + Number(e.amount || 0));
+    }
+    const byProvider = Array.from(byProviderMap.entries())
+      .map(([provider, total]) => ({ provider, total }))
+      .sort((a, b) => b.total - a.total);
+
+    return { totalAmount, totalCount, byProject, byProvider };
+  }
+
+  async getUpcomingRenewals(limit = 10): Promise<HostingExpense[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expenses = await this.hostingExpenseRepository
+      .createQueryBuilder('expense')
+      .leftJoinAndSelect('expense.project', 'project')
+      .where('expense.status = :status', { status: 'paid' })
+      .andWhere('expense.billingPeriodEnd >= :today', { today })
+      .orderBy('expense.billingPeriodEnd', 'ASC')
+      .take(limit)
+      .getMany();
+
+    return expenses;
+  }
 }

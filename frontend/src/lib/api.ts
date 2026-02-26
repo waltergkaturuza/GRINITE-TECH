@@ -585,6 +585,16 @@ export const hostingExpensesAPI = {
     const response = await api.get('/hosting-expenses', { params })
     return response.data
   },
+  getStats: async () => {
+    const response = await api.get('/hosting-expenses/stats')
+    return response.data
+  },
+  getUpcomingRenewals: async (limit = 10) => {
+    const response = await api.get('/hosting-expenses/upcoming-renewals', {
+      params: { limit },
+    })
+    return response.data
+  },
   getOne: async (id: string) => {
     const response = await api.get(`/hosting-expenses/${id}`)
     return response.data
