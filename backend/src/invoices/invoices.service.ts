@@ -57,18 +57,43 @@ export class InvoicesService {
     return this.findOne(savedInvoice.id);
   }
 
-  async findAll(page: number = 1, limit: number = 10, status?: InvoiceStatus): Promise<{ invoices: Invoice[]; total: number }> {
-    const whereCondition = status ? { status } : {};
-    
-    const [invoices, total] = await this.invoiceRepository.findAndCount({
-      where: whereCondition,
-      relations: ['client', 'items'],
-      order: { created_at: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+  async findAll(page: number = 1, limit: number = 10, status?: InvoiceStatus, clientId?: string): Promise<{ invoices: Invoice[]; total: number }> {
+    const qb = this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.client', 'client')
+      .leftJoinAndSelect('invoice.items', 'items')
+      .orderBy('invoice.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
 
+    if (status) qb.andWhere('invoice.status = :status', { status });
+    if (clientId) qb.andWhere('invoice.client_id = :clientId', { clientId });
+
+    const [invoices, total] = await qb.getManyAndCount();
     return { invoices, total };
+  }
+
+  async getClientRevenue(clientId: string): Promise<{ totalRevenue: number; paidCount: number; pendingAmount: number }> {
+    const paid = await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .select('COALESCE(SUM(invoice.total_amount), 0)', 'total')
+      .where('invoice.client_id = :clientId', { clientId })
+      .andWhere('invoice.status = :status', { status: InvoiceStatus.PAID })
+      .getRawOne();
+    const pending = await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .select('COALESCE(SUM(invoice.total_amount), 0)', 'total')
+      .where('invoice.client_id = :clientId', { clientId })
+      .andWhere('invoice.status = :status', { status: InvoiceStatus.SENT })
+      .getRawOne();
+    const paidCount = await this.invoiceRepository.count({
+      where: { client_id: clientId, status: InvoiceStatus.PAID },
+    });
+    return {
+      totalRevenue: parseFloat(paid?.total || '0'),
+      paidCount,
+      pendingAmount: parseFloat(pending?.total || '0'),
+    };
   }
 
   async findOne(id: number): Promise<Invoice> {

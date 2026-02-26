@@ -52,6 +52,46 @@ export class CreateUserDto {
   company?: string;
 
   @ApiProperty({
+    description: 'Company address',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  companyAddress?: string;
+
+  @ApiProperty({
+    description: 'Billing address',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  billingAddress?: string;
+
+  @ApiProperty({
+    description: 'Tax ID / VAT number',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  taxId?: string;
+
+  @ApiProperty({
+    description: 'Website URL',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  website?: string;
+
+  @ApiProperty({
+    description: 'Job title (for developers)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  jobTitle?: string;
+
+  @ApiProperty({
     description: 'User role in the system',
     enum: UserRole,
     example: UserRole.CLIENT,

@@ -43,11 +43,13 @@ export class InvoicesController {
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('status') status?: string,
+    @Query('clientId') clientId?: string,
   ) {
     return this.invoicesService.findAll(
       parseInt(page),
       parseInt(limit),
       status as any,
+      clientId,
     );
   }
 
@@ -57,6 +59,13 @@ export class InvoicesController {
   @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
   getStats() {
     return this.invoicesService.getStats();
+  }
+
+  @Get('client/:clientId/revenue')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get client revenue stats' })
+  getClientRevenue(@Param('clientId') clientId: string) {
+    return this.invoicesService.getClientRevenue(clientId);
   }
 
   @Get(':id')

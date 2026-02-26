@@ -519,6 +519,7 @@ export const invoicesAPI = {
     page?: number
     limit?: number
     status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+    clientId?: string
   }) => {
     const response = await api.get('/invoices', { params })
     return response.data
@@ -576,6 +577,10 @@ export const invoicesAPI = {
   },
   getInvoiceStats: async () => {
     const response = await api.get('/invoices/stats')
+    return response.data
+  },
+  getClientRevenue: async (clientId: string) => {
+    const response = await api.get(`/invoices/client/${clientId}/revenue`)
     return response.data
   },
 }

@@ -44,6 +44,21 @@ export class User {
   @Column({ nullable: true })
   company: string;
 
+  @Column('text', { nullable: true })
+  companyAddress: string;
+
+  @Column('text', { nullable: true })
+  billingAddress: string;
+
+  @Column({ nullable: true })
+  taxId: string;
+
+  @Column({ nullable: true })
+  website: string;
+
+  @Column({ nullable: true })
+  jobTitle: string;
+
   @Column({
     type: 'text',
     default: 'client',
