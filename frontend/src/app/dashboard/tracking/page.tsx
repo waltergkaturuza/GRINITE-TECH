@@ -184,6 +184,143 @@ interface ProjectTrackingData {
   teamMembers: string[]
 }
 
+// Timeline / Gantt View
+interface TimelineViewProps {
+  projects: ProjectTrackingData[]
+  formatDate: (d: string) => string
+  getStatusBadge: (s: string) => JSX.Element
+  getPriorityBadge: (p: string) => JSX.Element
+  onViewProject: (p: ProjectTrackingData) => void
+  onEditProject: (p: ProjectTrackingData) => void
+}
+
+const TimelineView = ({ projects, formatDate, getStatusBadge, getPriorityBadge, onViewProject, onEditProject }: TimelineViewProps) => {
+  const [timelineMonth, setTimelineMonth] = useState(new Date())
+  const daysInMonth = new Date(timelineMonth.getFullYear(), timelineMonth.getMonth() + 1, 0).getDate()
+  const monthStart = new Date(timelineMonth.getFullYear(), timelineMonth.getMonth(), 1)
+  const monthEnd = new Date(timelineMonth.getFullYear(), timelineMonth.getMonth(), daysInMonth)
+  const dayMs = 86400000
+
+  const getBarCols = (project: ProjectTrackingData) => {
+    const start = project.startDate ? new Date(project.startDate) : monthStart
+    const end = project.endDate ? new Date(project.endDate) : monthEnd
+    const colStart = Math.max(1, Math.floor((start.getTime() - monthStart.getTime()) / dayMs) + 1)
+    const colEnd = Math.min(daysInMonth, Math.ceil((end.getTime() - monthStart.getTime()) / dayMs) + 1)
+    const span = Math.max(1, colEnd - colStart + 1)
+    return { colStart, span, progress: project.completionPercentage / 100 }
+  }
+
+  const priorityColor: Record<string, string> = {
+    critical: 'bg-red-500',
+    high: 'bg-orange-500',
+    medium: 'bg-yellow-500',
+    low: 'bg-green-400',
+  }
+
+  const statusBarColor: Record<string, string> = {
+    active: 'bg-green-600',
+    planning: 'bg-blue-500',
+    completed: 'bg-gray-300',
+    paused: 'bg-amber-500',
+    cancelled: 'bg-red-400',
+  }
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+        <h3 className="font-medium text-gray-900">Timeline View</h3>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTimelineMonth(d => new Date(d.getFullYear(), d.getMonth() - 1))}
+            className="px-2 py-1 border rounded hover:bg-gray-50"
+          >
+            &larr;
+          </button>
+          <span className="font-medium min-w-[140px] text-center">
+            {timelineMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+          </span>
+          <button
+            onClick={() => setTimelineMonth(d => new Date(d.getFullYear(), d.getMonth() + 1))}
+            className="px-2 py-1 border rounded hover:bg-gray-50"
+          >
+            &rarr;
+          </button>
+          <button
+            onClick={() => setTimelineMonth(new Date())}
+            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
+          >
+            Today
+          </button>
+        </div>
+      </div>
+      <div className="flex overflow-x-auto">
+        <div className="w-64 flex-shrink-0 border-r border-gray-200">
+          <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase bg-gray-50">Project</div>
+          {projects.map((p) => (
+            <div key={p.id} className="px-3 py-3 border-b border-gray-100 flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${priorityColor[p.priority] || 'bg-gray-400'}`} />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 truncate text-sm">{p.title}</p>
+                <p className="text-xs text-gray-500 truncate">
+                  {p.client ? `${p.client.firstName} ${p.client.lastName}` : '—'} · ${(p.budget || 0).toLocaleString()}
+                </p>
+              </div>
+              <button onClick={() => onViewProject(p)} className="p-1 text-gray-400 hover:text-blue-600" title="View">
+                <EyeIcon className="w-4 h-4" />
+              </button>
+              <button onClick={() => onEditProject(p)} className="p-1 text-gray-400 hover:text-blue-600" title="Edit">
+                <PencilIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex-1 min-w-[500px] overflow-x-auto">
+          <div
+            className="grid border-b border-gray-200"
+            style={{ gridTemplateColumns: `repeat(${daysInMonth}, minmax(20px, 1fr))` }}
+          >
+            {Array.from({ length: daysInMonth }, (_, i) => (
+              <div key={i} className="px-0.5 py-2 text-center text-xs text-gray-500 border-r border-gray-100">
+                {i + 1}
+              </div>
+            ))}
+          </div>
+          {projects.map((p) => {
+            const { colStart, span, progress } = getBarCols(p)
+            return (
+              <div
+                key={p.id}
+                className="grid h-14 items-center border-b border-gray-100"
+                style={{ gridTemplateColumns: `repeat(${daysInMonth}, minmax(20px, 1fr))` }}
+              >
+                <div
+                  className="rounded h-5 overflow-hidden py-1"
+                  style={{ gridColumn: `${colStart} / span ${span}` }}
+                >
+                  <div className="h-full bg-gray-200 rounded relative overflow-hidden">
+                    <div
+                      className={`absolute inset-y-0 left-0 ${statusBarColor[p.status] || 'bg-blue-500'}`}
+                      style={{ width: `${progress * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <div className="px-4 py-3 border-t border-gray-200 flex flex-wrap gap-4 text-xs text-gray-600">
+        <span className="font-medium">Legend:</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Critical</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500" /> High</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500" /> Medium</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400" /> Low</span>
+        <span className="ml-2">Status: Dark overlay = progress %</span>
+      </div>
+    </div>
+  )
+}
+
 // Modal Components
 interface TaskModalProps {
   isOpen: boolean
@@ -1183,9 +1320,7 @@ export default function ProjectTrackingPage() {
                 <p className="text-gray-500 text-sm">Kanban view – coming soon</p>
               </div>
             ) : (
-              <div className="p-4">
-                <p className="text-gray-500 text-sm">Timeline view – coming soon</p>
-              </div>
+              <TimelineView projects={filteredProjects} formatDate={formatDate} getStatusBadge={getStatusBadge} getPriorityBadge={getPriorityBadge} onViewProject={(p) => setSelectedProject(p)} onEditProject={(p) => { setSelectedProject(p); setIsEditModalOpen(true) }} />
             )
         ) : selectedProject ? (
           /* Detailed Project View */

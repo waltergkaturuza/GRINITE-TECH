@@ -56,6 +56,7 @@ export default function DashboardLayout({
     { name: 'Projects', href: '/dashboard/projects', icon: CubeIcon, current: false },
     { name: 'Portfolio', href: '/portfolio', icon: BriefcaseIcon, current: false },
     { name: 'Project Tracking', href: '/dashboard/tracking', icon: ClockIcon, current: false },
+    { name: 'Project Indicators', href: '/dashboard/indicators', icon: ChartBarIcon, current: false },
     { name: 'Clients', href: '/dashboard/clients', icon: UsersIcon, current: false },
     { name: 'Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, current: false },
     { name: 'Products', href: '/dashboard/products', icon: ShoppingCartIcon, current: false },

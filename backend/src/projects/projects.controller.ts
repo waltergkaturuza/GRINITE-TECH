@@ -12,6 +12,7 @@ import {
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { UpdateIndicatorProgressDto, BulkUpdateIndicatorsDto } from './dto/update-indicator.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -74,5 +75,38 @@ export class ProjectsController {
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.projectsService.remove(id, user);
+  }
+
+  @Patch(':id/indicators/update')
+  updateIndicatorProgress(
+    @Param('id') id: string,
+    @Body() dto: UpdateIndicatorProgressDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectsService.updateIndicatorProgress(
+      id,
+      dto.indicatorId,
+      {
+        currentValue: dto.currentValue,
+        incrementBy: dto.incrementBy,
+        status: dto.status,
+        notes: dto.notes,
+      },
+      user,
+    );
+  }
+
+  @Patch(':id/indicators/bulk')
+  bulkUpdateIndicators(
+    @Param('id') id: string,
+    @Body() dto: BulkUpdateIndicatorsDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectsService.bulkUpdateIndicatorProgress(
+      id,
+      dto.updates,
+      dto.notes,
+      user,
+    );
   }
 }

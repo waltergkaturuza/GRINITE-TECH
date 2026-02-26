@@ -130,6 +130,56 @@ export class ProjectsService {
     });
   }
 
+  async updateIndicatorProgress(
+    projectId: string,
+    indicatorId: string,
+    payload: { currentValue?: number; incrementBy?: number; status?: string; notes?: string },
+    user: User,
+  ): Promise<Project> {
+    const project = await this.findOne(projectId, user);
+    const meta = (project.metadata || {}) as Record<string, any>;
+    const progress = meta.indicatorProgress || {};
+    const existing = progress[indicatorId] || { currentValue: 0, status: 'on_track', notes: '' };
+
+    let newValue = existing.currentValue ?? 0;
+    if (payload.incrementBy != null) {
+      newValue += payload.incrementBy;
+    } else if (payload.currentValue != null) {
+      newValue = payload.currentValue;
+    }
+
+    progress[indicatorId] = {
+      ...existing,
+      currentValue: newValue,
+      status: payload.status ?? existing.status,
+      notes: payload.notes ?? existing.notes,
+      lastUpdatedAt: new Date().toISOString(),
+      lastUpdatedBy: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.email,
+    };
+
+    meta.indicatorProgress = progress;
+    project.metadata = meta;
+    return this.projectRepository.save(project);
+  }
+
+  async bulkUpdateIndicatorProgress(
+    projectId: string,
+    updates: { indicatorId: string; currentValue?: number; incrementBy?: number; status?: string; notes?: string }[],
+    bulkNotes: string | undefined,
+    user: User,
+  ): Promise<Project> {
+    let project = await this.findOne(projectId, user);
+    for (const u of updates) {
+      project = await this.updateIndicatorProgress(
+        projectId,
+        u.indicatorId,
+        { ...u, notes: u.notes ?? bulkNotes },
+        user,
+      );
+    }
+    return project;
+  }
+
   async getStats(user: User) {
     const projects = await this.projectRepository.find({
       relations: ['client'],

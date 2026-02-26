@@ -174,6 +174,20 @@ export const projectsAPI = {
     const response = await api.get(`/projects/status/${status}`)
     return response.data
   },
+  updateIndicatorProgress: async (
+    projectId: string,
+    payload: { indicatorId: string; currentValue?: number; incrementBy?: number; status?: string; notes?: string },
+  ) => {
+    const response = await api.patch(`/projects/${projectId}/indicators/update`, payload)
+    return response.data
+  },
+  bulkUpdateIndicators: async (
+    projectId: string,
+    payload: { updates: { indicatorId: string; currentValue?: number; incrementBy?: number; status?: string; notes?: string }[]; notes?: string },
+  ) => {
+    const response = await api.patch(`/projects/${projectId}/indicators/bulk`, payload)
+    return response.data
+  },
   // Legacy methods for backward compatibility
   getAll: async () => {
     const response = await api.get('/projects')
