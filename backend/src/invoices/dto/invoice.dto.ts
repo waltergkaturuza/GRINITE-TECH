@@ -28,6 +28,14 @@ export class CreateInvoiceDto {
   @IsString()
   client_id: string;
 
+  @IsOptional()
+  @IsString()
+  project_id?: string;
+
+  @IsOptional()
+  @IsString()
+  document_type?: 'invoice' | 'quotation';
+
   @IsNotEmpty()
   @IsDateString()
   issue_date: string;
@@ -80,6 +88,14 @@ export class UpdateInvoiceDto {
   @IsOptional()
   @IsString()
   client_id?: string;
+
+  @IsOptional()
+  @IsString()
+  project_id?: string;
+
+  @IsOptional()
+  @IsString()
+  document_type?: 'invoice' | 'quotation';
 
   @IsOptional()
   @IsDateString()

@@ -33,30 +33,33 @@ export default function InvoicesPage() {
   const [showView, setShowView] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
+  const [openForPrint, setOpenForPrint] = useState(false)
+  const [activeTab, setActiveTab] = useState<'invoices' | 'quotations'>('invoices')
   
   // Filters and pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [searchInput, setSearchInput] = useState('')
   const [totalCount, setTotalCount] = useState(0)
   const itemsPerPage = 10
 
   useEffect(() => {
     loadInvoices()
     loadStats()
-  }, [currentPage, statusFilter])
+  }, [currentPage, statusFilter, activeTab, searchTerm])
 
   const loadInvoices = async () => {
     setIsLoading(true)
     try {
       const params: any = {
         page: currentPage,
-        limit: itemsPerPage
+        limit: itemsPerPage,
+        documentType: activeTab === 'quotations' ? 'quotation' : 'invoice'
       }
       
-      if (statusFilter) {
-        params.status = statusFilter
-      }
+      if (statusFilter) params.status = statusFilter
+      if (searchTerm.trim()) params.search = searchTerm.trim()
 
       const response = await invoicesAPI.getInvoices(params)
       setInvoices(response.invoices || [])
@@ -142,13 +145,7 @@ export default function InvoicesPage() {
     setShowView(true)
   }
 
-  const filteredInvoices = invoices.filter(invoice =>
-    searchTerm === '' || 
-    invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.client?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.client?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.client?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredInvoices = invoices
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -167,6 +164,12 @@ export default function InvoicesPage() {
 
   const totalPages = Math.ceil(totalCount / itemsPerPage)
 
+  const handleDownloadPDF = (inv: any) => {
+    setSelectedInvoice(inv)
+    setOpenForPrint(true)
+    setShowView(true)
+  }
+
   if (showForm) {
     return (
       <div className="space-y-6">
@@ -178,6 +181,7 @@ export default function InvoicesPage() {
             setSelectedInvoice(null)
           }}
           isLoading={isFormLoading}
+          documentType={selectedInvoice?.document_type || (activeTab === 'quotations' ? 'quotation' : 'invoice')}
         />
       </div>
     )
@@ -188,20 +192,46 @@ export default function InvoicesPage() {
       {/* Header */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Invoices</h1>
+          <h1 className="text-2xl font-bold text-white">Invoices & Quotations</h1>
           <p className="mt-2 text-sm text-gray-300">
-            Manage your invoices and billing
+            Manage invoices, quotations and billing
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        <div className="mt-4 sm:mt-0 flex gap-2">
           <button 
             onClick={() => setShowForm(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 active:bg-green-700 transition-colors duration-200"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-            Create Invoice
+            {activeTab === 'quotations' ? 'Create Quotation' : 'Create Invoice'}
           </button>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-granite-600">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => { setActiveTab('invoices'); setCurrentPage(1) }}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'invoices'
+                ? 'border-amber-500 text-amber-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+            }`}
+          >
+            Invoice History
+          </button>
+          <button
+            onClick={() => { setActiveTab('quotations'); setCurrentPage(1) }}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'quotations'
+                ? 'border-amber-500 text-amber-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+            }`}
+          >
+            Quotations
+          </button>
+        </nav>
       </div>
 
       {/* Stats */}
@@ -266,17 +296,26 @@ export default function InvoicesPage() {
 
       {/* Filters and Search */}
       <div className="bg-granite-800 shadow rounded-lg border border-granite-700 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
-          <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search invoices..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
+          <div className="flex gap-2 md:col-span-2">
+            <div className="relative flex-1">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder={`Search by number, client...`}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && setSearchTerm(searchInput)}
+                className="w-full pl-10 pr-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+            </div>
+            <button
+              onClick={() => setSearchTerm(searchInput)}
+              className="px-4 py-2 bg-granite-600 hover:bg-granite-500 text-white rounded-md"
+            >
+              Search
+            </button>
           </div>
 
           {/* Status Filter */}
@@ -299,7 +338,7 @@ export default function InvoicesPage() {
           {/* Results Count */}
           <div className="flex items-center text-gray-300">
             <span className="text-sm">
-              Showing {filteredInvoices.length} of {totalCount} invoices
+              Showing {filteredInvoices.length} of {totalCount} {activeTab}
             </span>
           </div>
         </div>
@@ -309,7 +348,8 @@ export default function InvoicesPage() {
       <div className="bg-granite-800 shadow rounded-lg border border-granite-700">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-white mb-4">
-            {statusFilter ? `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Invoices` : 'All Invoices'}
+            {statusFilter ? `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} ` : 'All '}
+            {activeTab === 'quotations' ? 'Quotations' : 'Invoices'}
           </h3>
           
           {isLoading ? (
@@ -320,13 +360,13 @@ export default function InvoicesPage() {
           ) : filteredInvoices.length === 0 ? (
             <div className="text-center py-8">
               <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-300">No invoices found</p>
+              <p className="text-gray-300">No {activeTab} found</p>
               <button
                 onClick={() => setShowForm(true)}
                 className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 active:bg-green-700 transition-colors duration-200"
               >
                 <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
-                Create Your First Invoice
+                Create {activeTab === 'quotations' ? 'Your First Quotation' : 'Your First Invoice'}
               </button>
             </div>
           ) : (
@@ -334,8 +374,9 @@ export default function InvoicesPage() {
               <table className="min-w-full divide-y divide-granite-600">
                 <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Invoice</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Number</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Client</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden md:table-cell">Project</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Issue Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
@@ -358,6 +399,9 @@ export default function InvoicesPage() {
                           </div>
                         </div>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 hidden md:table-cell">
+                        {invoice.project?.title || '—'}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
                         {formatCurrency(invoice.total_amount)}
                       </td>
@@ -374,6 +418,7 @@ export default function InvoicesPage() {
                           onView={handleViewInvoice}
                           onDelete={handleDeleteInvoice}
                           onStatusUpdate={handleStatusUpdate}
+                          onDownloadPDF={handleDownloadPDF}
                         />
                       </td>
                     </tr>
@@ -465,13 +510,16 @@ export default function InvoicesPage() {
       {showView && selectedInvoice && (
         <InvoiceView
           invoice={selectedInvoice}
+          autoPrint={openForPrint}
           onClose={() => {
             setShowView(false)
             setSelectedInvoice(null)
+            setOpenForPrint(false)
           }}
           onEdit={() => {
             setShowView(false)
             setShowForm(true)
+            setOpenForPrint(false)
           }}
         />
       )}

@@ -50,7 +50,7 @@ export class UsersController {
   @ApiQuery({ name: 'role', required: false, enum: UserRole })
   @ApiQuery({ name: 'status', required: false })
   findAll(@Query('role') role?: UserRole, @Query('status') status?: string) {
-    return this.usersService.findAll();
+    return this.usersService.findAll(role, status);
   }
 
   @Get('stats')

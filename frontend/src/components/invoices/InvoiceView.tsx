@@ -1,12 +1,29 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+
 interface InvoiceViewProps {
   invoice: any
   onClose: () => void
   onEdit?: () => void
+  autoPrint?: boolean
 }
 
-export default function InvoiceView({ invoice, onClose, onEdit }: InvoiceViewProps) {
+export default function InvoiceView({ invoice, onClose, onEdit, autoPrint }: InvoiceViewProps) {
+  const printRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (autoPrint && invoice) {
+      const t = setTimeout(() => window.print(), 300)
+      return () => clearTimeout(t)
+    }
+  }, [autoPrint, invoice])
+
+  const handleDownloadPDF = () => {
+    window.print()
+  }
+
   if (!invoice) return null
 
   const formatDate = (dateString: string) => {
@@ -42,13 +59,15 @@ export default function InvoiceView({ invoice, onClose, onEdit }: InvoiceViewPro
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 print:bg-white print:p-0">
+      <div ref={printRef} className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl print:max-h-none print:shadow-none">
         {/* Header */}
         <div className="bg-granite-800 text-white p-6 rounded-t-lg">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold">Invoice {invoice.invoice_number}</h2>
+              <h2 className="text-2xl font-bold">
+                {invoice.document_type === 'quotation' ? 'Quotation' : 'Invoice'} {invoice.invoice_number}
+              </h2>
               <p className="text-gray-300 mt-1">
                 Created on {formatDate(invoice.created_at)}
               </p>
@@ -57,7 +76,14 @@ export default function InvoiceView({ invoice, onClose, onEdit }: InvoiceViewPro
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(invoice.status)}`}>
                 {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
               </span>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 print:hidden">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="inline-flex items-center px-4 py-2 bg-purple-700 text-white rounded-md hover:bg-purple-600 transition-colors"
+                >
+                  <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
+                  Download PDF
+                </button>
                 {onEdit && (
                   <button
                     onClick={onEdit}
@@ -148,9 +174,15 @@ export default function InvoiceView({ invoice, onClose, onEdit }: InvoiceViewPro
                 <div className="flex justify-between">
                   <span>Payment Terms:</span>
                   <span className="capitalize">
-                    {invoice.payment_terms.replace('_', ' ')}
+                    {invoice.payment_terms?.replace('_', ' ')}
                   </span>
                 </div>
+                {invoice.project && (
+                  <div className="flex justify-between">
+                    <span>Project:</span>
+                    <span>{invoice.project.title}</span>
+                  </div>
+                )}
                 {invoice.payment_date && (
                   <div className="flex justify-between">
                     <span>Payment Date:</span>

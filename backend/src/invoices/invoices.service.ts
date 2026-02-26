@@ -17,7 +17,7 @@ export class InvoicesService {
   ) {}
 
   async create(createInvoiceDto: CreateInvoiceDto): Promise<Invoice> {
-    const { client_id, items, ...invoiceData } = createInvoiceDto;
+    const { client_id, project_id, document_type = 'invoice', items, ...invoiceData } = createInvoiceDto;
 
     // Verify client exists
     const client = await this.userRepository.findOne({ where: { id: client_id } });
@@ -30,14 +30,18 @@ export class InvoicesService {
     const taxAmount = (invoiceData.tax_rate || 0) * subtotal / 100;
     const totalAmount = subtotal + taxAmount - (invoiceData.discount_amount || 0);
 
+    const invoiceNumber = await this.generateInvoiceNumber(document_type);
+
     // Create invoice
     const invoice = this.invoiceRepository.create({
       ...invoiceData,
       client_id,
+      project_id: project_id || null,
+      document_type: document_type || 'invoice',
       subtotal,
       tax_amount: taxAmount,
       total_amount: totalAmount,
-      invoice_number: await this.generateInvoiceNumber(),
+      invoice_number: invoiceNumber,
     });
 
     const savedInvoice = await this.invoiceRepository.save(invoice);
@@ -57,10 +61,11 @@ export class InvoicesService {
     return this.findOne(savedInvoice.id);
   }
 
-  async findAll(page: number = 1, limit: number = 10, status?: InvoiceStatus, clientId?: string): Promise<{ invoices: Invoice[]; total: number }> {
+  async findAll(page: number = 1, limit: number = 10, status?: InvoiceStatus, clientId?: string, documentType?: string, search?: string): Promise<{ invoices: Invoice[]; total: number }> {
     const qb = this.invoiceRepository
       .createQueryBuilder('invoice')
       .leftJoinAndSelect('invoice.client', 'client')
+      .leftJoinAndSelect('invoice.project', 'project')
       .leftJoinAndSelect('invoice.items', 'items')
       .orderBy('invoice.created_at', 'DESC')
       .skip((page - 1) * limit)
@@ -68,6 +73,13 @@ export class InvoicesService {
 
     if (status) qb.andWhere('invoice.status = :status', { status });
     if (clientId) qb.andWhere('invoice.client_id = :clientId', { clientId });
+    if (documentType) qb.andWhere('invoice.document_type = :documentType', { documentType });
+    if (search && search.trim()) {
+      qb.andWhere(
+        '(invoice.invoice_number ILIKE :search OR client.firstName ILIKE :search OR client.lastName ILIKE :search OR client.email ILIKE :search)',
+        { search: `%${search.trim()}%` }
+      );
+    }
 
     const [invoices, total] = await qb.getManyAndCount();
     return { invoices, total };
@@ -99,7 +111,7 @@ export class InvoicesService {
   async findOne(id: number): Promise<Invoice> {
     const invoice = await this.invoiceRepository.findOne({
       where: { id },
-      relations: ['client', 'items'],
+      relations: ['client', 'project', 'items'],
     });
 
     if (!invoice) {
@@ -116,7 +128,10 @@ export class InvoicesService {
       throw new BadRequestException('Cannot update a paid invoice');
     }
 
-    const { client_id, items, ...updateData } = updateInvoiceDto;
+    const { client_id, project_id, document_type, items, ...updateData } = updateInvoiceDto;
+
+    if (project_id !== undefined) updateData['project_id'] = project_id || null;
+    if (document_type) updateData['document_type'] = document_type;
 
     // Update client if provided
     if (client_id) {
@@ -251,13 +266,15 @@ export class InvoicesService {
     };
   }
 
-  private async generateInvoiceNumber(): Promise<string> {
-    const lastInvoice = await this.invoiceRepository.findOne({
-      order: { id: 'DESC' },
-    });
-
-    const nextNumber = lastInvoice ? lastInvoice.id + 1 : 1;
-    return `INV-${nextNumber.toString().padStart(3, '0')}`;
+  private async generateInvoiceNumber(type: 'invoice' | 'quotation' = 'invoice'): Promise<string> {
+    const prefix = type === 'quotation' ? 'QUO' : 'INV';
+    const result = await this.invoiceRepository
+      .createQueryBuilder('inv')
+      .select('COUNT(inv.id)', 'count')
+      .where('inv.document_type = :type', { type })
+      .getRawOne();
+    const nextNumber = (parseInt(String(result?.count || 0), 10) || 0) + 1;
+    return `${prefix}-${nextNumber.toString().padStart(3, '0')}`;
   }
 
   async sendInvoice(id: number): Promise<Invoice> {
@@ -282,6 +299,8 @@ export class InvoicesService {
     
     const duplicateData = {
       client_id: originalInvoice.client_id,
+      project_id: originalInvoice.project_id,
+      document_type: originalInvoice.document_type || 'invoice',
       issue_date: new Date().toISOString(),
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
       payment_terms: originalInvoice.payment_terms,

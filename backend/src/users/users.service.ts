@@ -24,8 +24,12 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
+  async findAll(role?: UserRole, status?: string): Promise<User[]> {
+    const where: any = {};
+    if (role) where.role = role;
+    if (status) where.status = status;
     return this.usersRepository.find({
+      where: Object.keys(where).length ? where : undefined,
       select: ['id', 'email', 'firstName', 'lastName', 'phone', 'company', 'companyAddress', 'billingAddress', 'taxId', 'website', 'jobTitle', 'role', 'status', 'createdAt'],
     });
   }

@@ -44,12 +44,16 @@ export class InvoicesController {
     @Query('limit') limit: string = '10',
     @Query('status') status?: string,
     @Query('clientId') clientId?: string,
+    @Query('documentType') documentType?: string,
+    @Query('search') search?: string,
   ) {
     return this.invoicesService.findAll(
-      parseInt(page),
-      parseInt(limit),
+      parseInt(page) || 1,
+      parseInt(limit) || 10,
       status as any,
       clientId,
+      documentType,
+      search,
     );
   }
 

@@ -20,6 +20,7 @@ interface InvoiceActionsProps {
   onView: (invoice: any) => void
   onDelete: (invoiceId: number) => void
   onStatusUpdate: (invoiceId: number, status: string) => void
+  onDownloadPDF?: (invoice: any) => void
   className?: string
 }
 
@@ -29,6 +30,7 @@ export default function InvoiceActions({
   onView, 
   onDelete, 
   onStatusUpdate,
+  onDownloadPDF,
   className = ''
 }: InvoiceActionsProps) {
   const [isLoading, setIsLoading] = useState(false)
@@ -80,9 +82,7 @@ export default function InvoiceActions({
   }
 
   const handleDownload = () => {
-    // In a real implementation, this would generate and download a PDF
-    // For now, we'll just show an alert
-    alert('PDF download functionality would be implemented here')
+    onDownloadPDF ? onDownloadPDF(invoice) : onView(invoice)
   }
 
   const getStatusColor = (status: string) => {

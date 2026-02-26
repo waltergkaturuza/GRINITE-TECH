@@ -8,7 +8,7 @@ import {
   UserIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline'
-import { usersAPI, invoicesAPI } from '../../lib/api'
+import { usersAPI, projectsAPI } from '../../lib/api'
 
 interface InvoiceItem {
   description: string
@@ -23,12 +23,15 @@ interface InvoiceFormProps {
   onSubmit: (data: any) => void
   onCancel: () => void
   isLoading?: boolean
+  documentType?: 'invoice' | 'quotation'
 }
 
-export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = false }: InvoiceFormProps) {
+export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = false, documentType = 'invoice' }: InvoiceFormProps) {
   const [clients, setClients] = useState<any[]>([])
+  const [projects, setProjects] = useState<any[]>([])
   const [formData, setFormData] = useState({
     client_id: '',
+    project_id: '',
     issue_date: new Date().toISOString().split('T')[0],
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     payment_terms: 'net_30' as const,
@@ -50,9 +53,10 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
     }
   ])
 
-  // Load clients on component mount
+  // Load clients and projects on mount
   useEffect(() => {
     loadClients()
+    loadProjects()
   }, [])
 
   // Populate form when editing existing invoice
@@ -60,6 +64,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
     if (invoice) {
       setFormData({
         client_id: invoice.client_id || '',
+        project_id: invoice.project_id || '',
         issue_date: invoice.issue_date ? new Date(invoice.issue_date).toISOString().split('T')[0] : formData.issue_date,
         due_date: invoice.due_date ? new Date(invoice.due_date).toISOString().split('T')[0] : formData.due_date,
         payment_terms: invoice.payment_terms || 'net_30',
@@ -86,10 +91,21 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
 
   const loadClients = async () => {
     try {
-      const response = await usersAPI.getUsers({ role: 'client', limit: 100 })
-      setClients(response.users || response.data || [])
+      const response = await usersAPI.getUsers({ role: 'client' })
+      const list = Array.isArray(response) ? response : (response?.users || response?.data || [])
+      setClients(list.filter((u: any) => (u.role || '').toLowerCase() === 'client'))
     } catch (error) {
       console.error('Failed to load clients:', error)
+    }
+  }
+
+  const loadProjects = async () => {
+    try {
+      const res = await projectsAPI.getProjects({ limit: 200 })
+      const list = res?.projects ?? (Array.isArray(res) ? res : [])
+      setProjects(Array.isArray(list) ? list : [])
+    } catch (error) {
+      console.error('Failed to load projects:', error)
     }
   }
 
@@ -146,6 +162,8 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
     const totals = calculateTotals()
     const invoiceData = {
       ...formData,
+      document_type: documentType,
+      project_id: formData.project_id || undefined,
       items: items.filter(item => item.description.trim() !== ''),
       subtotal: parseFloat(totals.subtotal),
       tax_amount: parseFloat(totals.taxAmount),
@@ -161,7 +179,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
     <div className="max-w-4xl mx-auto bg-granite-800 shadow-xl rounded-lg border border-granite-700">
       <div className="px-6 py-4 border-b border-granite-700">
         <h3 className="text-lg font-medium text-white">
-          {invoice ? 'Edit Invoice' : 'Create New Invoice'}
+          {invoice ? (documentType === 'quotation' ? 'Edit Quotation' : 'Edit Invoice') : (documentType === 'quotation' ? 'Create New Quotation' : 'Create New Invoice')}
         </h3>
       </div>
 
@@ -176,7 +194,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
             </label>
             <select
               value={formData.client_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value, project_id: '' }))}
               className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
               required
             >
@@ -184,6 +202,25 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.firstName} {client.lastName} ({client.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Project Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Project (optional)
+            </label>
+            <select
+              value={formData.project_id}
+              onChange={(e) => setFormData(prev => ({ ...prev, project_id: e.target.value }))}
+              className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            >
+              <option value="">No project</option>
+              {projects.map((proj) => (
+                <option key={proj.id} value={proj.id}>
+                  {proj.title}
                 </option>
               ))}
             </select>
@@ -466,7 +503,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
             disabled={isLoading}
             className="px-4 py-2 bg-amber-800 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed active:bg-green-700 transition-colors duration-200"
           >
-            {isLoading ? 'Saving...' : (invoice ? 'Update Invoice' : 'Create Invoice')}
+            {isLoading ? 'Saving...' : (invoice ? (documentType === 'quotation' ? 'Update Quotation' : 'Update Invoice') : (documentType === 'quotation' ? 'Create Quotation' : 'Create Invoice'))}
           </button>
         </div>
       </form>

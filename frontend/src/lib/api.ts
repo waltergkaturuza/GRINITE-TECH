@@ -520,6 +520,8 @@ export const invoicesAPI = {
     limit?: number
     status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
     clientId?: string
+    documentType?: 'invoice' | 'quotation'
+    search?: string
   }) => {
     const response = await api.get('/invoices', { params })
     return response.data
@@ -530,6 +532,8 @@ export const invoicesAPI = {
   },
   createInvoice: async (invoiceData: {
     client_id: string
+    project_id?: string
+    document_type?: 'invoice' | 'quotation'
     issue_date: string
     due_date: string
     payment_terms?: 'net_15' | 'net_30' | 'net_45' | 'net_60' | 'due_on_receipt'

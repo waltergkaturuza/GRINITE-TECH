@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, Generated } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, Generated, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Project } from '../../projects/entities/project.entity';
 
 export enum InvoiceStatus {
   DRAFT = 'draft',
@@ -31,6 +32,16 @@ export class Invoice {
 
   @Column()
   client_id: string;
+
+  @ManyToOne(() => Project, { eager: true, nullable: true })
+  @JoinColumn({ name: 'project_id' })
+  project: Project;
+
+  @Column({ nullable: true })
+  project_id: string;
+
+  @Column({ type: 'varchar', default: 'invoice' })
+  document_type: 'invoice' | 'quotation';
 
   @Column()
   issue_date: Date;
