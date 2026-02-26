@@ -68,6 +68,10 @@ export class CreateInvoiceDto {
 
   @IsOptional()
   @IsString()
+  company_logo_url?: string;
+
+  @IsOptional()
+  @IsString()
   billing_address?: string;
 
   @IsOptional()
@@ -130,6 +134,10 @@ export class UpdateInvoiceDto {
   @IsOptional()
   @IsString()
   terms_conditions?: string;
+
+  @IsOptional()
+  @IsString()
+  company_logo_url?: string;
 
   @IsOptional()
   @IsString()

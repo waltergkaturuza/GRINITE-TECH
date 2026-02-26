@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 
+const DEFAULT_LOGO = '/logo.png'
+
 interface InvoiceViewProps {
   invoice: any
   onClose: () => void
@@ -40,6 +42,9 @@ export default function InvoiceView({ invoice, onClose, onEdit, autoPrint }: Inv
       currency: 'USD'
     }).format(amount)
   }
+
+  const logoPath = invoice.company_logo_url || process.env.NEXT_PUBLIC_COMPANY_LOGO_URL || DEFAULT_LOGO
+  const logoUrl = logoPath.startsWith('http') ? logoPath : (typeof window !== 'undefined' ? `${window.location.origin}${logoPath.startsWith('/') ? '' : '/'}${logoPath}` : logoPath)
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -105,27 +110,42 @@ export default function InvoiceView({ invoice, onClose, onEdit, autoPrint }: Inv
 
         {/* Invoice Content */}
         <div className="p-8 bg-white text-gray-900">
-          {/* Company Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <img
-                src="/logo.png"
-                alt="Quantis Technologies logo"
-                className="h-12 w-12 object-contain"
-              />
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-granite-800">
-                  {invoice.company_name || 'Quantis Technologies'}
-                </h1>
-                {invoice.company_address && (
-                  <p className="text-gray-600 mt-1 text-sm md:text-base">{invoice.company_address}</p>
-                )}
+          {/* Letterhead / Logo header */}
+          <div className="mb-8 pb-6 border-b-2 border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden print:bg-white">
+                  <img
+                    src={logoUrl}
+                    alt={`${invoice.company_name || 'Company'} logo`}
+                    className="max-w-full max-h-full w-auto h-auto object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none'
+                      const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement
+                      if (fallback) fallback.style.display = 'flex'
+                    }}
+                  />
+                  <div
+                    className="hidden w-full h-full items-center justify-center text-2xl font-bold text-gray-400"
+                    style={{ display: 'none' }}
+                  >
+                    {invoice.company_name?.charAt(0) || 'Q'}
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {invoice.company_name || 'Quantis Technologies'}
+                  </h1>
+                  {invoice.company_address && (
+                    <p className="text-gray-600 mt-1 text-sm">{invoice.company_address}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-0 text-xs text-gray-600">
+                    {invoice.company_email && <span>Email: {invoice.company_email}</span>}
+                    {invoice.company_phone && <span>Phone: {invoice.company_phone}</span>}
+                    {invoice.company_website && <span>Web: {invoice.company_website}</span>}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end space-y-1 text-xs md:text-sm text-gray-600">
-              {invoice.company_email && <span>Email: {invoice.company_email}</span>}
-              {invoice.company_phone && <span>Phone: {invoice.company_phone}</span>}
-              {invoice.company_website && <span>Web: {invoice.company_website}</span>}
             </div>
           </div>
 

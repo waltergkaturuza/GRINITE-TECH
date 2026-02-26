@@ -103,9 +103,12 @@ export class Invoice {
   @Column({ nullable: true })
   billing_phone: string;
 
-  // Company information for invoice header
+  // Company information for invoice header / letterhead
   @Column({ default: 'Quantis Technologies' })
   company_name: string;
+
+  @Column({ nullable: true })
+  company_logo_url: string;
 
   @Column('text', { nullable: true })
   company_address: string;
