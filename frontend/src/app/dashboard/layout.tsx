@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { 
-  Bars3Icon, 
+  Bars3Icon,
   XMarkIcon,
   HomeIcon,
   CubeIcon,
@@ -19,7 +19,8 @@ import {
   MagnifyingGlassIcon,
   ClipboardDocumentListIcon,
   BriefcaseIcon,
-  ClockIcon
+  ClockIcon,
+  ServerStackIcon
 } from '@heroicons/react/24/outline'
 
 export default function DashboardLayout({
@@ -63,6 +64,7 @@ export default function DashboardLayout({
     { name: 'Analytics', href: '/dashboard/analytics', icon: ChartBarIcon, current: false },
     { name: 'Chat', href: '/dashboard/chat', icon: ChatBubbleLeftRightIcon, current: false },
     { name: 'Invoices', href: '/dashboard/invoices', icon: DocumentTextIcon, current: false },
+    { name: 'Hosting Expenses', href: '/dashboard/hosting-expenses', icon: ServerStackIcon, current: false },
     { name: 'Settings', href: '/dashboard/settings', icon: CogIcon, current: false },
   ]
 

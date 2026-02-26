@@ -8,6 +8,14 @@ import {
   CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import api from '@/lib/api';
+import { projectsAPI, invoicesAPI, usersAPI } from '@/lib/api';
+
+interface BusinessKpis {
+  totalRevenue: number
+  activeClients: number
+  totalProjects: number
+  growthPercent: number
+}
 
 interface AnalyticsSummary {
   windowDays: number;
@@ -21,6 +29,7 @@ interface AnalyticsSummary {
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsSummary | null>(null);
+  const [kpis, setKpis] = useState<BusinessKpis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,8 +37,29 @@ export default function AnalyticsPage() {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/analytics/summary');
-        setData(res.data.data);
+        setError(null);
+
+        const [analyticsRes, projectStats, invoiceStats, userStats] = await Promise.allSettled([
+          api.get('/analytics/summary'),
+          projectsAPI.getProjectStats(),
+          invoicesAPI.getInvoiceStats(),
+          usersAPI.getStats(),
+        ]);
+
+        if (analyticsRes.status === 'fulfilled' && analyticsRes.value?.data?.data) {
+          setData(analyticsRes.value.data.data);
+        }
+
+        const proj = projectStats.status === 'fulfilled' ? projectStats.value : null;
+        const inv = invoiceStats.status === 'fulfilled' ? invoiceStats.value : null;
+        const usr = userStats.status === 'fulfilled' ? userStats.value : null;
+
+        setKpis({
+          totalRevenue: inv?.total_revenue ?? 0,
+          activeClients: usr?.clients ?? usr?.active ?? 0,
+          totalProjects: proj?.total ?? 0,
+          growthPercent: inv?.monthly_growth ?? 0,
+        });
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to load analytics');
       } finally {
@@ -48,27 +78,21 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (error || !data) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
-        <p className="text-sm text-red-300">{error || 'No data available'}</p>
-      </div>
-    );
-  }
-
-  const days = Object.keys(data.viewsByDay).sort();
+  const days = data ? Object.keys(data.viewsByDay).sort() : [];
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Analytics</h1>
         <p className="mt-2 text-sm text-gray-300">
-          Last {data.windowDays} days · {data.totalPageViews} page views · {data.uniqueSessions} unique sessions
+          {data
+            ? `Last ${data.windowDays} days · ${data.totalPageViews} page views · ${data.uniqueSessions} unique sessions`
+            : 'Web analytics summary is unavailable'}
         </p>
+        {error && <p className="mt-1 text-sm text-amber-400">{error}</p>}
       </div>
 
-      {/* Business KPIs (original financial analytics) */}
+      {/* Business KPIs - real data from backend */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -79,7 +103,9 @@ export default function AnalyticsPage() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-blue-100 truncate">Total Revenue</dt>
-                  <dd className="text-lg font-medium text-white">$87,500</dd>
+                  <dd className="text-lg font-medium text-white">
+                    ${(kpis?.totalRevenue ?? 0).toLocaleString()}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -95,7 +121,7 @@ export default function AnalyticsPage() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-green-100 truncate">Active Clients</dt>
-                  <dd className="text-lg font-medium text-white">12</dd>
+                  <dd className="text-lg font-medium text-white">{kpis?.activeClients ?? 0}</dd>
                 </dl>
               </div>
             </div>
@@ -111,7 +137,7 @@ export default function AnalyticsPage() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-yellow-100 truncate">Projects</dt>
-                  <dd className="text-lg font-medium text-white">25</dd>
+                  <dd className="text-lg font-medium text-white">{kpis?.totalProjects ?? 0}</dd>
                 </dl>
               </div>
             </div>
@@ -127,7 +153,11 @@ export default function AnalyticsPage() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-purple-100 truncate">Growth</dt>
-                  <dd className="text-lg font-medium text-white">+23%</dd>
+                  <dd className="text-lg font-medium text-white">
+                    {kpis != null
+                      ? `${kpis.growthPercent >= 0 ? '+' : ''}${kpis.growthPercent.toFixed(1)}%`
+                      : '—'}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -135,7 +165,8 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Page visits & events tracking */}
+      {/* Page visits & events tracking - from web analytics when available */}
+      {data && (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -185,6 +216,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="bg-granite-800 shadow rounded-lg border border-granite-700">
@@ -196,7 +228,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-400">No data yet</p>
                 </div>
               )}
-              {days.map((day) => {
+              {data && days.map((day) => {
                 const max = Math.max(...days.map(d => data.viewsByDay[d] || 0)) || 1;
                 const value = data.viewsByDay[day] || 0;
                 const height = (value / max) * 100;
@@ -220,26 +252,26 @@ export default function AnalyticsPage() {
           <div className="px-4 py-5 sm:p-6 space-y-4">
             <h3 className="text-lg leading-6 font-medium text-white">Top pages</h3>
             <ul className="divide-y divide-granite-700">
-              {data.topPages.map((p) => (
+              {data?.topPages?.map((p) => (
                 <li key={p.path} className="py-2 flex items-center justify-between">
                   <span className="text-sm text-gray-200">{p.path}</span>
                   <span className="text-sm font-medium text-gray-100">{p.count}</span>
                 </li>
               ))}
-              {data.topPages.length === 0 && (
+              {(!data?.topPages || data.topPages.length === 0) && (
                 <li className="py-2 text-sm text-gray-400">No page views yet</li>
               )}
             </ul>
 
             <h3 className="text-lg leading-6 font-medium text-white mt-4">Events</h3>
             <ul className="divide-y divide-granite-700">
-              {Object.entries(data.eventsByName).map(([name, count]) => (
+              {data?.eventsByName && Object.entries(data.eventsByName).map(([name, count]) => (
                 <li key={name} className="py-2 flex items-center justify-between">
                   <span className="text-sm text-gray-200">{name}</span>
                   <span className="text-sm font-medium text-gray-100">{count}</span>
                 </li>
               ))}
-              {Object.keys(data.eventsByName).length === 0 && (
+              {(!data?.eventsByName || Object.keys(data.eventsByName).length === 0) && (
                 <li className="py-2 text-sm text-gray-400">No events tracked yet</li>
               )}
             </ul>

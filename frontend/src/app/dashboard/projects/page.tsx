@@ -27,6 +27,7 @@ interface Project {
   type: string
   status: string
   budget?: number
+  totalBudget?: number
   startDate?: string
   endDate?: string
   estimatedHours?: number
@@ -156,9 +157,20 @@ export default function ProjectsPage() {
     const review = projectsData.filter(p => p.status === 'review').length
     const completed = projectsData.filter(p => p.status === 'completed').length
     const cancelled = projectsData.filter(p => p.status === 'cancelled').length
-    const totalBudget = projectsData.reduce((sum, p) => sum + (p.budget || 0), 0)
-    const totalActualHours = projectsData.reduce((sum, p) => sum + (p.actualHours || 0), 0)
-    const averageCompletion = total > 0 ? projectsData.reduce((sum, p) => sum + p.completionPercentage, 0) / total : 0
+    const toNum = (v: unknown): number => {
+      if (v == null || v === '') return 0
+      const n = Number(v)
+      return Number.isFinite(n) ? n : 0
+    }
+    const totalBudget = projectsData.reduce(
+      (sum, p) => sum + toNum(p.budget ?? p.totalBudget),
+      0
+    )
+    const totalActualHours = projectsData.reduce((sum, p) => sum + toNum(p.actualHours), 0)
+    const averageCompletion =
+      total > 0
+        ? projectsData.reduce((sum, p) => sum + toNum(p.completionPercentage), 0) / total
+        : 0
 
     return {
       total,
@@ -245,10 +257,12 @@ export default function ProjectsPage() {
   }
 
   const formatCurrency = (amount: number) => {
+    const n = Number(amount)
+    if (!Number.isFinite(n)) return '$0.00'
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(amount)
+    }).format(n)
   }
 
   const formatDate = (dateString: string) => {
@@ -321,7 +335,9 @@ export default function ProjectsPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg. Completion</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.averageCompletion.toFixed(1)}%</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {(Number.isFinite(stats.averageCompletion) ? stats.averageCompletion : 0).toFixed(1)}%
+              </p>
             </div>
           </div>
         </div>
@@ -476,7 +492,7 @@ export default function ProjectsPage() {
                       {getStatusBadge(project.status)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {project.budget ? formatCurrency(project.budget) : 'Not set'}
+                      {(project.budget ?? project.totalBudget) ? formatCurrency(Number(project.budget ?? project.totalBudget) || 0) : 'Not set'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">

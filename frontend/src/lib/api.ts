@@ -119,6 +119,10 @@ export const usersAPI = {
     const response = await api.delete(`/users/${id}`)
     return response.data
   },
+  getStats: async () => {
+    const response = await api.get('/users/stats')
+    return response.data
+  },
 }
 
 export const projectsAPI = {
@@ -572,6 +576,29 @@ export const invoicesAPI = {
   },
   getInvoiceStats: async () => {
     const response = await api.get('/invoices/stats')
+    return response.data
+  },
+}
+
+export const hostingExpensesAPI = {
+  getAll: async (params?: { page?: number; limit?: number; projectId?: string; status?: string; provider?: string }) => {
+    const response = await api.get('/hosting-expenses', { params })
+    return response.data
+  },
+  getOne: async (id: string) => {
+    const response = await api.get(`/hosting-expenses/${id}`)
+    return response.data
+  },
+  create: async (data: Record<string, any>) => {
+    const response = await api.post('/hosting-expenses', data)
+    return response.data
+  },
+  update: async (id: string, data: Record<string, any>) => {
+    const response = await api.patch(`/hosting-expenses/${id}`, data)
+    return response.data
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/hosting-expenses/${id}`)
     return response.data
   },
 }

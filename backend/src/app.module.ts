@@ -13,6 +13,7 @@ import { ChatModule } from './chat/chat.module';
 import { ServicesModule } from './services/services.module';
 import { RequestsModule } from './requests/requests.module';
 import { InvoicesModule } from './invoices/invoices.module';
+import { HostingExpensesModule } from './hosting-expenses/hosting-expenses.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { EmailModule } from './email/email.module';
@@ -50,6 +51,7 @@ import { SearchModule } from './search/search.module';
     ServicesModule,
     RequestsModule,
     InvoicesModule,
+    HostingExpensesModule,
     HealthModule,
     EmailModule,
     AnalyticsModule,
