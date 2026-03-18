@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic'
 import { 
   ChartBarIcon,
   ArrowTrendingUpIcon,
@@ -19,9 +20,16 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
-import { Line, Doughnut } from 'react-chartjs-2'
+const Line = dynamic(() => import('react-chartjs-2').then((m) => m.Line), { ssr: false })
+const Doughnut = dynamic(() => import('react-chartjs-2').then((m) => m.Doughnut), { ssr: false })
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend)
+if (typeof window !== 'undefined') {
+  try {
+    ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend)
+  } catch {
+    // ignore duplicate registration / transient runtime issues
+  }
+}
 
 type RangeOption = { label: string; windowDays: number }
 const RANGE_OPTIONS: RangeOption[] = [
