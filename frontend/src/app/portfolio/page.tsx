@@ -351,14 +351,14 @@ export default function Portfolio() {
                     </div>
                     <p className="text-gray-200 text-sm mb-4">{project.description}</p>
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {project.technologies.slice(0, 3).map((tech: string, index: number) => (
+                      {(project.technologies ?? []).slice(0, 3).map((tech: string, index: number) => (
                         <span key={index} className="bg-white/10 text-gray-100 text-xs px-2 py-1 rounded border border-white/15">
                           {tech}
                         </span>
                       ))}
-                      {project.technologies.length > 3 && (
+                      {(project.technologies?.length ?? 0) > 3 && (
                         <span className="bg-white/10 text-gray-100 text-xs px-2 py-1 rounded border border-white/15">
-                          +{project.technologies.length - 3} more
+                          +{(project.technologies?.length ?? 0) - 3} more
                         </span>
                       )}
                     </div>
