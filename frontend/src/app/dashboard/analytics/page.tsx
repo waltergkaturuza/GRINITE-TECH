@@ -10,6 +10,15 @@ import {
 import api from '@/lib/api';
 import { projectsAPI, invoicesAPI, usersAPI } from '@/lib/api';
 
+type RangeOption = { label: string; windowDays: number }
+const RANGE_OPTIONS: RangeOption[] = [
+  { label: '7 days', windowDays: 7 },
+  { label: '14 days', windowDays: 14 },
+  { label: '30 days', windowDays: 30 },
+  { label: '3 months', windowDays: 90 },
+  { label: '1 year', windowDays: 365 },
+]
+
 interface BusinessKpis {
   totalRevenue: number
   activeClients: number
@@ -32,6 +41,8 @@ export default function AnalyticsPage() {
   const [kpis, setKpis] = useState<BusinessKpis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rangeOpen, setRangeOpen] = useState(false)
+  const [windowDays, setWindowDays] = useState<number>(14)
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -40,7 +51,7 @@ export default function AnalyticsPage() {
         setError(null);
 
         const [analyticsRes, projectStats, invoiceStats, userStats] = await Promise.allSettled([
-          api.get('/analytics/summary'),
+          api.get('/analytics/summary', { params: { windowDays } }),
           projectsAPI.getProjectStats(),
           invoicesAPI.getInvoiceStats(),
           usersAPI.getStats(),
@@ -68,7 +79,7 @@ export default function AnalyticsPage() {
     };
 
     fetchAnalytics();
-  }, []);
+  }, [windowDays]);
 
   if (loading) {
     return (
@@ -82,14 +93,46 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
-        <p className="mt-2 text-sm text-gray-300">
-          {data
-            ? `Last ${data.windowDays} days · ${data.totalPageViews} page views · ${data.uniqueSessions} unique sessions`
-            : 'Web analytics summary is unavailable'}
-        </p>
-        {error && <p className="mt-1 text-sm text-amber-400">{error}</p>}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Analytics</h1>
+          <p className="mt-2 text-sm text-gray-300">
+            {data
+              ? `Last ${data.windowDays} days · ${data.totalPageViews} page views · ${data.uniqueSessions} unique sessions`
+              : 'Web analytics summary is unavailable'}
+          </p>
+          {error && <p className="mt-1 text-sm text-amber-400">{error}</p>}
+        </div>
+
+        {/* Range filter (like screenshot) */}
+        <div className="relative">
+          <button
+            onClick={() => setRangeOpen((v) => !v)}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/15"
+          >
+            <span>{RANGE_OPTIONS.find((o) => o.windowDays === windowDays)?.label ?? `${windowDays} days`}</span>
+            <svg className="h-4 w-4 opacity-80" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M5.5 7.5L10 12L14.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {rangeOpen && (
+            <div className="absolute right-0 mt-2 w-44 rounded-xl border border-white/10 bg-granite-800 shadow-xl overflow-hidden z-50">
+              {RANGE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.windowDays}
+                  onClick={() => { setWindowDays(opt.windowDays); setRangeOpen(false) }}
+                  className={`w-full text-left px-4 py-2 text-sm ${
+                    opt.windowDays === windowDays
+                      ? 'bg-amber-900/40 text-amber-200'
+                      : 'text-gray-200 hover:bg-white/5'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Business KPIs - real data from backend */}
