@@ -186,44 +186,6 @@ export default function DashboardLayout({
           </button>
         </div>
 
-        {/* Page header */}
-        <header className="bg-white/5 backdrop-blur-sm border-b border-white/10">
-          <div className="py-6 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-              </div>
-              <div className="flex items-center space-x-4">
-                {/* Search bar */}
-                <div className="relative hidden md:block">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="block w-full pl-10 pr-3 py-2 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-900 focus:border-transparent"
-                  />
-                </div>
-                
-                {/* Notifications */}
-                <button className="relative p-2 text-gray-400 hover:text-white transition-colors duration-200">
-                  <BellIcon className="h-6 w-6" />
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-crimson-900 ring-2 ring-granite-900"></span>
-                </button>
-
-                {/* User menu */}
-                <div className="relative">
-                  <button className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-200">
-                    <UserCircleIcon className="h-8 w-8" />
-                    <span className="hidden md:block text-sm font-medium">{user?.firstName}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Main content area */}
         <main className="flex-1">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
