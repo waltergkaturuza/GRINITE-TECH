@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, Param } from '@nestjs/common'
+import { Controller, Post, Get, Body, Query, Param, Patch, Delete } from '@nestjs/common'
 import { ChatService } from './chat.service'
 
 export interface CreateChatSessionDto {
@@ -71,6 +71,59 @@ export class ChatController {
         success: false,
         error: error.message,
         message: 'Failed to retrieve chat session'
+      }
+    }
+  }
+
+  @Patch('sessions/:id')
+  async updateSession(@Param('id') sessionId: string, @Body() updateDto: any) {
+    try {
+      const session = await this.chatService.updateSession(sessionId, updateDto)
+      return {
+        success: true,
+        data: session,
+        message: 'Chat session updated successfully',
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to update chat session',
+      }
+    }
+  }
+
+  @Delete('sessions/:id')
+  async deleteSession(@Param('id') sessionId: string) {
+    try {
+      await this.chatService.deleteSession(sessionId)
+      return {
+        success: true,
+        message: 'Chat session deleted successfully',
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to delete chat session',
+      }
+    }
+  }
+
+  @Post('sessions/:sessionId/messages')
+  async addMessage(@Param('sessionId') sessionId: string, @Body() messageData: any) {
+    try {
+      const session = await this.chatService.addMessage(sessionId, messageData)
+      return {
+        success: true,
+        data: session,
+        message: 'Message added successfully',
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to add message',
       }
     }
   }
