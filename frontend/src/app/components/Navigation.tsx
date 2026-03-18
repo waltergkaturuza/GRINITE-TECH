@@ -144,6 +144,9 @@ export default function Navigation() {
             <Link href="/products" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
               Products
             </Link>
+            <Link href="/portfolio" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
+              Portfolio
+            </Link>
             <Link href="/about" className="text-granite-700 hover:text-crimson-900 transition-colors duration-200">
               About
             </Link>
@@ -211,6 +214,13 @@ export default function Navigation() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Products
+              </Link>
+              <Link 
+                href="/portfolio" 
+                className="block px-3 py-2 text-granite-700 hover:text-crimson-900 transition-colors duration-200"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Portfolio
               </Link>
               <Link 
                 href="/about" 
