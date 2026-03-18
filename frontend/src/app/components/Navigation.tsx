@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bars3Icon, XMarkIcon, UserIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import LoginModal from '@/components/LoginModal'
@@ -16,6 +16,7 @@ export default function Navigation() {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isServicesOpen, setIsServicesOpen] = useState(false)
+  const servicesMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -23,6 +24,19 @@ export default function Navigation() {
     const token = localStorage.getItem('token')
     setIsLoggedIn(!!token)
   }, [])
+
+  useEffect(() => {
+    if (!isServicesOpen) return
+    const onMouseDown = (e: MouseEvent) => {
+      const el = servicesMenuRef.current
+      if (!el) return
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setIsServicesOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [isServicesOpen])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -81,13 +95,12 @@ export default function Navigation() {
               <MagnifyingGlassIcon className="h-5 w-5" />
               <span className="text-xs text-emerald-50/80">Search</span>
             </button>
-            <div
-              className="relative"
-              onMouseEnter={() => setIsServicesOpen(true)}
-              onMouseLeave={() => setIsServicesOpen(false)}
-            >
+            <div className="relative" ref={servicesMenuRef}>
               <button
+                onClick={() => setIsServicesOpen((v) => !v)}
                 className="inline-flex items-center text-emerald-50/90 hover:text-white transition-colors duration-200"
+                aria-haspopup="menu"
+                aria-expanded={isServicesOpen}
               >
                 <span>Services</span>
                 <svg
@@ -110,6 +123,7 @@ export default function Navigation() {
                   <Link
                     href="/services"
                     className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     All services
                   </Link>
@@ -117,24 +131,28 @@ export default function Navigation() {
                   <Link
                     href="/services/custom-software"
                     className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     Custom software
                   </Link>
                   <Link
                     href="/services/mobile-apps"
                     className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     Mobile apps
                   </Link>
                   <Link
                     href="/services/business-automation"
                     className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     Business automation
                   </Link>
                   <Link
                     href="/services/ecommerce"
                     className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     E‑commerce & digital products
                   </Link>

@@ -255,24 +255,16 @@ export default function Portfolio() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-granite-200 sticky top-0 z-40">
+      <div className="bg-emerald-950 shadow-lg border-b border-emerald-900/30 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link 
                 href="/"
-                className="flex items-center gap-2 text-granite-600 hover:text-crimson-900 transition-colors"
+                className="flex items-center gap-2 text-emerald-50/90 hover:text-white transition-colors"
               >
                 <ArrowLeftIcon className="h-5 w-5" />
                 Back to Home
-              </Link>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link 
-                href="/dashboard"
-                className="bg-gradient-to-r from-crimson-900 to-crimson-800 hover:from-crimson-800 hover:to-crimson-700 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium"
-              >
-                Dashboard
               </Link>
             </div>
           </div>
@@ -465,41 +457,41 @@ export default function Portfolio() {
 
         {/* Experience Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Experience & Approach</h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Experience & Approach</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
+            <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="bg-blue-100 text-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CodeBracketIcon className="h-8 w-8" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Clean Code</h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-black text-sm">
                 Writing maintainable, scalable, and well-documented code following industry best practices.
               </p>
             </div>
-            <div className="text-center">
+            <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="bg-green-100 text-green-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <GlobeAltIcon className="h-8 w-8" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Full-Stack</h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-black text-sm">
                 End-to-end development from database design to user interface implementation.
               </p>
             </div>
-            <div className="text-center">
+            <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="bg-purple-100 text-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <DevicePhoneMobileIcon className="h-8 w-8" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Mobile First</h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-black text-sm">
                 Responsive design and mobile application development for all platforms.
               </p>
             </div>
-            <div className="text-center">
+            <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="bg-orange-100 text-orange-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ChartBarIcon className="h-8 w-8" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Performance</h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-black text-sm">
                 Optimized applications with focus on speed, scalability, and user experience.
               </p>
             </div>
@@ -521,10 +513,10 @@ export default function Portfolio() {
               Start a Project
             </a>
             <Link 
-              href="/dashboard"
+              href="/services"
               className="border border-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              View Dashboard
+              View Services
             </Link>
           </div>
         </div>
