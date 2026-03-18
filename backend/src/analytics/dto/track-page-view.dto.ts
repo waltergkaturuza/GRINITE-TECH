@@ -15,5 +15,9 @@ export class TrackPageViewDto {
   @IsOptional()
   @IsString()
   userId?: string;
+
+  @IsOptional()
+  @IsString()
+  userAgent?: string;
 }
 

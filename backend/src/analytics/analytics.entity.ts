@@ -17,6 +17,9 @@ export class PageView {
   @Column({ nullable: true })
   userId?: string;
 
+  @Column({ nullable: true })
+  userAgent?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }

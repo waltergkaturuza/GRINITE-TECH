@@ -25,6 +25,7 @@ export async function trackPageView(path: string) {
         path,
         referrer: document.referrer || null,
         sessionId,
+        userAgent: navigator.userAgent || null,
       }),
     });
   } catch {
