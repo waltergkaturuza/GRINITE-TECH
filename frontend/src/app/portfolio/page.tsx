@@ -43,7 +43,7 @@ const FEATURED_WORK: PortfolioProject[] = [
     description: 'Company website and portfolio presence for Quantis Technologies.',
     technologies: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS'],
     status: 'Live',
-    demo: 'https://www.quantistechnologies.co.zw/portfolio',
+    demo: 'https://www.quantistechnologies.co.zw',
     type: 'web',
   },
   {
@@ -53,7 +53,7 @@ const FEATURED_WORK: PortfolioProject[] = [
     technologies: ['Next.js', 'TypeScript', 'Vercel'],
     status: 'Live',
     github: 'https://github.com/waltergkaturuza/tnf_summit',
-    demo: 'https://tnf-summit.vercel.app/admin/dashboard',
+    demo: 'https://tnf-summit.vercel.app',
     type: 'web',
   },
   {
@@ -125,9 +125,9 @@ function svgThumbDataUri(title: string, subtitle?: string) {
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2563EB"/>
-      <stop offset="0.6" stop-color="#7C3AED"/>
-      <stop offset="1" stop-color="#0EA5E9"/>
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="0.55" stop-color="#7F1D1D"/>
+      <stop offset="1" stop-color="#0F766E"/>
     </linearGradient>
     <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity="0.28"/>
@@ -227,10 +227,10 @@ export default function Portfolio() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading portfolio...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-900 mx-auto mb-4"></div>
+          <p className="text-gray-200">Loading portfolio...</p>
         </div>
       </div>
     )
@@ -238,12 +238,12 @@ export default function Portfolio() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="text-red-200 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-crimson-900 text-white px-4 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
           >
             Retry
           </button>
@@ -253,15 +253,15 @@ export default function Portfolio() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-granite-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link 
                 href="/"
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center gap-2 text-granite-600 hover:text-crimson-900 transition-colors"
               >
                 <ArrowLeftIcon className="h-5 w-5" />
                 Back to Home
@@ -270,7 +270,7 @@ export default function Portfolio() {
             <div className="flex items-center gap-4">
               <Link 
                 href="/dashboard"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-gradient-to-r from-crimson-900 to-crimson-800 hover:from-crimson-800 hover:to-crimson-700 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium"
               >
                 Dashboard
               </Link>
@@ -282,10 +282,10 @@ export default function Portfolio() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Greenford Walter Katuruza — Portfolio
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">
             Full-stack software developer specializing in modern web technologies, 
             mobile applications, and scalable backend systems. Passionate about creating 
             innovative solutions that drive business growth.
@@ -295,13 +295,13 @@ export default function Portfolio() {
               href="https://github.com/waltergkaturuza" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+              className="bg-white/15 backdrop-blur-sm border border-white/25 text-white px-6 py-3 rounded-lg hover:bg-white/20 transition-colors font-medium"
             >
               View GitHub
             </a>
             <a 
               href="mailto:walter.katuruza@grinitetech.com"
-              className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+              className="bg-crimson-900 text-white px-6 py-3 rounded-lg hover:bg-crimson-800 transition-colors font-medium"
             >
               Contact Me
             </a>
@@ -310,16 +310,16 @@ export default function Portfolio() {
 
         {/* Skills Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Technical Skills</h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Technical Skills</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {skills.map((skillGroup, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">{skillGroup.category}</h3>
+              <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">{skillGroup.category}</h3>
                 <div className="flex flex-wrap gap-2">
                   {skillGroup.technologies.map((tech, techIndex) => (
                     <span 
                       key={techIndex}
-                      className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
+                      className="bg-white/10 text-gray-100 text-sm px-3 py-1 rounded-full border border-white/15"
                     >
                       {tech}
                     </span>
@@ -332,12 +332,12 @@ export default function Portfolio() {
 
         {/* Projects Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Featured Work</h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Featured Work</h2>
           {featured.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featured.map((project) => (
-                <div key={project.id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="h-48 bg-gray-100">
+                <div key={project.id} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 overflow-hidden hover:border-white/25 transition-all">
+                  <div className="h-48 bg-black/20">
                     <img
                       src={svgThumbDataUri(project.title, project.description)}
                       alt={`${project.title} thumbnail`}
@@ -346,26 +346,26 @@ export default function Portfolio() {
                   </div>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
+                      <h3 className="text-lg font-semibold text-white">{project.title}</h3>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         project.status === 'Live' 
-                          ? 'bg-green-100 text-green-800' 
+                          ? 'bg-emerald-400/15 text-emerald-200 border border-emerald-400/25' 
                           : project.status === 'Suspended'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-red-400/15 text-red-200 border border-red-400/25'
+                            : 'bg-amber-400/15 text-amber-200 border border-amber-400/25'
                       }`}>
                         {project.status || 'Project'}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-sm mb-4">{project.description}</p>
+                    <p className="text-gray-200 text-sm mb-4">{project.description}</p>
                     <div className="flex flex-wrap gap-1 mb-4">
                       {project.technologies.slice(0, 3).map((tech: string, index: number) => (
-                        <span key={index} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                        <span key={index} className="bg-white/10 text-gray-100 text-xs px-2 py-1 rounded border border-white/15">
                           {tech}
                         </span>
                       ))}
                       {project.technologies.length > 3 && (
-                        <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                        <span className="bg-white/10 text-gray-100 text-xs px-2 py-1 rounded border border-white/15">
                           +{project.technologies.length - 3} more
                         </span>
                       )}
@@ -376,7 +376,7 @@ export default function Portfolio() {
                           href={project.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 text-center bg-gray-900 text-white text-sm px-3 py-2 rounded hover:bg-gray-800 transition-colors"
+                          className="flex-1 text-center bg-white/15 text-white text-sm px-3 py-2 rounded-lg hover:bg-white/20 transition-colors border border-white/20"
                         >
                           GitHub
                         </a>
@@ -386,7 +386,7 @@ export default function Portfolio() {
                           href={project.demo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 text-center bg-blue-600 text-white text-sm px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+                          className="flex-1 text-center bg-crimson-900 text-white text-sm px-3 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
                         >
                           Live Demo
                         </a>
@@ -398,20 +398,20 @@ export default function Portfolio() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-600 mb-4">No projects available yet.</p>
-              <p className="text-gray-500">Add projects or connect GitHub to show work here.</p>
+              <p className="text-gray-200 mb-2">No projects available yet.</p>
+              <p className="text-gray-300">Add projects or connect GitHub to show work here.</p>
             </div>
           )}
         </div>
 
         {/* More from GitHub */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">More from GitHub</h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">More from GitHub</h2>
           {githubProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {githubProjects.map((project) => (
-                <div key={project.id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="h-40 bg-gray-100">
+                <div key={project.id} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 overflow-hidden hover:border-white/25 transition-all">
+                  <div className="h-40 bg-black/20">
                     <img
                       src={svgThumbDataUri(project.title, project.technologies.join(' • '))}
                       alt={`${project.title} thumbnail`}
@@ -420,23 +420,23 @@ export default function Portfolio() {
                   </div>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
+                      <h3 className="text-lg font-semibold text-white">{project.title}</h3>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         project.status === 'Live'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-700'
+                          ? 'bg-emerald-400/15 text-emerald-200 border border-emerald-400/25'
+                          : 'bg-white/10 text-gray-100 border border-white/15'
                       }`}>
                         {project.status}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">{project.description}</p>
+                    <p className="text-gray-200 text-sm mb-4 line-clamp-3">{project.description}</p>
                     <div className="flex gap-2">
                       {project.github && (
                         <a
                           href={project.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 text-center bg-gray-900 text-white text-sm px-3 py-2 rounded hover:bg-gray-800 transition-colors"
+                          className="flex-1 text-center bg-white/15 text-white text-sm px-3 py-2 rounded-lg hover:bg-white/20 transition-colors border border-white/20"
                         >
                           Repo
                         </a>
@@ -446,7 +446,7 @@ export default function Portfolio() {
                           href={project.demo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 text-center bg-blue-600 text-white text-sm px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+                          className="flex-1 text-center bg-crimson-900 text-white text-sm px-3 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
                         >
                           Live
                         </a>
@@ -457,7 +457,7 @@ export default function Portfolio() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-10 text-gray-600">
+            <div className="text-center py-10 text-gray-200">
               No public repos found yet.
             </div>
           )}
