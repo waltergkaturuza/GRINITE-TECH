@@ -5,6 +5,7 @@ import { ChatSession } from '../chatbot/entities/chat-session.entity'
 
 export interface ChatSessionData {
   id: string
+  sessionId: string
   userId?: string
   sessionName?: string
   messages: any[]
@@ -46,6 +47,7 @@ export class ChatService {
     }
     return {
       id: entity.id,
+      sessionId: entity.sessionId,
       userId: entity.user?.id,
       sessionName: entity.sessionId,
       messages,
