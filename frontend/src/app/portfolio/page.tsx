@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { projectsAPI } from '@/lib/api'
 import { 
   ArrowLeftIcon, 
   CodeBracketIcon, 
@@ -11,8 +10,152 @@ import {
   ChartBarIcon 
 } from '@heroicons/react/24/outline'
 
+type PortfolioProject = {
+  id: string
+  title: string
+  description: string
+  technologies: string[]
+  status?: string
+  github?: string
+  demo?: string
+  type?: 'web' | 'mobile' | 'backend' | 'data' | 'system'
+}
+
+type GitHubRepo = {
+  id: number
+  name: string
+  full_name: string
+  html_url: string
+  description: string | null
+  homepage: string | null
+  language: string | null
+  fork: boolean
+  archived: boolean
+  disabled: boolean
+  pushed_at: string | null
+  updated_at: string
+}
+
+const FEATURED_WORK: PortfolioProject[] = [
+  {
+    id: 'quantis-portfolio',
+    title: 'Quantis Technologies Website & Portfolio',
+    description: 'Company website and portfolio presence for Quantis Technologies.',
+    technologies: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS'],
+    status: 'Live',
+    demo: 'https://www.quantistechnologies.co.zw/portfolio',
+    type: 'web',
+  },
+  {
+    id: 'tnf-summit',
+    title: 'TNF Global Summit 2026 Admin Dashboard',
+    description: 'Conference admin dashboard for registrations, content, and event workflows.',
+    technologies: ['Next.js', 'TypeScript', 'Vercel'],
+    status: 'Live',
+    github: 'https://github.com/waltergkaturuza/tnf_summit',
+    demo: 'https://tnf-summit.vercel.app/admin/dashboard',
+    type: 'web',
+  },
+  {
+    id: 'saywhat-sirtis',
+    title: 'SAYWHAT SIRTIS',
+    description: 'Integrated real-time information system with secure access portal and enterprise workflows.',
+    technologies: ['Next.js', 'TypeScript', 'Realtime', 'RBAC'],
+    status: 'Live',
+    github: 'https://github.com/waltergkaturuza/SaywhatSirtis',
+    demo: 'https://saywhat-sirtis.vercel.app/',
+    type: 'system',
+  },
+  {
+    id: 'poz-fuel',
+    title: 'POZ Fuel Coupon System',
+    description: 'Fuel coupon issuance and tracking system for operational control and reporting.',
+    technologies: ['Web App', 'Auth', 'Reporting'],
+    status: 'Live',
+    demo: 'https://parliament-zimbabwe-fuel-system.vercel.app/',
+    github: 'https://github.com/waltergkaturuza/Parliament-Zimbabwe',
+    type: 'system',
+  },
+  {
+    id: 'munda-market-buyer',
+    title: 'Munda Market (Buyer Portal)',
+    description: 'Buyer experience for browsing products, ordering, and account management.',
+    technologies: ['Web App', 'E-commerce'],
+    status: 'Live',
+    demo: 'https://munda-market-buyer.vercel.app/',
+    github: 'https://github.com/waltergkaturuza/Munda-Market',
+    type: 'web',
+  },
+  {
+    id: 'munda-market-admin',
+    title: 'Munda Market (Admin Console)',
+    description: 'Admin console for catalog, orders, users and operational workflows.',
+    technologies: ['Admin', 'RBAC', 'Analytics'],
+    status: 'Live',
+    demo: 'https://munda-market-admin.vercel.app/login',
+    github: 'https://github.com/waltergkaturuza/Munda-Market',
+    type: 'web',
+  },
+  {
+    id: 'retailcloud',
+    title: 'RetailCloud',
+    description: 'Retail management platform (auth, onboarding, and operational modules).',
+    technologies: ['TypeScript', 'Next.js', 'Render'],
+    status: 'Paused',
+    demo: 'https://retailcloud.onrender.com/signup',
+    github: 'https://github.com/waltergkaturuza/RetailCloud',
+    type: 'system',
+  },
+  {
+    id: 'srhr-trust',
+    title: 'SRHR Africa Trust',
+    description: 'Web system for SRHR Africa Trust (deployment currently suspended).',
+    technologies: ['Web App', 'Render'],
+    status: 'Suspended',
+    demo: 'https://srhr-africa-trust.onrender.com/',
+    github: 'https://github.com/waltergkaturuza/SRHR-Dashboard',
+    type: 'web',
+  },
+]
+
+function svgThumbDataUri(title: string, subtitle?: string) {
+  const safeTitle = (title || '').slice(0, 38)
+  const safeSub = (subtitle || '').slice(0, 52)
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563EB"/>
+      <stop offset="0.6" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" rx="44" fill="url(#g)"/>
+  <g filter="url(#s)">
+    <rect x="76" y="86" width="1048" height="458" rx="32" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.22)"/>
+    <text x="120" y="220" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="54" font-weight="800" fill="#fff">
+      ${escapeXml(safeTitle)}
+    </text>
+    <text x="120" y="288" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="26" font-weight="500" fill="rgba(255,255,255,0.92)">
+      ${escapeXml(safeSub)}
+    </text>
+    <text x="120" y="500" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="20" font-weight="600" fill="rgba(255,255,255,0.85)">
+      Greenford Walter Katuruza • Full-stack Developer
+    </text>
+  </g>
+</svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
+function escapeXml(str: string) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 export default function Portfolio() {
-  const [projects, setProjects] = useState<any[]>([])
+  const [githubRepos, setGithubRepos] = useState<GitHubRepo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,17 +163,13 @@ export default function Portfolio() {
     async function fetchData() {
       try {
         setLoading(true)
-        const projectsResponse: any = await projectsAPI.getProjects()
-
-        const list = Array.isArray(projectsResponse?.data)
-          ? projectsResponse.data
-          : Array.isArray(projectsResponse?.projects)
-          ? projectsResponse.projects
-          : Array.isArray(projectsResponse)
-          ? projectsResponse
-          : []
-
-        setProjects(list)
+        const res = await fetch('https://api.github.com/users/waltergkaturuza/repos?per_page=100&sort=updated')
+        if (!res.ok) throw new Error(`GitHub fetch failed: ${res.status}`)
+        const repos = (await res.json()) as GitHubRepo[]
+        const cleaned = repos
+          .filter((r) => !r.fork && !r.archived && !r.disabled)
+          .sort((a, b) => new Date(b.pushed_at || b.updated_at).getTime() - new Date(a.pushed_at || a.updated_at).getTime())
+        setGithubRepos(cleaned)
       } catch (err) {
         console.error('Error fetching data:', err)
         setError('Failed to load portfolio data')
@@ -70,17 +209,21 @@ export default function Portfolio() {
     }
   ]
 
-  // Create portfolio projects from real data
-  const portfolioProjects = projects.slice(0, 6).map(project => ({
-    id: project.id,
-    title: project.name,
-    description: project.description || 'Professional project developed with modern technologies',
-    technologies: project.technologies ? project.technologies.split(',').map((t: string) => t.trim()) : ['React', 'Node.js'],
-    status: project.status || 'Completed',
-    icon: '🚀',
-    github: project.repositoryUrl,
-    demo: project.liveUrl
-  }))
+  const githubProjects: PortfolioProject[] = githubRepos
+    .filter((r) => Boolean(r.homepage) || Boolean(r.description))
+    .slice(0, 9)
+    .map((r) => ({
+      id: `gh-${r.id}`,
+      title: r.name.replace(/[-_]/g, ' '),
+      description: r.description || 'Open-source project.',
+      technologies: [r.language || 'Software'].filter(Boolean) as string[],
+      status: r.homepage ? 'Live' : 'Open Source',
+      github: r.html_url,
+      demo: r.homepage || undefined,
+      type: 'web',
+    }))
+
+  const featured = FEATURED_WORK
 
   if (loading) {
     return (
@@ -140,7 +283,7 @@ export default function Portfolio() {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Walter Katuruza - Portfolio
+            Greenford Walter Katuruza — Portfolio
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             Full-stack software developer specializing in modern web technologies, 
@@ -189,25 +332,29 @@ export default function Portfolio() {
 
         {/* Projects Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Featured Projects</h2>
-          {portfolioProjects.length > 0 ? (
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Featured Work</h2>
+          {featured.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {portfolioProjects.map((project) => (
+              {featured.map((project) => (
                 <div key={project.id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <div className="text-white text-6xl opacity-20">
-                      {project.icon}
-                    </div>
+                  <div className="h-48 bg-gray-100">
+                    <img
+                      src={svgThumbDataUri(project.title, project.description)}
+                      alt={`${project.title} thumbnail`}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        project.status === 'Completed' 
+                        project.status === 'Live' 
                           ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
+                          : project.status === 'Suspended'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {project.status}
+                        {project.status || 'Project'}
                       </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-4">{project.description}</p>
@@ -252,12 +399,66 @@ export default function Portfolio() {
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-600 mb-4">No projects available yet.</p>
-              <Link 
-                href="/dashboard/projects"
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Add Projects
-              </Link>
+              <p className="text-gray-500">Add projects or connect GitHub to show work here.</p>
+            </div>
+          )}
+        </div>
+
+        {/* More from GitHub */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">More from GitHub</h2>
+          {githubProjects.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {githubProjects.map((project) => (
+                <div key={project.id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="h-40 bg-gray-100">
+                    <img
+                      src={svgThumbDataUri(project.title, project.technologies.join(' • '))}
+                      alt={`${project.title} thumbnail`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        project.status === 'Live'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {project.status}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">{project.description}</p>
+                    <div className="flex gap-2">
+                      {project.github && (
+                        <a
+                          href={project.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 text-center bg-gray-900 text-white text-sm px-3 py-2 rounded hover:bg-gray-800 transition-colors"
+                        >
+                          Repo
+                        </a>
+                      )}
+                      {project.demo && (
+                        <a
+                          href={project.demo}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 text-center bg-blue-600 text-white text-sm px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+                        >
+                          Live
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-600">
+              No public repos found yet.
             </div>
           )}
         </div>
