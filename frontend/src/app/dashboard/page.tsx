@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Navigation from '../components/Navigation'
 import { 
   BriefcaseIcon,
   DocumentIcon,
@@ -212,13 +211,10 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-        <Navigation />
-        <div className="wide-container px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crimson-900 mx-auto"></div>
-            <p className="mt-4 text-granite-600">Loading dashboard...</p>
-          </div>
+      <div className="py-16">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-900 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading dashboard...</p>
         </div>
       </div>
     )
@@ -226,19 +222,16 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-        <Navigation />
-        <div className="wide-container px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="text-red-600 mb-4">{error}</p>
-            <button
-              onClick={loadDashboardData}
-              className="bg-crimson-600 hover:bg-crimson-700 text-white px-4 py-2 rounded-lg"
-            >
-              Try Again
-            </button>
-          </div>
+      <div className="py-16">
+        <div className="text-center">
+          <ExclamationTriangleIcon className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <p className="text-red-200 mb-4">{error}</p>
+          <button
+            onClick={loadDashboardData}
+            className="bg-yellow-900 hover:bg-yellow-800 text-white px-4 py-2 rounded-lg"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     )
@@ -249,16 +242,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-      <Navigation />
-
-      <div className="wide-container px-4 sm:px-6 lg:px-8 py-8">
+    <div className="py-2">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-granite-800 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
             Welcome back, {user.firstName} {user.lastName}!
           </h1>
-          <p className="text-granite-600">Manage your projects and track progress</p>
+          <p className="text-gray-300">Manage your projects and track progress</p>
         </div>
 
         {/* Stats Overview */}
@@ -591,7 +581,6 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-      </div>
     </div>
   )
 }
