@@ -126,14 +126,6 @@ export default function AnalyticsPage() {
     }
   }, [rangeOpen])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />
-      </div>
-    );
-  }
-
   const days = useMemo(() => {
     if (!data) return []
     const keys = new Set<string>([
@@ -270,6 +262,14 @@ export default function AnalyticsPage() {
       },
     }
   }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

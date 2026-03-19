@@ -262,6 +262,15 @@ export default function HostingExpensesPage() {
   const formatDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'
 
+  const projectTitleById = projects.reduce<Record<string, string>>((acc, p) => {
+    acc[p.id] = p.title
+    return acc
+  }, {})
+
+  const getExpenseProjectTitle = (exp: HostingExpense) => {
+    return exp.project?.title || (exp.projectId ? projectTitleById[exp.projectId] : undefined) || '—'
+  }
+
   const handleExportCSV = async () => {
     setExporting(true)
     try {
@@ -274,7 +283,7 @@ export default function HostingExpensesPage() {
       const headers = ['Provider', 'Project', 'Amount', 'Currency', 'Category', 'Status', 'Billing Start', 'Billing End', 'Payment Date', 'Description', 'Invoice Ref']
       const rows = list.map((e: HostingExpense) => [
         e.provider ?? '',
-        e.project?.title ?? '',
+        getExpenseProjectTitle(e) === '—' ? '' : getExpenseProjectTitle(e),
         e.amount ?? '',
         e.currency ?? 'USD',
         e.category ?? '',
@@ -404,7 +413,7 @@ export default function HostingExpensesPage() {
                 className="flex items-center justify-between rounded border border-white/5 bg-white/5 px-3 py-2 text-sm"
               >
                 <span className="text-gray-300">
-                  {e.provider || '—'} · {e.project?.title || 'Unassigned'}
+                  {e.provider || '—'} · {getExpenseProjectTitle(e) === '—' ? 'Unassigned' : getExpenseProjectTitle(e)}
                 </span>
                 <span className="text-amber-200">
                   {formatDate(e.billingPeriodEnd)} · {formatCurrency(Number(e.amount), e.currency)}
@@ -619,7 +628,7 @@ export default function HostingExpensesPage() {
                       {exp.provider || '—'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-300">
-                      {exp.project?.title || '—'}
+                      {getExpenseProjectTitle(exp)}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-white">
                       {formatCurrency(Number(exp.amount), exp.currency)}

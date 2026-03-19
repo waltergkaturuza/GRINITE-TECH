@@ -338,7 +338,7 @@ export default function Navigation() {
               {t(lang, 'nav.trackRequest')}
             </Link>
             
-            {isLoggedIn ? (
+            {isLoggedIn && (
               <div className="flex items-center space-x-4">
                 <Link href="/dashboard" className="text-emerald-50/90 hover:text-white transition-colors duration-200 flex items-center">
                   <UserIcon className="h-5 w-5 mr-1" />
@@ -349,15 +349,6 @@ export default function Navigation() {
                   className="text-emerald-50/90 hover:text-white transition-colors duration-200"
                 >
                   Logout
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <button 
-                  onClick={openSignupModal}
-                  className="bg-white text-emerald-950 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-all duration-200 font-medium"
-                >
-                  {t(lang, 'nav.getStarted')}
                 </button>
               </div>
             )}

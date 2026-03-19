@@ -258,8 +258,8 @@ export default function HomePage() {
               &copy; 2024 <span className="text-crimson-300">Quantis Technologies</span>.{' '}
               {t(lang, 'footer.copyright')}
             </p>
-            <p className="text-gray-500 text-sm">
-              <Link href="/login" className="hover:text-crimson-300 underline underline-offset-2">
+            <p className="text-gray-800 text-xs">
+              <Link href="/login" className="text-gray-800 hover:text-gray-600 transition-colors">
                 {t(lang, 'footer.adminLogin')}
               </Link>
             </p>
