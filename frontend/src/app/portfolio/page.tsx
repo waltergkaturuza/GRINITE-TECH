@@ -324,12 +324,17 @@ export default function Portfolio() {
 
         {/* Projects Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Featured Work</h2>
+          <h2 className="text-3xl font-bold text-emerald-100 text-center mb-12 tracking-tight">
+            Featured Work
+          </h2>
           {featured.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featured.map((project) => (
-                <div key={project.id} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 overflow-hidden hover:border-white/25 transition-all">
-                  <div className="h-48 bg-black/20">
+                <div
+                  key={project.id}
+                  className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950/95 backdrop-blur-sm rounded-2xl shadow-xl border border-emerald-800/70 overflow-hidden hover:border-emerald-500/70 hover:shadow-2xl transition-all"
+                >
+                  <div className="h-48 bg-emerald-900/40">
                     <img
                       src={svgThumbDataUri(project.title, project.description)}
                       alt={`${project.title} thumbnail`}
@@ -338,7 +343,9 @@ export default function Portfolio() {
                   </div>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-white">{project.title}</h3>
+                      <h3 className="text-lg md:text-xl font-semibold text-emerald-50 tracking-tight">
+                        {project.title}
+                      </h3>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         project.status === 'Live' 
                           ? 'bg-emerald-400/15 text-emerald-200 border border-emerald-400/25' 
@@ -349,15 +356,20 @@ export default function Portfolio() {
                         {project.status || 'Project'}
                       </span>
                     </div>
-                    <p className="text-gray-200 text-sm mb-4">{project.description}</p>
+                    <p className="text-emerald-100/90 text-sm mb-4 leading-relaxed">
+                      {project.description}
+                    </p>
                     <div className="flex flex-wrap gap-1 mb-4">
                       {(project.technologies ?? []).slice(0, 3).map((tech: string, index: number) => (
-                        <span key={index} className="bg-white/10 text-gray-100 text-xs px-2 py-1 rounded border border-white/15">
+                        <span
+                          key={index}
+                          className="bg-emerald-900/60 text-emerald-100 text-xs px-2 py-1 rounded-full border border-emerald-700/60"
+                        >
                           {tech}
                         </span>
                       ))}
                       {(project.technologies?.length ?? 0) > 3 && (
-                        <span className="bg-white/10 text-gray-100 text-xs px-2 py-1 rounded border border-white/15">
+                        <span className="bg-emerald-900/60 text-emerald-100 text-xs px-2 py-1 rounded-full border border-emerald-700/60">
                           +{(project.technologies?.length ?? 0) - 3} more
                         </span>
                       )}

@@ -80,7 +80,7 @@ export default function Navigation() {
     setIsSignupModalOpen(false)
   }
 
-  const handleLanguageSelect = (code: 'en' | 'fr' | 'sn' | 'zh') => {
+  const handleLanguageSelect = (code: 'en' | 'fr' | 'sn' | 'zh' | 'pt' | 'ja' | 'ru' | 'el') => {
     setLang(code)
     setIsLangOpen(false)
   }
@@ -133,14 +133,22 @@ export default function Navigation() {
                 <span className="font-semibold uppercase">
                   {lang === 'en' && 'GB'}
                   {lang === 'fr' && 'FR'}
+                  {lang === 'pt' && 'PT'}
                   {lang === 'sn' && 'ZW'}
                   {lang === 'zh' && 'CN'}
+                  {lang === 'ja' && 'JP'}
+                  {lang === 'ru' && 'RU'}
+                  {lang === 'el' && 'GR'}
                 </span>
                 <span className="uppercase">
                   {lang === 'en' && 'EN'}
                   {lang === 'fr' && 'FR'}
+                  {lang === 'pt' && 'PT'}
                   {lang === 'sn' && 'SN'}
                   {lang === 'zh' && 'ZH'}
+                  {lang === 'ja' && 'JA'}
+                  {lang === 'ru' && 'RU'}
+                  {lang === 'el' && 'EL'}
                 </span>
                 <svg
                   className="ml-1 h-3 w-3"
@@ -202,6 +210,50 @@ export default function Navigation() {
                       <span>中文</span>
                     </span>
                     {lang === 'zh' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageSelect('pt')}
+                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">PT</span>
+                      <span>Português</span>
+                    </span>
+                    {lang === 'pt' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageSelect('ja')}
+                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">JP</span>
+                      <span>日本語</span>
+                    </span>
+                    {lang === 'ja' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageSelect('ru')}
+                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">RU</span>
+                      <span>Русский</span>
+                    </span>
+                    {lang === 'ru' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageSelect('el')}
+                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">GR</span>
+                      <span>Ελληνικά</span>
+                    </span>
+                    {lang === 'el' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
                   </button>
                 </div>
               )}
