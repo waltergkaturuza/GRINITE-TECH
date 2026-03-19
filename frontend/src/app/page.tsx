@@ -6,11 +6,14 @@ import { ArrowRightIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import Navigation from './components/Navigation'
 import { useEffect } from 'react'
 import { trackPageView } from '@/lib/analytics'
+import { useLanguage } from '@/i18n/LanguageProvider'
+import { t } from '@/i18n/config'
 
 export default function HomePage() {
   useEffect(() => {
     trackPageView('/')
   }, [])
+  const { lang } = useLanguage()
   return (
     <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
       {/* Navigation */}
@@ -41,19 +44,21 @@ export default function HomePage() {
             {/* Hero text - below logo on mobile, right on desktop */}
             <div className="text-center lg:text-left order-2">
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-                Engineering Digital Infrastructure for
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900"> a Smarter Future.</span>
+                {t(lang, 'home.hero.title.part1')}{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900">
+                  {t(lang, 'home.hero.title.part2')}
+                </span>
               </h1>
               <p className="text-xl text-gray-200 mb-8 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
-                Quantis Technologies is a systems engineering company delivering enterprise platforms, automation solutions, data intelligence, and secure cloud infrastructure for governments and forward-thinking organizations.
+                {t(lang, 'home.hero.subtitle')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/contact" className="bg-crimson-900 hover:bg-crimson-800 text-white font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
-                  Build With Quantis
+                  {t(lang, 'home.hero.primaryCta')}
                   <ArrowRightIcon className="ml-2 h-5 w-5 inline" />
                 </Link>
                 <Link href="/portfolio" className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200">
-                  Explore Our Solutions
+                  {t(lang, 'home.hero.secondaryCta')}
                 </Link>
               </div>
             </div>
@@ -67,10 +72,10 @@ export default function HomePage() {
         <div className="wide-container px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-granite-800 mb-4">
-              Core <span className="text-crimson-900">Capabilities</span>
+              {t(lang, 'home.pillars.heading')}
             </h2>
             <p className="text-xl text-granite-600 max-w-2xl mx-auto">
-              Integrated systems designed for scale, security, and performance.
+              {t(lang, 'home.pillars.subheading')}
             </p>
           </div>
 
@@ -80,9 +85,11 @@ export default function HomePage() {
                 <Image src="/pillar-enterprise-systems.png" alt="Enterprise Systems Engineering" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">Enterprise Systems Engineering</h3>
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                  {t(lang, 'home.pillars.enterprise')}
+                </h3>
                 <p className="text-granite-600 text-sm leading-relaxed">
-                  Custom-built platforms, portals, and mission-critical systems engineered for scalability, performance, and security.
+                  {t(lang, 'home.pillars.enterprise.desc')}
                 </p>
               </div>
             </div>
@@ -92,9 +99,11 @@ export default function HomePage() {
                 <Image src="/pillar-cloud-devops.png" alt="Cloud Infrastructure & DevOps" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">Cloud Infrastructure & DevOps</h3>
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                  {t(lang, 'home.pillars.cloud')}
+                </h3>
                 <p className="text-granite-600 text-sm leading-relaxed">
-                  Cloud migration, CI/CD pipelines, infrastructure as code, and managed hosting for enterprise workloads.
+                  {t(lang, 'home.pillars.cloud.desc')}
                 </p>
               </div>
             </div>
@@ -104,9 +113,11 @@ export default function HomePage() {
                 <Image src="/pillar-data-intelligence.png" alt="Data Intelligence & Analytics" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">Data Intelligence & Analytics</h3>
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                  {t(lang, 'home.pillars.data')}
+                </h3>
                 <p className="text-granite-600 text-sm leading-relaxed">
-                  Executive dashboards, KPI tracking, data warehousing, and real-time analytics for informed decision-making.
+                  {t(lang, 'home.pillars.data.desc')}
                 </p>
               </div>
             </div>
@@ -116,9 +127,11 @@ export default function HomePage() {
                 <Image src="/pillar-automation-integration.png" alt="Process Automation & Integration" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">Process Automation & Integration</h3>
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                  {t(lang, 'home.pillars.automation')}
+                </h3>
                 <p className="text-granite-600 text-sm leading-relaxed">
-                  Workflow automation, ERP integrations, API development, and intelligent systems that streamline operations and eliminate inefficiencies.
+                  {t(lang, 'home.pillars.automation.desc')}
                 </p>
               </div>
             </div>
@@ -128,9 +141,11 @@ export default function HomePage() {
                 <ShieldCheckIcon className="h-20 w-20 text-white/90" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">Cybersecurity & Compliance</h3>
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                  {t(lang, 'home.pillars.security')}
+                </h3>
                 <p className="text-granite-600 text-sm leading-relaxed">
-                  Security audits, penetration testing, data encryption, identity management, and compliance advisory (GDPR, POPIA).
+                  {t(lang, 'home.pillars.security.desc')}
                 </p>
               </div>
             </div>
@@ -140,9 +155,11 @@ export default function HomePage() {
                 <Image src="/pillar-digital-platforms.png" alt="Digital Platform Development" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">Digital Platform Development</h3>
+                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                  {t(lang, 'home.pillars.platforms')}
+                </h3>
                 <p className="text-granite-600 text-sm leading-relaxed">
-                  End-to-end digital ecosystems including e-commerce, SaaS platforms, service portals, and enterprise tools.
+                  {t(lang, 'home.pillars.platforms.desc')}
                 </p>
               </div>
             </div>
@@ -155,13 +172,13 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-granite-800/95 to-crimson-900/95"></div>
         <div className="wide-container px-4 sm:px-6 lg:px-8 text-center relative">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Transform Your <span className="text-yellow-900">Business</span>?
+            {t(lang, 'home.cta.heading')}
           </h2>
           <p className="text-xl text-gray-200 mb-8">
-            Join hundreds of satisfied clients who trust Quantis Technologies
+            {t(lang, 'home.cta.text')}
           </p>
           <Link href="/contact" className="bg-white text-granite-800 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
-            Get Started Today
+            {t(lang, 'home.cta.button')}
           </Link>
         </div>
       </section>
@@ -171,31 +188,55 @@ export default function HomePage() {
         <div className="wide-container px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4 text-yellow-900">Quantis Technologies</h3>
+              <h3 className="text-lg font-semibold mb-4 text-yellow-900">
+                {t(lang, 'footer.title')}
+              </h3>
               <p className="text-gray-300">
-                Comprehensive business solutions for the modern world.
+                {t(lang, 'footer.tagline')}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-crimson-300">Services</h4>
+              <h4 className="font-semibold mb-4 text-crimson-300">
+                {t(lang, 'footer.services')}
+              </h4>
               <ul className="space-y-2 text-gray-300">
-                <li className="hover:text-crimson-300 transition-colors duration-200">Web Development</li>
-                <li className="hover:text-crimson-300 transition-colors duration-200">Mobile Apps</li>
-                <li className="hover:text-crimson-300 transition-colors duration-200">Digital Products</li>
-                <li className="hover:text-crimson-300 transition-colors duration-200">Automation</li>
+                <li className="hover:text-crimson-300 transition-colors duration-200">
+                  {t(lang, 'footer.services.web')}
+                </li>
+                <li className="hover:text-crimson-300 transition-colors duration-200">
+                  {t(lang, 'footer.services.mobile')}
+                </li>
+                <li className="hover:text-crimson-300 transition-colors duration-200">
+                  {t(lang, 'footer.services.digital')}
+                </li>
+                <li className="hover:text-crimson-300 transition-colors duration-200">
+                  {t(lang, 'footer.services.automation')}
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-jungle-300">Products</h4>
+              <h4 className="font-semibold mb-4 text-jungle-300">
+                {t(lang, 'footer.products')}
+              </h4>
               <ul className="space-y-2 text-gray-300">
-                <li className="hover:text-jungle-300 transition-colors duration-200">Templates</li>
-                <li className="hover:text-jungle-300 transition-colors duration-200">Tools</li>
-                <li className="hover:text-jungle-300 transition-colors duration-200">APIs</li>
-                <li className="hover:text-jungle-300 transition-colors duration-200">Plugins</li>
+                <li className="hover:text-jungle-300 transition-colors duration-200">
+                  {t(lang, 'footer.products.templates')}
+                </li>
+                <li className="hover:text-jungle-300 transition-colors duration-200">
+                  {t(lang, 'footer.products.tools')}
+                </li>
+                <li className="hover:text-jungle-300 transition-colors duration-200">
+                  {t(lang, 'footer.products.apis')}
+                </li>
+                <li className="hover:text-jungle-300 transition-colors duration-200">
+                  {t(lang, 'footer.products.plugins')}
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-olive-300">Contact</h4>
+              <h4 className="font-semibold mb-4 text-olive-300">
+                {t(lang, 'footer.contact')}
+              </h4>
               <ul className="space-y-2 text-gray-300 text-sm sm:text-base">
                 <li className="hover:text-olive-300 transition-colors duration-200 break-words">
                   <a href="mailto:support@quantistech.co.zw" className="block py-1">support@quantistech.co.zw</a>
@@ -214,11 +255,12 @@ export default function HomePage() {
           </div>
           <div className="border-t border-granite-700 mt-8 pt-8 text-center space-y-2">
             <p className="text-gray-400">
-              &copy; 2024 <span className="text-crimson-300">Quantis Technologies</span>. All rights reserved.
+              &copy; 2024 <span className="text-crimson-300">Quantis Technologies</span>.{' '}
+              {t(lang, 'footer.copyright')}
             </p>
             <p className="text-gray-500 text-sm">
               <Link href="/login" className="hover:text-crimson-300 underline underline-offset-2">
-                Admin / Staff Login
+                {t(lang, 'footer.adminLogin')}
               </Link>
             </p>
           </div>

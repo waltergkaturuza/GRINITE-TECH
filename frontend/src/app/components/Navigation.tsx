@@ -8,6 +8,8 @@ import { Bars3Icon, XMarkIcon, UserIcon, MagnifyingGlassIcon } from '@heroicons/
 import LoginModal from '@/components/LoginModal'
 import SignupModal from '@/components/SignupModal'
 import SearchCommand from '@/components/SearchCommand'
+import { useLanguage } from '@/i18n/LanguageProvider'
+import { t } from '@/i18n/config'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -16,7 +18,10 @@ export default function Navigation() {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isServicesOpen, setIsServicesOpen] = useState(false)
+  const [isLangOpen, setIsLangOpen] = useState(false)
+  const { lang, setLang } = useLanguage()
   const servicesMenuRef = useRef<HTMLDivElement>(null)
+  const langMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -37,6 +42,19 @@ export default function Navigation() {
     document.addEventListener('mousedown', onMouseDown)
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [isServicesOpen])
+
+  useEffect(() => {
+    if (!isLangOpen) return
+    const onMouseDown = (e: MouseEvent) => {
+      const el = langMenuRef.current
+      if (!el) return
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setIsLangOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [isLangOpen])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -62,6 +80,11 @@ export default function Navigation() {
     setIsSignupModalOpen(false)
   }
 
+  const handleLanguageSelect = (code: 'en' | 'fr' | 'sn' | 'zh') => {
+    setLang(code)
+    setIsLangOpen(false)
+  }
+
   return (
     <nav className="bg-emerald-950 shadow-lg border-b border-emerald-900/30 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,21 +103,109 @@ export default function Navigation() {
                 />
               </div>
               <span className="hidden sm:inline text-xl sm:text-2xl font-bold text-white">
-                Quantis Technologies
+                {t(lang, 'nav.brand')}
               </span>
             </Link>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
+            {/* Search chip */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="text-emerald-50/90 hover:text-white transition-colors duration-200 flex items-center space-x-1 px-2 py-1 rounded-lg hover:bg-white/10"
+              className="flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-900/60 px-3 py-1.5 text-xs text-emerald-50/90 hover:bg-emerald-800 hover:border-emerald-400 transition-colors"
               aria-label="Search"
             >
-              <MagnifyingGlassIcon className="h-5 w-5" />
-              <span className="text-xs text-emerald-50/80">Search</span>
+              <MagnifyingGlassIcon className="h-4 w-4" />
+              <span className="hidden lg:inline">{t(lang, 'nav.search')}</span>
+              <span className="rounded-md border border-emerald-500/40 bg-emerald-950/60 px-1.5 py-0.5 text-[10px] tracking-wide text-emerald-100">
+                Ctrl K
+              </span>
             </button>
+
+            {/* Language selector */}
+            <div className="relative" ref={langMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsLangOpen((v) => !v)}
+                className="inline-flex items-center gap-1 rounded-full border border-emerald-500/50 bg-emerald-900/70 px-3 py-1.5 text-xs text-emerald-50/90 hover:bg-emerald-800 hover:border-emerald-400 transition-colors"
+              >
+                <span className="font-semibold uppercase">
+                  {lang === 'en' && 'GB'}
+                  {lang === 'fr' && 'FR'}
+                  {lang === 'sn' && 'ZW'}
+                  {lang === 'zh' && 'CN'}
+                </span>
+                <span className="uppercase">
+                  {lang === 'en' && 'EN'}
+                  {lang === 'fr' && 'FR'}
+                  {lang === 'sn' && 'SN'}
+                  {lang === 'zh' && 'ZH'}
+                </span>
+                <svg
+                  className="ml-1 h-3 w-3"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5.5 7.5L10 12L14.5 7.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {isLangOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-emerald-950 border border-emerald-900/60 shadow-xl py-2 z-50">
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageSelect('en')}
+                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">GB</span>
+                      <span>English</span>
+                    </span>
+                    {lang === 'en' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageSelect('fr')}
+                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">FR</span>
+                      <span>Français</span>
+                    </span>
+                    {lang === 'fr' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageSelect('sn')}
+                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">ZW</span>
+                      <span>ChiShona</span>
+                    </span>
+                    {lang === 'sn' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageSelect('zh')}
+                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">CN</span>
+                      <span>中文</span>
+                    </span>
+                    {lang === 'zh' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="relative" ref={servicesMenuRef}>
               <button
                 onClick={() => setIsServicesOpen((v) => !v)}
@@ -102,7 +213,7 @@ export default function Navigation() {
                 aria-haspopup="menu"
                 aria-expanded={isServicesOpen}
               >
-                <span>Services</span>
+                <span>{t(lang, 'nav.services')}</span>
                 <svg
                   className="ml-1 h-4 w-4"
                   viewBox="0 0 20 20"
@@ -125,7 +236,7 @@ export default function Navigation() {
                     className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
                     onClick={() => setIsServicesOpen(false)}
                   >
-                    All services
+                    {t(lang, 'nav.services')}
                   </Link>
                   <div className="my-1 h-px bg-white/10" />
                   <Link
@@ -160,19 +271,19 @@ export default function Navigation() {
               )}
             </div>
             <Link href="/products" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
-              Products
+              {t(lang, 'nav.products')}
             </Link>
             <Link href="/portfolio" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
-              Portfolio
+              {t(lang, 'nav.portfolio')}
             </Link>
             <Link href="/about" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
-              About
+              {t(lang, 'nav.about')}
             </Link>
             <Link href="/contact" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
-              Contact
+              {t(lang, 'nav.contact')}
             </Link>
             <Link href="/track-request" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
-              Track Request
+              {t(lang, 'nav.trackRequest')}
             </Link>
             
             {isLoggedIn ? (
@@ -194,7 +305,7 @@ export default function Navigation() {
                   onClick={openSignupModal}
                   className="bg-white text-emerald-950 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-all duration-200 font-medium"
                 >
-                  Get Started
+                  {t(lang, 'nav.getStarted')}
                 </button>
               </div>
             )}
