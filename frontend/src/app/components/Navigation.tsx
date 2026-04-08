@@ -299,6 +299,13 @@ export default function Navigation() {
                     Custom software
                   </Link>
                   <Link
+                    href="/services/fuel-management-system-africa"
+                    className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    onClick={() => setIsServicesOpen(false)}
+                  >
+                    Fuel management systems
+                  </Link>
+                  <Link
                     href="/services/mobile-apps"
                     className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
                     onClick={() => setIsServicesOpen(false)}
@@ -327,6 +334,9 @@ export default function Navigation() {
             </Link>
             <Link href="/portfolio" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
               {t(lang, 'nav.portfolio')}
+            </Link>
+            <Link href="/case-studies" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
+              Case studies
             </Link>
             <Link href="/about" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
               {t(lang, 'nav.about')}
@@ -393,6 +403,13 @@ export default function Navigation() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Portfolio
+              </Link>
+              <Link 
+                href="/case-studies" 
+                className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Case studies
               </Link>
               <Link 
                 href="/about" 
