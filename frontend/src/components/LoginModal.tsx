@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
+import { isStaffRole } from '@/lib/dashboardRoles'
 import Modal from './Modal'
 
 interface LoginModalProps {
@@ -30,7 +31,7 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
       localStorage.setItem('token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
       closeModal()
-      router.push('/dashboard')
+      router.push(isStaffRole(data.user?.role) ? '/dashboard/requests' : '/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed')
     } finally {

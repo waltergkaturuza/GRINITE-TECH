@@ -64,7 +64,7 @@ export interface UserProjectDto {
   first_name: string;
   last_name: string;
   company?: string;
-  role: 'admin' | 'client' | 'developer';
+  role: 'admin' | 'client' | 'developer' | 'staff';
   status: 'active' | 'inactive' | 'suspended';
   projects?: ProjectDto[];
   created_at: Date;

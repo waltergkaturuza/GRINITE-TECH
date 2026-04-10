@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { isStaffRole, isPathAllowedForStaff } from '@/lib/dashboardRoles'
 import { 
   Bars3Icon,
   XMarkIcon,
@@ -14,9 +15,7 @@ import {
   ShoppingCartIcon,
   ChatBubbleLeftRightIcon,
   DocumentTextIcon,
-  BellIcon,
   UserCircleIcon,
-  MagnifyingGlassIcon,
   ClipboardDocumentListIcon,
   BriefcaseIcon,
   ClockIcon,
@@ -32,6 +31,7 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -47,13 +47,21 @@ export default function DashboardLayout({
     }
   }, [router])
 
+  useEffect(() => {
+    if (!user) return
+    if (!isStaffRole(user.role)) return
+    if (pathname === '/dashboard' || !isPathAllowedForStaff(pathname)) {
+      router.replace('/dashboard/requests')
+    }
+  }, [user, pathname, router])
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     router.push('/')
   }
 
-  const navigation = [
+  const allNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: true },
     { name: 'Projects', href: '/dashboard/projects', icon: CubeIcon, current: false },
     { name: 'Portfolio', href: '/portfolio', icon: BriefcaseIcon, current: false },
@@ -69,6 +77,17 @@ export default function DashboardLayout({
     { name: 'Accounts', href: '/dashboard/accounts', icon: BanknotesIcon, current: false },
     { name: 'Settings', href: '/dashboard/settings', icon: CogIcon, current: false },
   ]
+
+  const navigation = useMemo(() => {
+    if (!user || !isStaffRole(user.role)) return allNavigation
+    const staffHrefs = new Set([
+      '/dashboard/requests',
+      '/dashboard/products',
+      '/dashboard/chat',
+      '/dashboard/settings',
+    ])
+    return allNavigation.filter((item) => staffHrefs.has(item.href))
+  }, [user])
 
   if (!user) {
     return (

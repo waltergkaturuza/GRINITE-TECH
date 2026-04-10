@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
+import { isStaffRole } from '@/lib/dashboardRoles'
 import { trackEvent, trackPageView } from '@/lib/analytics'
 
 export default function LoginPage() {
@@ -29,7 +30,11 @@ export default function LoginPage() {
       localStorage.setItem('token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
       trackEvent('login_success')
-      router.push('/dashboard')
+      if (isStaffRole(data.user?.role)) {
+        router.push('/dashboard/requests')
+      } else {
+        router.push('/dashboard')
+      }
     } catch (err: any) {
       trackEvent('login_failed')
       setError(err.response?.data?.message || 'Login failed')

@@ -150,7 +150,10 @@ export default function ClientsPage() {
       setLoading(true)
       const data = await usersAPI.getUsers()
       // Filter only clients and exclude admin users
-      const clientUsers = data.filter((user: Client) => user.role === 'client' || user.role === 'developer')
+      const clientUsers = data.filter(
+        (user: Client) =>
+          user.role === 'client' || user.role === 'developer' || user.role === 'staff'
+      )
       setClients(clientUsers)
     } catch (err: any) {
       setError('Failed to load clients')
@@ -322,6 +325,7 @@ export default function ClientsPage() {
     switch (role) {
       case 'client': return '👤'
       case 'developer': return '👨‍💻'
+      case 'staff': return '🛎️'
       case 'admin': return '👑'
       default: return '👤'
     }
@@ -486,6 +490,7 @@ export default function ClientsPage() {
                 <option value="all">All Roles</option>
                 <option value="client">Client</option>
                 <option value="developer">Developer</option>
+                <option value="staff">Staff (requests, chat, products)</option>
               </select>
 
               <select
@@ -751,7 +756,7 @@ export default function ClientsPage() {
                       className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
                     />
                   </div>
-                  {formData.role === 'developer' && (
+                  {(formData.role === 'developer' || formData.role === 'staff') && (
                     <input
                       type="text"
                       placeholder="Job title / role"
@@ -770,6 +775,7 @@ export default function ClientsPage() {
                 >
                   <option value="client">Client</option>
                   <option value="developer">Developer</option>
+                  <option value="staff">Staff (limited dashboard)</option>
                 </select>
                 <select
                   value={formData.status}
@@ -898,7 +904,7 @@ export default function ClientsPage() {
                       className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
                     />
                   </div>
-                  {formData.role === 'developer' && (
+                  {(formData.role === 'developer' || formData.role === 'staff') && (
                     <input
                       type="text"
                       placeholder="Job title / role"
@@ -917,6 +923,7 @@ export default function ClientsPage() {
                 >
                   <option value="client">Client</option>
                   <option value="developer">Developer</option>
+                  <option value="staff">Staff (limited dashboard)</option>
                 </select>
                 <select
                   value={formData.status}

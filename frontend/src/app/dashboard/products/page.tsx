@@ -15,6 +15,7 @@ import {
   DocumentDuplicateIcon
 } from '@heroicons/react/24/outline'
 import { productsAPI } from '@/lib/api'
+import { isStaffRole } from '@/lib/dashboardRoles'
 
 interface Product {
   id: string
@@ -68,10 +69,20 @@ export default function ProductsPage() {
     digitalFiles: '',
     recurringInterval: ''
   })
+  const [staffUser, setStaffUser] = useState(false)
 
   // Load Products
   useEffect(() => {
     loadProducts()
+  }, [])
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('user')
+      if (raw) setStaffUser(isStaffRole(JSON.parse(raw).role))
+    } catch {
+      setStaffUser(false)
+    }
   }, [])
 
   // Filter and Sort Products
@@ -549,12 +560,15 @@ export default function ProductsPage() {
                         >
                           <DocumentDuplicateIcon className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => openDeleteModal(product)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
+                        {!staffUser && (
+                          <button
+                            onClick={() => openDeleteModal(product)}
+                            className="text-red-400 hover:text-red-300 transition-colors"
+                            title="Delete product"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

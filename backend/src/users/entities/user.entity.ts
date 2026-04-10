@@ -13,6 +13,8 @@ export enum UserRole {
   ADMIN = 'admin',
   CLIENT = 'client',
   DEVELOPER = 'developer',
+  /** Dashboard: requests, chat, products (no delete); no projects/clients/invoices/etc. */
+  STAFF = 'staff',
 }
 
 export enum UserStatus {

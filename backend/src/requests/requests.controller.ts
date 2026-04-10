@@ -62,7 +62,7 @@ export class RequestsController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.DEVELOPER)
+  @Roles(UserRole.ADMIN, UserRole.DEVELOPER, UserRole.STAFF)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all project requests (Admin only)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
@@ -93,7 +93,7 @@ export class RequestsController {
 
   @Get('stats')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.DEVELOPER)
+  @Roles(UserRole.ADMIN, UserRole.DEVELOPER, UserRole.STAFF)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get request statistics (Admin only)' })
   async getStats() {
@@ -153,7 +153,7 @@ export class RequestsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.DEVELOPER)
+  @Roles(UserRole.ADMIN, UserRole.DEVELOPER, UserRole.STAFF)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a request (Admin only)' })
   async update(@Param('id') id: string, @Body() updateRequestDto: UpdateRequestDto) {
