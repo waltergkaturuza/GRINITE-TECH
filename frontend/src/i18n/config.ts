@@ -12,8 +12,8 @@ export const messages: Record<Lang, Record<string, string>> = {
     'nav.getStarted': 'Get Started',
     'nav.search': 'Search',
 
-    'home.hero.title.part1': 'Engineering Digital Infrastructure for',
-    'home.hero.title.part2': 'a Smarter Future.',
+    'home.hero.title.part1': 'Engineering Digital Infrastructure',
+    'home.hero.title.part2': 'for a Smarter Future.',
     'home.hero.subtitle':
       'Quantis Technologies is a systems engineering company delivering enterprise platforms, automation solutions, data intelligence, and secure cloud infrastructure for governments and forward-thinking organizations.',
     'home.hero.primaryCta': 'Build With Quantis',

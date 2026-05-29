@@ -335,17 +335,11 @@ export default function Navigation() {
             <Link href="/portfolio" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
               {t(lang, 'nav.portfolio')}
             </Link>
-            <Link href="/case-studies" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
-              Case studies
-            </Link>
             <Link href="/about" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
               {t(lang, 'nav.about')}
             </Link>
             <Link href="/contact" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
               {t(lang, 'nav.contact')}
-            </Link>
-            <Link href="/track-request" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
-              {t(lang, 'nav.trackRequest')}
             </Link>
             
             {isLoggedIn && (
@@ -405,13 +399,6 @@ export default function Navigation() {
                 Portfolio
               </Link>
               <Link 
-                href="/case-studies" 
-                className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Case studies
-              </Link>
-              <Link 
                 href="/about" 
                 className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
                 onClick={() => setIsMenuOpen(false)}
@@ -424,13 +411,6 @@ export default function Navigation() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact
-              </Link>
-              <Link 
-                href="/track-request" 
-                className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Track Request
               </Link>
               
               {isLoggedIn ? (

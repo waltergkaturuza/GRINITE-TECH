@@ -9,37 +9,6 @@ import {
   TrophyIcon
 } from '@heroicons/react/24/outline'
 
-const team = [
-  {
-    name: 'Alex Johnson',
-    role: 'CEO & Founder',
-    bio: 'Serial entrepreneur with 15+ years in tech. Previously led engineering teams at Fortune 500 companies.',
-    expertise: ['Strategy', 'Leadership', 'Product Vision'],
-    image: '/api/placeholder/300/400'
-  },
-  {
-    name: 'Sarah Chen',
-    role: 'CTO',
-    bio: 'Full-stack architect specializing in scalable cloud solutions and modern web technologies.',
-    expertise: ['Cloud Architecture', 'DevOps', 'Security'],
-    image: '/api/placeholder/300/400'
-  },
-  {
-    name: 'Marcus Rodriguez',
-    role: 'Lead Developer',
-    bio: 'Expert in React, Node.js, and mobile development with a passion for clean, efficient code.',
-    expertise: ['React/Next.js', 'Node.js', 'Mobile Apps'],
-    image: '/api/placeholder/300/400'
-  },
-  {
-    name: 'Emily Watson',
-    role: 'UX/UI Designer',
-    bio: 'Creative designer focused on user-centered design and creating beautiful, intuitive interfaces.',
-    expertise: ['UI/UX Design', 'Prototyping', 'User Research'],
-    image: '/api/placeholder/300/400'
-  }
-]
-
 const values = [
   {
     icon: LightBulbIcon,
@@ -171,52 +140,6 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold text-granite-800 mb-4">{value.title}</h3>
                 <p className="text-granite-600">{value.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="py-20">
-        <div className="wide-container px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-granite-800 mb-4">Meet Our Team</h2>
-            <p className="text-xl text-granite-600 max-w-3xl mx-auto">
-              Talented professionals who bring your ideas to life
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {team.map((member, index) => (
-              <div 
-                key={index}
-                className="bg-white rounded-2xl shadow-lg border border-granite-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:transform hover:scale-105"
-              >
-                {/* Profile Image Placeholder */}
-                <div className="h-64 bg-gradient-to-br from-granite-100 to-granite-200 flex items-center justify-center">
-                  <div className="text-granite-400 text-6xl font-bold">{member.name.charAt(0)}</div>
-                </div>
-                
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-granite-800 mb-1">{member.name}</h3>
-                  <p className="text-crimson-600 font-semibold mb-3">{member.role}</p>
-                  <p className="text-granite-600 text-sm mb-4">{member.bio}</p>
-                  
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-granite-700">Expertise:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {member.expertise.map((skill, skillIndex) => (
-                        <span 
-                          key={skillIndex}
-                          className="bg-granite-100 text-granite-700 px-2 py-1 rounded-lg text-xs"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
               </div>
             ))}
           </div>

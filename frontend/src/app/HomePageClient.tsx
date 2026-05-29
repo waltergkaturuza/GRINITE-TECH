@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { trackPageView } from '@/lib/analytics'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
+import SiteFooter from '@/components/SiteFooter'
 
 export default function HomePageClient() {
   useEffect(() => {
@@ -21,9 +22,14 @@ export default function HomePageClient() {
 
       {/* Hero Section */}
       <section className="py-16 sm:py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-granite-800/90 via-crimson-900/80 to-jungle-900/90"></div>
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/wp4004960-engineer-wallpapers.jpg')" }}
+          aria-hidden
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-granite-900/85 via-granite-800/75 to-crimson-950/80" aria-hidden />
 
-        <div className="wide-container px-4 sm:px-6 lg:px-8 relative">
+        <div className="wide-container px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,300px)_1fr] gap-8 lg:gap-12 items-center">
             {/* Logo - top on mobile, left on desktop; slightly smaller; pushed left */}
             <div className="flex justify-center lg:justify-start order-1 lg:-ml-4">
@@ -43,9 +49,9 @@ export default function HomePageClient() {
 
             {/* Hero text - below logo on mobile, right on desktop */}
             <div className="text-center lg:text-left order-2">
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-                {t(lang, 'home.hero.title.part1')}{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[2.75rem] xl:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
+                <span className="block">{t(lang, 'home.hero.title.part1')}</span>
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">
                   {t(lang, 'home.hero.title.part2')}
                 </span>
               </h1>
@@ -183,89 +189,7 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-granite-800 text-white py-12 border-t border-granite-700">
-        <div className="wide-container px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-4 text-yellow-900">
-                {t(lang, 'footer.title')}
-              </h3>
-              <p className="text-gray-300">
-                {t(lang, 'footer.tagline')}
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-crimson-300">
-                {t(lang, 'footer.services')}
-              </h4>
-              <ul className="space-y-2 text-gray-300">
-                <li className="hover:text-crimson-300 transition-colors duration-200">
-                  {t(lang, 'footer.services.web')}
-                </li>
-                <li className="hover:text-crimson-300 transition-colors duration-200">
-                  {t(lang, 'footer.services.mobile')}
-                </li>
-                <li className="hover:text-crimson-300 transition-colors duration-200">
-                  {t(lang, 'footer.services.digital')}
-                </li>
-                <li className="hover:text-crimson-300 transition-colors duration-200">
-                  {t(lang, 'footer.services.automation')}
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-jungle-300">
-                {t(lang, 'footer.products')}
-              </h4>
-              <ul className="space-y-2 text-gray-300">
-                <li className="hover:text-jungle-300 transition-colors duration-200">
-                  {t(lang, 'footer.products.templates')}
-                </li>
-                <li className="hover:text-jungle-300 transition-colors duration-200">
-                  {t(lang, 'footer.products.tools')}
-                </li>
-                <li className="hover:text-jungle-300 transition-colors duration-200">
-                  {t(lang, 'footer.products.apis')}
-                </li>
-                <li className="hover:text-jungle-300 transition-colors duration-200">
-                  {t(lang, 'footer.products.plugins')}
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-olive-300">
-                {t(lang, 'footer.contact')}
-              </h4>
-              <ul className="space-y-2 text-gray-300 text-sm sm:text-base">
-                <li className="hover:text-olive-300 transition-colors duration-200 break-words">
-                  <a href="mailto:support@quantistech.co.zw" className="block py-1">support@quantistech.co.zw</a>
-                </li>
-                <li className="hover:text-olive-300 transition-colors duration-200">
-                  <a href="tel:+263777937721" className="block py-1">+263 777 937 721</a>
-                </li>
-                <li className="hover:text-olive-300 transition-colors duration-200">
-                  <a href="tel:+263717935866" className="block py-1">+263 717 935 866</a>
-                </li>
-                <li className="hover:text-olive-300 transition-colors duration-200">
-                  <a href="tel:+263774211041" className="block py-1">+263 774 211 041</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-granite-700 mt-8 pt-8 text-center space-y-2">
-            <p className="text-gray-400">
-              &copy; 2024 <span className="text-crimson-300">Quantis Technologies</span>.{' '}
-              {t(lang, 'footer.copyright')}
-            </p>
-            <p className="text-gray-800 text-xs">
-              <Link href="/login" className="text-gray-800 hover:text-gray-600 transition-colors">
-                {t(lang, 'footer.adminLogin')}
-              </Link>
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

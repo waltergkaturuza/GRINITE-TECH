@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
   EnvelopeIcon,
@@ -9,11 +10,13 @@ import {
   ClockIcon,
   CheckCircleIcon,
   DocumentArrowUpIcon,
-  TrashIcon
+  TrashIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline'
 import { requestsAPI, type BlobDocument } from '@/lib/api'
 import BlobFileUpload from '@/components/BlobFileUpload'
 import { trackEvent, trackPageView } from '@/lib/analytics'
+import { COMPANY_CONTACT } from '@/constants/company'
 
 const services = [
   { id: 'web-development', name: 'Web Development' },
@@ -167,7 +170,6 @@ export default function ContactContent() {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors"
-                    placeholder="John Doe"
                   />
                 </div>
 
@@ -183,7 +185,6 @@ export default function ContactContent() {
                     value={formData.email}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors"
-                    placeholder="john@example.com"
                   />
                 </div>
               </div>
@@ -200,7 +201,6 @@ export default function ContactContent() {
                     value={formData.company}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors"
-                    placeholder="Your Company"
                   />
                 </div>
 
@@ -215,7 +215,6 @@ export default function ContactContent() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors"
-                    placeholder="+263 XXX XXX XXX"
                   />
                 </div>
               </div>
@@ -294,7 +293,6 @@ export default function ContactContent() {
                   value={formData.description}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-granite-300 rounded-lg focus:ring-2 focus:ring-crimson-500 focus:border-transparent transition-colors resize-none"
-                  placeholder="Tell us about your project, goals, and any specific requirements..."
                 />
               </div>
 
@@ -379,8 +377,32 @@ export default function ContactContent() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-granite-900">Email</h3>
-                    <p className="text-granite-600">hello@quantistech.co.zw</p>
-                    <p className="text-granite-600">support@quantistech.co.zw</p>
+                    <p className="text-granite-600">
+                      <a
+                        href={`mailto:${COMPANY_CONTACT.primaryEmail}`}
+                        className="hover:text-crimson-600 transition-colors block py-1"
+                      >
+                        {COMPANY_CONTACT.primaryEmail}
+                      </a>
+                    </p>
+                    <p className="text-granite-600">
+                      <a
+                        href={`mailto:${COMPANY_CONTACT.supportEmail}`}
+                        className="hover:text-crimson-600 transition-colors block py-1"
+                      >
+                        {COMPANY_CONTACT.supportEmail}
+                      </a>
+                    </p>
+                    <p className="text-granite-600">
+                      <a
+                        href={COMPANY_CONTACT.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-crimson-600 transition-colors block py-1"
+                      >
+                        {COMPANY_CONTACT.websiteDisplay}
+                      </a>
+                    </p>
                   </div>
                 </div>
 
@@ -410,8 +432,9 @@ export default function ContactContent() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-granite-900">Office</h3>
-                    <p className="text-granite-600">Harare, Zimbabwe</p>
-                    <p className="text-granite-600">Available Nationwide</p>
+                    <p className="text-granite-600 font-medium">{COMPANY_CONTACT.legalName}</p>
+                    <p className="text-granite-600">{COMPANY_CONTACT.addressLine1}</p>
+                    <p className="text-granite-600">{COMPANY_CONTACT.addressLine2}</p>
                   </div>
                 </div>
 
@@ -426,6 +449,27 @@ export default function ContactContent() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="flex items-start space-x-4 mb-6">
+                <div className="bg-violet-100 p-3 rounded-lg">
+                  <MagnifyingGlassIcon className="w-6 h-6 text-violet-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-granite-900">Track Request</h2>
+                  <p className="text-granite-600 mt-2">
+                    Already submitted a project request? Check status and messages with the email you used.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/track-request"
+                className="inline-flex items-center justify-center w-full px-6 py-3 rounded-lg bg-crimson-900 hover:bg-crimson-800 text-white font-medium transition-colors shadow-md"
+              >
+                <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
+                Track your request
+              </Link>
             </div>
 
             {/* Quick Response Promise */}

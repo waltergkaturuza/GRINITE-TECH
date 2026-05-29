@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react'
 import Navigation from '../components/Navigation'
+import SiteFooter from '@/components/SiteFooter'
 import ContactContent from './ContactContent'
 
 export default function ContactPage() {
@@ -15,6 +16,7 @@ export default function ContactPage() {
       }>
         <ContactContent />
       </Suspense>
+      <SiteFooter />
     </div>
   )
 }
