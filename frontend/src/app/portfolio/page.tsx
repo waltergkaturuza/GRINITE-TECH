@@ -19,6 +19,7 @@ type PortfolioProject = {
   github?: string
   demo?: string
   previewImage?: string
+  detailsOverride?: Omit<ProjectDetails, 'title'>
   type?: 'web' | 'mobile' | 'backend' | 'data' | 'system'
   lastUpdatedAt?: string
 }
@@ -50,10 +51,30 @@ const FEATURED_WORK: PortfolioProject[] = [
     id: 'tnf-main',
     title: 'Tripartite Negotiating Forum (TNF)',
     description: 'Official institutional website for Zimbabwe’s tripartite social dialogue platform with resources, news, and engagement.',
-    technologies: ['Next.js', 'TypeScript', 'Content Management'],
+    technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Content Management'],
     status: 'Live',
     demo: 'https://www.tnfzim.com/',
     type: 'web',
+    detailsOverride: {
+      summary:
+        'Official digital platform for Zimbabwe’s Tripartite Negotiating Forum (TNF), supporting structured social dialogue between government, labour, and business through news, publications, resources, and public engagement.',
+      technologies: [
+        'Next.js',
+        'TypeScript',
+        'React',
+        'Tailwind CSS',
+        'Content Management',
+        'SEO',
+        'Responsive UI',
+      ],
+      features: [
+        '**Institutional Homepage** – presents TNF mandate, tripartite membership, and social dialogue priorities.',
+        '**News & Announcements** – publishes forum updates, communiqués, and stakeholder communications.',
+        '**Resource Library** – organized access to reports, documents, and institutional reference material.',
+        '**Engagement Pathways** – clear sections for partners, delegations, and public information requests.',
+        '**Accessible Delivery** – mobile-ready experience for audiences across Zimbabwe and partner institutions.',
+      ],
+    },
   },
   {
     id: 'tnf-summit',
@@ -69,20 +90,75 @@ const FEATURED_WORK: PortfolioProject[] = [
     id: 'sarsyc-vi',
     title: 'SARSYC VI Conference Platform',
     description: 'Regional youth conference platform for registrations, programme, resources, and partnerships (Windhoek 2026).',
-    technologies: ['Next.js', 'TypeScript', 'Conference CMS'],
+    technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Conference CMS', 'Vercel'],
     status: 'Live',
-    github: 'https://github.com/waltergkaturuza/SaywhatSirtis',
     demo: 'https://www.sarsyc.org/',
-    type: 'system',
+    type: 'web',
+    detailsOverride: {
+      summary:
+        'Public conference website for SARSYC VI (Windhoek 2026), built to promote the event, capture registrations, publish programme updates, and showcase partners and resources for regional youth delegates.',
+      technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Conference CMS', 'Responsive UI', 'Vercel'],
+      features: [
+        '**Conference Homepage** – event branding, key messaging, and delegate call-to-action sections.',
+        '**Registration Experience** – structured flows for participants, partners, and stakeholders.',
+        '**Programme & Updates** – publish schedules, announcements, and conference content.',
+        '**Resources & Partnerships** – highlight sponsors, documents, and engagement opportunities.',
+        '**Mobile-first Delivery** – optimized browsing for regional audiences on phone and desktop.',
+      ],
+    },
   },
   {
     id: 'chilmund',
     title: 'Chilmund Chemicals',
     description: 'Corporate website for Zimbabwe’s aluminium sulphate manufacturer with products, logistics, SHEQ, and quote workflows.',
-    technologies: ['Next.js', 'TypeScript', 'Corporate Web'],
+    technologies: ['Next.js', 'TypeScript', 'React', 'Corporate Web'],
     status: 'Live',
     demo: 'https://www.chilmund.co.zw/',
     type: 'web',
+    detailsOverride: {
+      summary:
+        'Corporate website for Chilmund Chemicals, Zimbabwe’s aluminium sulphate manufacturer, showcasing products, production capabilities, logistics, SHEQ standards, and customer quote workflows.',
+      technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Corporate Web', 'SEO', 'Responsive UI'],
+      features: [
+        '**Company Profile** – manufacturing story, capabilities, and market positioning.',
+        '**Products & Applications** – aluminium sulphate ranges and industrial use cases.',
+        '**Logistics & Operations** – delivery coverage, supply reliability, and service information.',
+        '**SHEQ Commitment** – safety, health, environment, and quality assurance messaging.',
+        '**Quote & Contact Flows** – lead capture for procurement and customer enquiries.',
+      ],
+    },
+  },
+  {
+    id: 'poz-fuel',
+    title: 'POZ Fuel Coupon System',
+    description: 'Fuel coupon issuance and tracking platform for Parliament of Zimbabwe with approvals, audit trails, and institutional reporting.',
+    technologies: ['Python', 'Django', 'Django REST', 'PostgreSQL', 'RBAC', 'Audit Logging'],
+    status: 'Live',
+    github: 'https://github.com/waltergkaturuza/Parliament-Zimbabwe',
+    demo: 'https://parliament-zimbabwe-fuel-system.vercel.app/',
+    type: 'system',
+    detailsOverride: {
+      summary:
+        'Enterprise fuel coupon management platform for the Parliament of Zimbabwe (POZ), centralizing allocation, multi-level approvals, redemption tracking, and accountability reporting across departments and constituencies.',
+      technologies: [
+        'Python',
+        'Django',
+        'Django REST Framework',
+        'PostgreSQL',
+        'RBAC',
+        'Workflow Engine',
+        'Audit Logs',
+        'Reporting Dashboards',
+      ],
+      features: [
+        '**Allocation & Policy Controls** – configurable coupon distribution rules by role, department, and threshold.',
+        '**Multi-step Approvals** – structured authorization workflows for officers and administrators.',
+        '**Issuance & Redemption Tracking** – end-to-end traceability across the fuel coupon lifecycle.',
+        '**Parliament-specific Data Model** – MPs, constituencies, sessions, and institutional structures.',
+        '**Operational Dashboards** – reconciliation views, anomaly monitoring, and executive oversight.',
+        '**Governance & Security** – role-based access, segregation of duties, and immutable audit records.',
+      ],
+    },
   },
   {
     id: 'quantis-portfolio',
@@ -137,6 +213,86 @@ const FEATURED_WORK: PortfolioProject[] = [
 
 const EXTRA_FEATURED_FROM_GITHUB = 6
 
+const POZ_FUEL_DETAILS: Omit<ProjectDetails, 'title'> = {
+  summary:
+    'Enterprise fuel coupon management platform for the Parliament of Zimbabwe (POZ), centralizing allocation, multi-level approvals, redemption tracking, and accountability reporting across departments and constituencies.',
+  technologies: [
+    'Python',
+    'Django',
+    'Django REST Framework',
+    'PostgreSQL',
+    'RBAC',
+    'Workflow Engine',
+    'Audit Logs',
+    'Reporting Dashboards',
+  ],
+  features: [
+    '**Allocation & Policy Controls** – configurable coupon distribution rules by role, department, and threshold.',
+    '**Multi-step Approvals** – structured authorization workflows for officers and administrators.',
+    '**Issuance & Redemption Tracking** – end-to-end traceability across the fuel coupon lifecycle.',
+    '**Parliament-specific Data Model** – MPs, constituencies, sessions, and institutional structures.',
+    '**Operational Dashboards** – reconciliation views, anomaly monitoring, and executive oversight.',
+    '**Governance & Security** – role-based access, segregation of duties, and immutable audit records.',
+  ],
+}
+
+const GEOSPATIAL_HUB_DETAILS: Omit<ProjectDetails, 'title'> = {
+  summary:
+    'Integrated geospatial monitoring platform for multi-scale risk monitoring, environmental assessment, food security analysis, and disaster resilience planning, powered by Google Earth Engine with interactive mapping and analytics APIs.',
+  technologies: [
+    'TypeScript',
+    'Next.js',
+    'Google Earth Engine',
+    'Django',
+    'PostGIS',
+    'Leaflet',
+    'REST APIs',
+    'GeoJSON',
+  ],
+  features: [
+    '**GEE-driven Indicators** – rainfall (CHIRPS), NDVI (MODIS/Sentinel), soil moisture, and land surface temperature layers.',
+    '**Zonal Statistics** – country-level and administrative boundary analysis (ADM0, ADM1, ADM2).',
+    '**Interactive Leaflet Maps** – dynamic Earth Engine raster tiles and vector overlays.',
+    '**Temporal Analysis** – date-range filtering and trend exploration for environmental indicators.',
+    '**Operational Overlays** – boundaries, rivers, roads, health facilities, schools, markets, and livelihood zones.',
+    '**API Services** – GeoJSON endpoints and tile URLs for dashboard integrations.',
+  ],
+}
+
+function githubRepoSlug(githubUrl?: string) {
+  if (!githubUrl) return null
+  const match = githubUrl.match(/github\.com\/[^/]+\/([^/?#]+)/i)
+  return match?.[1]?.replace(/\.git$/i, '') ?? null
+}
+
+function applyGithubRepoOverrides(project: PortfolioProject): PortfolioProject {
+  const slug = githubRepoSlug(project.github)
+  if (slug === 'Parliament-Zimbabwe') {
+    return {
+      ...project,
+      title: 'POZ Fuel Coupon System',
+      description:
+        'Fuel coupon issuance and tracking platform for Parliament of Zimbabwe with approvals, audit trails, and institutional reporting.',
+      technologies: ['Python', 'Django', 'Django REST', 'PostgreSQL', 'RBAC', 'Audit Logging'],
+      type: 'system',
+      detailsOverride: POZ_FUEL_DETAILS,
+    }
+  }
+  if (slug === 'enhanced-geospatial-repo') {
+    return {
+      ...project,
+      title: 'Global Resilience Hub',
+      description:
+        'Geospatial monitoring platform for environmental assessment, food security analysis, and disaster resilience planning.',
+      technologies: ['TypeScript', 'Next.js', 'Google Earth Engine', 'Django', 'PostGIS', 'Leaflet'],
+      demo: project.demo || 'https://zim-geo.vercel.app/',
+      type: 'system',
+      detailsOverride: GEOSPATIAL_HUB_DETAILS,
+    }
+  }
+  return project
+}
+
 function svgThumbDataUri(title: string, subtitle?: string) {
   const safeTitle = (title || '').slice(0, 38)
   const safeSub = (subtitle || '').slice(0, 52)
@@ -170,12 +326,11 @@ function svgThumbDataUri(title: string, subtitle?: string) {
 }
 
 function sitePreviewSources(url: string) {
-  const clean = url.trim()
-  const encoded = encodeURIComponent(clean)
+  const encoded = encodeURIComponent(url.trim())
+  const stamp = Date.now()
   return [
     `/api/site-screenshot?url=${encoded}`,
-    `https://s0.wp.com/mshots/v1/${encoded}?w=1200&h=630`,
-    `https://image.thum.io/get/width/1200/crop/630/noanimate/${clean}`,
+    `/api/site-screenshot?url=${encoded}&retry=${stamp}`,
   ]
 }
 
@@ -188,7 +343,7 @@ function ProjectThumbnail({
   subtitle,
   demo,
   previewImage,
-  containerClassName = 'h-56 bg-gray-100',
+  containerClassName = 'h-64 bg-gray-100',
 }: {
   title: string
   subtitle: string
@@ -203,16 +358,22 @@ function ProjectThumbnail({
     fallbackThumb,
   ]
   const [sourceIndex, setSourceIndex] = useState(0)
+  const [loaded, setLoaded] = useState(false)
   const currentSrc = sources[Math.min(sourceIndex, sources.length - 1)]
 
   return (
-    <div className={`${containerClassName} overflow-hidden`}>
+    <div className={`${containerClassName} relative overflow-hidden`}>
+      {!loaded && demo && (
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200" />
+      )}
       <img
         src={currentSrc}
         alt={`${title} site preview`}
-        className="h-full w-full object-cover object-top transition-transform duration-300 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
+        className={`h-full w-full object-cover object-top transition-all duration-300 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03] ${loaded ? 'opacity-100' : 'opacity-0'}`}
         loading="lazy"
+        onLoad={() => setLoaded(true)}
         onError={() => {
+          setLoaded(false)
           setSourceIndex((prev) => (prev < sources.length - 1 ? prev + 1 : prev))
         }}
       />
@@ -256,6 +417,14 @@ const SKIP_HEADINGS = [
   'contact',
   'prerequisites',
   'requirements',
+  'quick start',
+  'demo credentials',
+  'test accounts',
+  'credentials',
+  'access urls',
+  'endpoints',
+  'api documentation',
+  'urls',
 ]
 
 const TECH_HEADINGS = [
@@ -278,6 +447,14 @@ const SKIP_LINE_PATTERNS = [
   /\bdocker\b/i,
   /create .*\.env/i,
   /git clone/i,
+  /127\.0\.0\.1/i,
+  /localhost/i,
+  /swagger/i,
+  /\/admin\b/i,
+  /api\/schema/i,
+  /admin123|main123|mp123/i,
+  /\bUsers:\s*\d+/i,
+  /\b(admin|main_officer|mp_[\w-]+)\s*\/\s*\S+/i,
 ]
 
 function cleanMarkdownText(line: string) {
@@ -301,6 +478,8 @@ function stripInlineSetupSteps(text: string) {
   return text
     .replace(/\s*\d+\.\s*\*\*[^*]+\*\*/g, '')
     .replace(/\s*\d+\.\s*(Clone and Install Dependencies|Environment Setup)/gi, '')
+    .replace(/https?:\/\/127\.0\.0\.1[^\s)]+/gi, '')
+    .replace(/https?:\/\/localhost[^\s)]+/gi, '')
     .replace(/\s{2,}/g, ' ')
     .trim()
 }
@@ -462,17 +641,19 @@ export default function Portfolio() {
   const githubProjects: PortfolioProject[] = githubRepos
     .filter((r) => Boolean(r.homepage) || Boolean(r.description))
     .slice(0, 18)
-    .map((r) => ({
-      id: `gh-${r.id}`,
-      title: r.name.replace(/[-_]/g, ' '),
-      description: r.description || 'Open-source project.',
-      technologies: [r.language || 'Software'].filter(Boolean) as string[],
-      status: r.homepage ? 'Live' : 'Open Source',
-      github: r.html_url,
-      demo: r.homepage || undefined,
-      type: 'web',
-      lastUpdatedAt: r.pushed_at || r.updated_at,
-    }))
+    .map((r) =>
+      applyGithubRepoOverrides({
+        id: `gh-${r.id}`,
+        title: r.name.replace(/[-_]/g, ' '),
+        description: r.description || 'Open-source project.',
+        technologies: [r.language || 'Software'].filter(Boolean) as string[],
+        status: r.homepage ? 'Live' : 'Open Source',
+        github: r.html_url,
+        demo: r.homepage || undefined,
+        type: 'web',
+        lastUpdatedAt: r.pushed_at || r.updated_at,
+      }),
+    )
 
   const featuredIds = new Set(FEATURED_WORK.map((project) => project.id))
   const featuredGithubUrls = new Set(
@@ -505,12 +686,25 @@ export default function Portfolio() {
   async function openProjectDetails(project: PortfolioProject) {
     setDetailsOpen(true)
     setDetailsError(null)
-    setSelectedDetails(baseProjectDetails(project))
 
     if (detailsCache[project.id]) {
       setSelectedDetails(detailsCache[project.id])
       return
     }
+
+    if (project.detailsOverride) {
+      const customDetails: ProjectDetails = {
+        title: project.title,
+        summary: project.detailsOverride.summary,
+        technologies: project.detailsOverride.technologies,
+        features: project.detailsOverride.features,
+      }
+      setDetailsCache((prev) => ({ ...prev, [project.id]: customDetails }))
+      setSelectedDetails(customDetails)
+      return
+    }
+
+    setSelectedDetails(baseProjectDetails(project))
 
     const parsed = parseGitHubRepo(project.github)
     if (!parsed) return
@@ -536,8 +730,12 @@ export default function Portfolio() {
       setSelectedDetails(summarized)
     } catch (readmeError) {
       console.error('Unable to fetch README details', readmeError)
-      setDetailsError('Could not load README summary. Showing project overview.')
-      setSelectedDetails(baseProjectDetails(project))
+      const fallback = baseProjectDetails(project)
+      if (project.description === 'Open-source project.' || fallback.features.length === 0) {
+        setDetailsError('Could not load README summary. Showing project overview.')
+      }
+      setDetailsCache((prev) => ({ ...prev, [project.id]: fallback }))
+      setSelectedDetails(fallback)
     } finally {
       setDetailsLoading(false)
     }
