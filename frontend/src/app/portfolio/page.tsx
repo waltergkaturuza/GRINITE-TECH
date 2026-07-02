@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { 
   ArrowLeftIcon, 
@@ -18,6 +18,7 @@ type PortfolioProject = {
   status?: string
   github?: string
   demo?: string
+  previewImage?: string
   type?: 'web' | 'mobile' | 'backend' | 'data' | 'system'
   lastUpdatedAt?: string
 }
@@ -40,6 +41,7 @@ type GitHubRepo = {
 type ProjectDetails = {
   title: string
   summary: string
+  technologies: string[]
   features: string[]
 }
 
@@ -88,14 +90,15 @@ const FEATURED_WORK: PortfolioProject[] = [
     description: 'Company website and portfolio for Quantis Technologies enterprise systems engineering.',
     technologies: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS'],
     status: 'Live',
-    demo: 'https://www.quantistechnologies.co.zw',
+    demo: 'https://www.quantistechnologies.co.zw/',
+    github: 'https://github.com/waltergkaturuza/GRINITE-TECH',
     type: 'web',
   },
   {
     id: 'saywhat-sirtis',
     title: 'SAYWHAT SIRTIS',
     description: 'Multi-tenant enterprise information system for NGOs with secure portals, workflows, and real-time reporting.',
-    technologies: ['Next.js', 'TypeScript', 'Realtime', 'RBAC'],
+    technologies: ['Next.js', 'TypeScript', 'React', 'PostgreSQL', 'RBAC', 'Real-time APIs', 'AI Integration'],
     status: 'Live',
     github: 'https://github.com/waltergkaturuza/SaywhatSirtis',
     demo: 'https://saywhat-sirtis.vercel.app/',
@@ -166,9 +169,14 @@ function svgThumbDataUri(title: string, subtitle?: string) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
-function sitePreviewUrl(url: string) {
+function sitePreviewSources(url: string) {
   const clean = url.trim()
-  return `https://image.thum.io/get/width/1200/crop/630/noanimate/${encodeURIComponent(clean)}`
+  const encoded = encodeURIComponent(clean)
+  return [
+    `/api/site-screenshot?url=${encoded}`,
+    `https://s0.wp.com/mshots/v1/${encoded}?w=1200&h=630`,
+    `https://image.thum.io/get/width/1200/crop/630/noanimate/${clean}`,
+  ]
 }
 
 function escapeXml(str: string) {
@@ -179,26 +187,33 @@ function ProjectThumbnail({
   title,
   subtitle,
   demo,
-  containerClassName = 'h-56 bg-black/20',
+  previewImage,
+  containerClassName = 'h-56 bg-gray-100',
 }: {
   title: string
   subtitle: string
   demo?: string
+  previewImage?: string
   containerClassName?: string
 }) {
   const fallbackThumb = svgThumbDataUri(title, subtitle)
-  const previewThumb = demo ? sitePreviewUrl(demo) : fallbackThumb
+  const sources = [
+    ...(previewImage ? [previewImage] : []),
+    ...(demo ? sitePreviewSources(demo) : []),
+    fallbackThumb,
+  ]
+  const [sourceIndex, setSourceIndex] = useState(0)
+  const currentSrc = sources[Math.min(sourceIndex, sources.length - 1)]
 
   return (
     <div className={`${containerClassName} overflow-hidden`}>
       <img
-        src={previewThumb}
-        alt={`${title} thumbnail`}
-        className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
+        src={currentSrc}
+        alt={`${title} site preview`}
+        className="h-full w-full object-cover object-top transition-transform duration-300 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
         loading="lazy"
-        onError={(event) => {
-          event.currentTarget.onerror = null
-          event.currentTarget.src = fallbackThumb
+        onError={() => {
+          setSourceIndex((prev) => (prev < sources.length - 1 ? prev + 1 : prev))
         }}
       />
     </div>
@@ -220,8 +235,102 @@ function baseProjectDetails(project: PortfolioProject): ProjectDetails {
   return {
     title: project.title,
     summary: project.description,
-    features: project.technologies.slice(0, 6).map((tech) => `${tech} implementation`),
+    technologies: project.technologies,
+    features: [],
   }
+}
+
+const SKIP_HEADINGS = [
+  'installation',
+  'setup',
+  'getting started',
+  'deploy',
+  'contributing',
+  'license',
+  'author',
+  'credits',
+  'acknowledgment',
+  'faq',
+  'roadmap',
+  'support',
+  'contact',
+  'prerequisites',
+  'requirements',
+]
+
+const TECH_HEADINGS = [
+  'tech stack',
+  'technology',
+  'technologies',
+  'built with',
+  'stack',
+  'tools',
+  'skills',
+]
+
+const SKIP_LINE_PATTERNS = [
+  /^\d+\.\s/,
+  /clone/i,
+  /install dependencies/i,
+  /environment setup/i,
+  /npm (run|install)/i,
+  /\byarn\b/i,
+  /\bdocker\b/i,
+  /create .*\.env/i,
+  /git clone/i,
+]
+
+function cleanMarkdownText(line: string) {
+  return line
+    .replace(/^[-*]\s+/, '')
+    .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+    .replace(/\*\*/g, '')
+    .replace(/`/g, '')
+    .trim()
+}
+
+function normalizeRichText(line: string) {
+  return line
+    .replace(/^[-*]\s+/, '')
+    .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+    .replace(/`/g, '')
+    .trim()
+}
+
+function stripInlineSetupSteps(text: string) {
+  return text
+    .replace(/\s*\d+\.\s*\*\*[^*]+\*\*/g, '')
+    .replace(/\s*\d+\.\s*(Clone and Install Dependencies|Environment Setup)/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+function renderFormattedText(text: string): ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>
+    }
+    return <span key={index}>{part}</span>
+  })
+}
+
+function isSkippedLine(line: string) {
+  return SKIP_LINE_PATTERNS.some((pattern) => pattern.test(line))
+}
+
+function mergeTechnologies(base: string[], extra: string[]) {
+  const seen = new Set<string>()
+  const merged: string[] = []
+  for (const item of [...base, ...extra]) {
+    const clean = cleanMarkdownText(item)
+    if (!clean || clean.length > 40) continue
+    const key = clean.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    merged.push(clean)
+  }
+  return merged.slice(0, 14)
 }
 
 function summarizeReadme(markdown: string, fallback: PortfolioProject): ProjectDetails {
@@ -232,60 +341,60 @@ function summarizeReadme(markdown: string, fallback: PortfolioProject): ProjectD
     .map((line) => line.trim())
     .filter(Boolean)
 
-  const skipHeadings = [
-    'installation',
-    'setup',
-    'getting started',
-    'deploy',
-    'contributing',
-    'license',
-    'author',
-    'credits',
-    'acknowledgment',
-    'faq',
-    'roadmap',
-    'support',
-    'contact',
-  ]
-
   const usefulLines: string[] = []
   const bulletCandidates: string[] = []
+  const readmeTechnologies: string[] = []
   let skipSection = false
+  let inTechSection = false
 
   for (const line of lines) {
     if (line.startsWith('#')) {
       const heading = line.replace(/^#+\s*/, '').toLowerCase()
-      skipSection = skipHeadings.some((word) => heading.includes(word))
+      skipSection = SKIP_HEADINGS.some((word) => heading.includes(word))
+      inTechSection = !skipSection && TECH_HEADINGS.some((word) => heading.includes(word))
       continue
     }
-    if (skipSection) continue
+    if (skipSection) {
+      inTechSection = false
+      continue
+    }
     if (/^!\[[^\]]*]\([^)]*\)$/.test(line)) continue
     if (line.includes('shields.io')) continue
+    if (isSkippedLine(line)) continue
+
+    if (inTechSection) {
+      if (/^[-*]\s+/.test(line)) {
+        readmeTechnologies.push(cleanMarkdownText(line))
+      } else if (line.includes(',')) {
+        readmeTechnologies.push(...line.split(',').map((part) => cleanMarkdownText(part)))
+      } else if (line.length <= 40) {
+        readmeTechnologies.push(cleanMarkdownText(line))
+      }
+      continue
+    }
 
     if (/^[-*]\s+/.test(line)) {
-      const bullet = line.replace(/^[-*]\s+/, '').trim()
-      if (bullet.length >= 12 && bullet.length <= 180) {
+      const bullet = normalizeRichText(line)
+      if (bullet.length >= 12 && bullet.length <= 220 && !isSkippedLine(bullet)) {
         bulletCandidates.push(bullet)
       }
       continue
     }
 
-    const cleanLine = line
-      .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
-      .replace(/`/g, '')
-      .trim()
-    if (cleanLine.length >= 24) {
+    const cleanLine = normalizeRichText(line)
+    if (cleanLine.length >= 24 && cleanLine.length <= 320 && !isSkippedLine(cleanLine)) {
       usefulLines.push(cleanLine)
     }
   }
 
-  const summary = usefulLines.slice(0, 3).join(' ')
-  const features = bulletCandidates.slice(0, 7)
+  const summary = stripInlineSetupSteps(usefulLines.slice(0, 2).join(' '))
+  const features = bulletCandidates.slice(0, 8)
 
   return {
     title: fallback.title,
     summary: summary || fallback.description,
-    features: features.length > 0 ? features : fallback.technologies.map((tech) => `${tech} support`),
+    technologies: mergeTechnologies(fallback.technologies, readmeTechnologies),
+    features,
   }
 }
 
@@ -543,28 +652,25 @@ export default function Portfolio() {
                   key={project.id}
                   className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all"
                 >
-                  {project.github ? (
-                    <button
-                      type="button"
-                      onClick={() => openProjectDetails(project)}
-                      className="group block w-full text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                      aria-label={`View details for ${project.title}`}
-                    >
-                      <ProjectThumbnail
-                        title={project.title}
-                        subtitle={project.description}
-                        demo={project.demo}
-                      />
-                    </button>
-                  ) : (
+                  <button
+                    type="button"
+                    onClick={() => openProjectDetails(project)}
+                    className="group block w-full text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    aria-label={`View details for ${project.title}`}
+                  >
                     <ProjectThumbnail
                       title={project.title}
                       subtitle={project.description}
                       demo={project.demo}
+                      previewImage={project.previewImage}
                     />
-                  )}
+                  </button>
                   <div className="border-y border-gray-200 px-4 py-2 text-center bg-gray-50">
-                    <p className="text-sm text-gray-600">Click image to view app screenshots</p>
+                    <p className="text-sm text-gray-600">
+                      {project.type === 'system'
+                        ? 'Click image to view app details'
+                        : 'Click image to view site details'}
+                    </p>
                   </div>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">
@@ -600,21 +706,19 @@ export default function Portfolio() {
                       )}
                     </div>
                     <div className="flex gap-2">
-                      {project.github && (
-                        <button
-                          type="button"
-                          onClick={() => openProjectDetails(project)}
-                          className="flex-1 text-center bg-emerald-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-emerald-600 transition-colors"
-                        >
-                          {detailsLabel(project.type)}
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => openProjectDetails(project)}
+                        className="flex-1 text-center bg-emerald-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-emerald-600 transition-colors"
+                      >
+                        {detailsLabel(project.type)}
+                      </button>
                       {project.demo && (
                         <a 
                           href={project.demo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 text-center bg-fuchsia-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-fuchsia-600 transition-colors"
+                          className="flex-1 text-center bg-blue-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                         >
                           {project.type === 'system' ? 'Launch App' : 'Visit Site'}
                         </a>
@@ -651,30 +755,21 @@ export default function Portfolio() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
                   {moreGithubProjects.map((project) => (
                     <div key={project.id} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                      {project.github ? (
-                        <button
-                          type="button"
-                          onClick={() => openProjectDetails(project)}
-                          className="group block w-full text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                          aria-label={`View details for ${project.title}`}
-                        >
-                          <ProjectThumbnail
-                            title={project.title}
-                            subtitle={project.technologies.join(' • ')}
-                            demo={project.demo}
-                            containerClassName="h-56 bg-black/20"
-                          />
-                        </button>
-                      ) : (
+                      <button
+                        type="button"
+                        onClick={() => openProjectDetails(project)}
+                        className="group block w-full text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                        aria-label={`View details for ${project.title}`}
+                      >
                         <ProjectThumbnail
                           title={project.title}
                           subtitle={project.technologies.join(' • ')}
                           demo={project.demo}
-                          containerClassName="h-56 bg-black/20"
+                          previewImage={project.previewImage}
                         />
-                      )}
+                      </button>
                       <div className="border-y border-gray-200 px-4 py-2 text-center bg-gray-50">
-                        <p className="text-sm text-gray-600">Click image to view app screenshots</p>
+                        <p className="text-sm text-gray-600">Click image to view project details</p>
                       </div>
                       <div className="p-6">
                         <div className="flex items-center justify-between mb-2">
@@ -689,21 +784,19 @@ export default function Portfolio() {
                         </div>
                         <p className="text-gray-700 text-[1.05rem] mb-4 line-clamp-3">{project.description}</p>
                         <div className="flex gap-2">
-                          {project.github && (
-                            <button
-                              type="button"
-                              onClick={() => openProjectDetails(project)}
-                              className="flex-1 text-center bg-emerald-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-emerald-600 transition-colors"
-                            >
-                              {detailsLabel(project.type)}
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => openProjectDetails(project)}
+                            className="flex-1 text-center bg-emerald-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-emerald-600 transition-colors"
+                          >
+                            {detailsLabel(project.type)}
+                          </button>
                           {project.demo && (
                             <a
                               href={project.demo}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex-1 text-center bg-fuchsia-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-fuchsia-600 transition-colors"
+                              className="flex-1 text-center bg-blue-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                             >
                               {project.type === 'system' ? 'Launch App' : 'Visit Site'}
                             </a>
@@ -790,38 +883,71 @@ export default function Portfolio() {
       </div>
 
       {detailsOpen && selectedDetails && (
-        <div className="fixed inset-0 z-50 bg-black/60 p-4 md:p-6">
-          <div className="mx-auto max-w-3xl h-full md:h-auto md:max-h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900">{selectedDetails.title}</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 backdrop-blur-md p-4 sm:p-6 md:p-8"
+          onClick={() => setDetailsOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="relative mx-auto w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl border border-white/30 bg-white/75 shadow-[0_24px_80px_rgba(15,23,42,0.45)] backdrop-blur-2xl ring-1 ring-white/40 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="project-details-title"
+          >
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/70 via-white/45 to-emerald-100/35" />
+            <div className="relative flex items-center justify-between border-b border-white/40 bg-white/35 px-6 py-5 backdrop-blur-xl">
+              <h3 id="project-details-title" className="text-2xl font-semibold text-slate-900 pr-4">
+                {selectedDetails.title}
+              </h3>
               <button
                 type="button"
                 onClick={() => setDetailsOpen(false)}
-                className="text-gray-500 hover:text-gray-800 text-3xl leading-none"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/50 bg-white/60 text-slate-600 transition hover:bg-white hover:text-slate-900"
                 aria-label="Close details"
               >
                 ×
               </button>
             </div>
 
-            <div className="px-5 py-4 overflow-y-auto">
+            <div className="relative overflow-y-auto px-6 py-6 md:px-8 md:py-7">
               {detailsLoading && (
-                <p className="text-sm text-gray-500 mb-3">Loading README summary...</p>
+                <p className="mb-4 text-sm text-slate-500">Loading README summary...</p>
               )}
               {detailsError && (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4">
+                <p className="mb-5 rounded-xl border border-amber-200/80 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 backdrop-blur-sm">
                   {detailsError}
                 </p>
               )}
 
-              <p className="text-gray-700 leading-relaxed mb-6">{selectedDetails.summary}</p>
+              <p className="mb-7 text-base leading-relaxed text-slate-700 md:text-lg">
+                {renderFormattedText(selectedDetails.summary)}
+              </p>
 
-              <h4 className="text-2xl font-semibold text-gray-900 mb-3">Key Features</h4>
-              <ul className="list-disc pl-6 space-y-2 text-gray-800">
-                {selectedDetails.features.map((feature, index) => (
-                  <li key={`${selectedDetails.title}-${index}`}>{feature}</li>
+              <h4 className="mb-3 text-xl font-semibold text-slate-900 md:text-2xl">Technologies & Skills</h4>
+              <div className="mb-8 flex flex-wrap gap-2.5">
+                {selectedDetails.technologies.map((tech) => (
+                  <span
+                    key={`${selectedDetails.title}-${tech}`}
+                    className="rounded-full border border-emerald-200/80 bg-emerald-50/80 px-3.5 py-1.5 text-sm font-medium text-emerald-800 backdrop-blur-sm"
+                  >
+                    {tech}
+                  </span>
                 ))}
-              </ul>
+              </div>
+
+              {selectedDetails.features.length > 0 && (
+                <>
+                  <h4 className="mb-3 text-xl font-semibold text-slate-900 md:text-2xl">Key Features</h4>
+                  <ul className="list-disc space-y-2.5 pl-6 text-slate-800">
+                    {selectedDetails.features.map((feature, index) => (
+                      <li key={`${selectedDetails.title}-${index}`} className="leading-relaxed">
+                        {renderFormattedText(feature)}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           </div>
         </div>
