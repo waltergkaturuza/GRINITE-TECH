@@ -51,27 +51,29 @@ const FEATURED_WORK: PortfolioProject[] = [
     id: 'tnf-main',
     title: 'Tripartite Negotiating Forum (TNF)',
     description: 'Official institutional website for Zimbabwe’s tripartite social dialogue platform with resources, news, and engagement.',
-    technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Content Management'],
+    technologies: ['Next.js', 'TypeScript', 'React', 'CMS', 'SEO'],
     status: 'Live',
     demo: 'https://www.tnfzim.com/',
     type: 'web',
     detailsOverride: {
       summary:
-        'Official digital platform for Zimbabwe’s Tripartite Negotiating Forum (TNF), supporting structured social dialogue between government, labour, and business through news, publications, resources, and public engagement.',
+        'Official digital platform for Zimbabwe’s Tripartite Negotiating Forum (TNF), supporting structured social dialogue between government, labour, and business through CMS-managed news, publications, resources, and SEO-optimized public engagement.',
       technologies: [
         'Next.js',
         'TypeScript',
         'React',
         'Tailwind CSS',
-        'Content Management',
+        'CMS',
         'SEO',
+        'Content Management',
         'Responsive UI',
       ],
       features: [
         '**Institutional Homepage** – presents TNF mandate, tripartite membership, and social dialogue priorities.',
+        '**CMS-driven Content** – staff can publish and update news, documents, and pages without developer support.',
+        '**SEO Optimization** – search-friendly structure, metadata, and discoverability for institutional audiences.',
         '**News & Announcements** – publishes forum updates, communiqués, and stakeholder communications.',
         '**Resource Library** – organized access to reports, documents, and institutional reference material.',
-        '**Engagement Pathways** – clear sections for partners, delegations, and public information requests.',
         '**Accessible Delivery** – mobile-ready experience for audiences across Zimbabwe and partner institutions.',
       ],
     },
@@ -79,31 +81,65 @@ const FEATURED_WORK: PortfolioProject[] = [
   {
     id: 'tnf-summit',
     title: 'TNF Global Summit 2026',
-    description: 'Global summit platform for registrations, programme, sponsors, and Victoria Falls 2026 conference operations.',
-    technologies: ['Next.js', 'TypeScript', 'Event Platform'],
+    description: 'Global summit platform with CMS, SEO, registrations, integrated payments, programme, and Victoria Falls 2026 operations.',
+    technologies: ['Next.js', 'TypeScript', 'CMS', 'SEO', 'Payment Gateway'],
     status: 'Live',
     github: 'https://github.com/waltergkaturuza/tnf_summit',
     demo: 'https://summit.tnfzim.com/',
     type: 'web',
+    detailsOverride: {
+      summary:
+        'Global summit platform for TNF Global Summit 2026 (Victoria Falls), combining CMS-managed event content, SEO visibility, delegate registrations, and integrated payment gateway processing for tickets and conference services.',
+      technologies: [
+        'Next.js',
+        'TypeScript',
+        'React',
+        'Tailwind CSS',
+        'CMS',
+        'SEO',
+        'Payment Gateway Integration',
+        'Event Platform',
+        'Vercel',
+      ],
+      features: [
+        '**Summit Homepage & Branding** – conference positioning, programme highlights, and delegate conversion flows.',
+        '**CMS Content Management** – update speakers, agenda, sponsors, and pages in real time.',
+        '**SEO & Discoverability** – optimized landing pages for regional and international summit visibility.',
+        '**Registration Workflows** – structured signup journeys for delegates, partners, and exhibitors.',
+        '**Integrated Payment Gateway** – secure online payments for registrations, packages, and summit services.',
+        '**Programme & Sponsors** – showcase sessions, partners, and operational summit information.',
+      ],
+    },
   },
   {
     id: 'sarsyc-vi',
     title: 'SARSYC VI Conference Platform',
-    description: 'Regional youth conference platform for registrations, programme, resources, and partnerships (Windhoek 2026).',
-    technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Conference CMS', 'Vercel'],
+    description: 'Regional youth conference platform with CMS, SEO, registrations, and integrated payment gateway (Windhoek 2026).',
+    technologies: ['Next.js', 'TypeScript', 'CMS', 'SEO', 'Payment Gateway'],
     status: 'Live',
     demo: 'https://www.sarsyc.org/',
     type: 'web',
     detailsOverride: {
       summary:
-        'Public conference website for SARSYC VI (Windhoek 2026), built to promote the event, capture registrations, publish programme updates, and showcase partners and resources for regional youth delegates.',
-      technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Conference CMS', 'Responsive UI', 'Vercel'],
+        'Public conference website for SARSYC VI (Windhoek 2026), built with CMS-managed content and SEO best practices, plus delegate registrations and integrated payment gateway support for conference fees and related services.',
+      technologies: [
+        'Next.js',
+        'TypeScript',
+        'React',
+        'Tailwind CSS',
+        'CMS',
+        'SEO',
+        'Payment Gateway Integration',
+        'Conference Platform',
+        'Vercel',
+      ],
       features: [
         '**Conference Homepage** – event branding, key messaging, and delegate call-to-action sections.',
+        '**CMS-driven Updates** – programme, resources, partners, and announcements managed by the team.',
+        '**SEO Optimization** – search-ready content structure for regional youth conference visibility.',
         '**Registration Experience** – structured flows for participants, partners, and stakeholders.',
-        '**Programme & Updates** – publish schedules, announcements, and conference content.',
+        '**Integrated Payment Gateway** – secure online payments for registrations and conference packages.',
         '**Resources & Partnerships** – highlight sponsors, documents, and engagement opportunities.',
-        '**Mobile-first Delivery** – optimized browsing for regional audiences on phone and desktop.',
       ],
     },
   },
@@ -111,18 +147,19 @@ const FEATURED_WORK: PortfolioProject[] = [
     id: 'chilmund',
     title: 'Chilmund Chemicals',
     description: 'Corporate website for Zimbabwe’s aluminium sulphate manufacturer with products, logistics, SHEQ, and quote workflows.',
-    technologies: ['Next.js', 'TypeScript', 'React', 'Corporate Web'],
+    technologies: ['Next.js', 'TypeScript', 'React', 'CMS', 'SEO'],
     status: 'Live',
     demo: 'https://www.chilmund.co.zw/',
     type: 'web',
     detailsOverride: {
       summary:
-        'Corporate website for Chilmund Chemicals, Zimbabwe’s aluminium sulphate manufacturer, showcasing products, production capabilities, logistics, SHEQ standards, and customer quote workflows.',
-      technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Corporate Web', 'SEO', 'Responsive UI'],
+        'Corporate website for Chilmund Chemicals, Zimbabwe’s aluminium sulphate manufacturer, with CMS-managed content and SEO optimization across products, logistics, SHEQ standards, and customer quote workflows.',
+      technologies: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'CMS', 'SEO', 'Corporate Web', 'Responsive UI'],
       features: [
         '**Company Profile** – manufacturing story, capabilities, and market positioning.',
+        '**CMS Content Management** – update products, pages, and company information without code changes.',
+        '**SEO Optimization** – search-friendly product and corporate content for industrial buyers.',
         '**Products & Applications** – aluminium sulphate ranges and industrial use cases.',
-        '**Logistics & Operations** – delivery coverage, supply reliability, and service information.',
         '**SHEQ Commitment** – safety, health, environment, and quality assurance messaging.',
         '**Quote & Contact Flows** – lead capture for procurement and customer enquiries.',
       ],
@@ -163,12 +200,24 @@ const FEATURED_WORK: PortfolioProject[] = [
   {
     id: 'quantis-portfolio',
     title: 'Quantis Technologies',
-    description: 'Company website and portfolio for Quantis Technologies enterprise systems engineering.',
-    technologies: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS'],
+    description: 'Company website and portfolio with CMS, SEO, and enterprise systems engineering showcase.',
+    technologies: ['Next.js', 'React', 'TypeScript', 'CMS', 'SEO'],
     status: 'Live',
     demo: 'https://www.quantistechnologies.co.zw/',
     github: 'https://github.com/waltergkaturuza/GRINITE-TECH',
     type: 'web',
+    detailsOverride: {
+      summary:
+        'Company website and portfolio for Quantis Technologies, combining CMS-managed service content, SEO-optimized landing pages, and a showcase of enterprise platforms, automation, and digital infrastructure delivery.',
+      technologies: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'CMS', 'SEO', 'JSON-LD', 'Responsive UI'],
+      features: [
+        '**Brand & Services Presence** – clear positioning for enterprise systems engineering and digital delivery.',
+        '**CMS-managed Content** – update services, case studies, and company information without redeploying code.',
+        '**SEO Architecture** – metadata, structured data, sitemap, and search-ready page structure.',
+        '**Portfolio Showcase** – featured projects with live previews and detailed capability summaries.',
+        '**Conversion Paths** – contact, consultation, and service discovery flows for prospective clients.',
+      ],
+    },
   },
   {
     id: 'saywhat-sirtis',
@@ -325,17 +374,17 @@ function svgThumbDataUri(title: string, subtitle?: string) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
-function sitePreviewSources(url: string) {
-  const encoded = encodeURIComponent(url.trim())
-  const stamp = Date.now()
-  return [
-    `/api/site-screenshot?url=${encoded}`,
-    `/api/site-screenshot?url=${encoded}&retry=${stamp}`,
-  ]
-}
-
 function escapeXml(str: string) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function sitePreviewSources(url: string) {
+  const encoded = encodeURIComponent(url.trim())
+  return [`/api/site-screenshot?url=${encoded}`]
+}
+
+function isLikelyPlaceholderImage(width: number, height: number) {
+  return width > 0 && width < 700
 }
 
 function ProjectThumbnail({
@@ -352,13 +401,36 @@ function ProjectThumbnail({
   containerClassName?: string
 }) {
   const fallbackThumb = svgThumbDataUri(title, subtitle)
+  const [remotePreview, setRemotePreview] = useState<string | null>(null)
+  const [sourceIndex, setSourceIndex] = useState(0)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!demo || previewImage) return
+
+    let cancelled = false
+    fetch(`/api/site-preview-url?url=${encodeURIComponent(demo)}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { url?: string } | null) => {
+        if (!cancelled && data?.url) {
+          setRemotePreview(data.url)
+          setSourceIndex(0)
+          setLoaded(false)
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [demo, previewImage])
+
   const sources = [
     ...(previewImage ? [previewImage] : []),
+    ...(remotePreview ? [remotePreview] : []),
     ...(demo ? sitePreviewSources(demo) : []),
     fallbackThumb,
   ]
-  const [sourceIndex, setSourceIndex] = useState(0)
-  const [loaded, setLoaded] = useState(false)
   const currentSrc = sources[Math.min(sourceIndex, sources.length - 1)]
 
   return (
@@ -367,11 +439,24 @@ function ProjectThumbnail({
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200" />
       )}
       <img
+        key={currentSrc}
         src={currentSrc}
         alt={`${title} site preview`}
         className={`h-full w-full object-cover object-top transition-all duration-300 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03] ${loaded ? 'opacity-100' : 'opacity-0'}`}
         loading="lazy"
-        onLoad={() => setLoaded(true)}
+        onLoad={(event) => {
+          const img = event.currentTarget
+          if (
+            demo &&
+            isLikelyPlaceholderImage(img.naturalWidth, img.naturalHeight) &&
+            sourceIndex < sources.length - 1
+          ) {
+            setLoaded(false)
+            setSourceIndex((prev) => prev + 1)
+            return
+          }
+          setLoaded(true)
+        }}
         onError={() => {
           setLoaded(false)
           setSourceIndex((prev) => (prev < sources.length - 1 ? prev + 1 : prev))
