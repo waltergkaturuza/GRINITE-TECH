@@ -19,6 +19,7 @@ type PortfolioProject = {
   github?: string
   demo?: string
   type?: 'web' | 'mobile' | 'backend' | 'data' | 'system'
+  lastUpdatedAt?: string
 }
 
 type GitHubRepo = {
@@ -125,6 +126,8 @@ const FEATURED_WORK: PortfolioProject[] = [
   },
 ]
 
+const EXTRA_FEATURED_FROM_GITHUB = 6
+
 function svgThumbDataUri(title: string, subtitle?: string) {
   const safeTitle = (title || '').slice(0, 38)
   const safeSub = (subtitle || '').slice(0, 52)
@@ -157,8 +160,43 @@ function svgThumbDataUri(title: string, subtitle?: string) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
+function sitePreviewUrl(url: string) {
+  const clean = url.trim()
+  return `https://image.thum.io/get/width/1200/crop/630/noanimate/${encodeURIComponent(clean)}`
+}
+
 function escapeXml(str: string) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function ProjectThumbnail({
+  title,
+  subtitle,
+  demo,
+  containerClassName = 'h-48 bg-emerald-900/40',
+}: {
+  title: string
+  subtitle: string
+  demo?: string
+  containerClassName?: string
+}) {
+  const fallbackThumb = svgThumbDataUri(title, subtitle)
+  const previewThumb = demo ? sitePreviewUrl(demo) : fallbackThumb
+
+  return (
+    <div className={containerClassName}>
+      <img
+        src={previewThumb}
+        alt={`${title} thumbnail`}
+        className="h-full w-full object-cover"
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.onerror = null
+          event.currentTarget.src = fallbackThumb
+        }}
+      />
+    </div>
+  )
 }
 
 export default function Portfolio() {
@@ -218,7 +256,7 @@ export default function Portfolio() {
 
   const githubProjects: PortfolioProject[] = githubRepos
     .filter((r) => Boolean(r.homepage) || Boolean(r.description))
-    .slice(0, 9)
+    .slice(0, 18)
     .map((r) => ({
       id: `gh-${r.id}`,
       title: r.name.replace(/[-_]/g, ' '),
@@ -228,9 +266,36 @@ export default function Portfolio() {
       github: r.html_url,
       demo: r.homepage || undefined,
       type: 'web',
+      lastUpdatedAt: r.pushed_at || r.updated_at,
     }))
 
-  const featured = FEATURED_WORK
+  const featuredIds = new Set(FEATURED_WORK.map((project) => project.id))
+  const featuredGithubUrls = new Set(
+    FEATURED_WORK.flatMap((project) => [project.github, project.demo]).filter(Boolean).map((url) => url!.toLowerCase()),
+  )
+
+  const githubFeaturedCandidates = githubProjects
+    .filter((project) => {
+      const githubUrl = project.github?.toLowerCase()
+      const demoUrl = project.demo?.toLowerCase()
+      return (
+        Boolean(project.demo) &&
+        project.status === 'Live' &&
+        !featuredIds.has(project.id) &&
+        !githubUrl?.includes('/grinite-tech-system') &&
+        !(githubUrl && featuredGithubUrls.has(githubUrl)) &&
+        !(demoUrl && featuredGithubUrls.has(demoUrl))
+      )
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.lastUpdatedAt || 0).getTime() - new Date(a.lastUpdatedAt || 0).getTime(),
+    )
+    .slice(0, EXTRA_FEATURED_FROM_GITHUB)
+
+  const featured = [...FEATURED_WORK, ...githubFeaturedCandidates]
+  const githubFeaturedIds = new Set(githubFeaturedCandidates.map((project) => project.id))
+  const moreGithubProjects = githubProjects.filter((project) => !githubFeaturedIds.has(project.id))
 
   if (loading) {
     return (
@@ -341,13 +406,11 @@ export default function Portfolio() {
                   key={project.id}
                   className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950/95 backdrop-blur-sm rounded-2xl shadow-xl border border-emerald-800/70 overflow-hidden hover:border-emerald-500/70 hover:shadow-2xl transition-all"
                 >
-                  <div className="h-48 bg-emerald-900/40">
-                    <img
-                      src={svgThumbDataUri(project.title, project.description)}
-                      alt={`${project.title} thumbnail`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
+                  <ProjectThumbnail
+                    title={project.title}
+                    subtitle={project.description}
+                    demo={project.demo}
+                  />
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg md:text-xl font-semibold text-emerald-50 tracking-tight">
@@ -418,17 +481,16 @@ export default function Portfolio() {
         {/* More from GitHub */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-white text-center mb-12">More from GitHub</h2>
-          {githubProjects.length > 0 ? (
+          {moreGithubProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {githubProjects.map((project) => (
+              {moreGithubProjects.map((project) => (
                 <div key={project.id} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 overflow-hidden hover:border-white/25 transition-all">
-                  <div className="h-40 bg-black/20">
-                    <img
-                      src={svgThumbDataUri(project.title, project.technologies.join(' • '))}
-                      alt={`${project.title} thumbnail`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
+                  <ProjectThumbnail
+                    title={project.title}
+                    subtitle={project.technologies.join(' • ')}
+                    demo={project.demo}
+                    containerClassName="h-40 bg-black/20"
+                  />
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-lg font-semibold text-white">{project.title}</h3>
