@@ -233,10 +233,23 @@ const FEATURED_WORK: PortfolioProject[] = [
     id: 'munda-market-admin',
     title: 'Munda Market (Admin Console)',
     description: 'Admin console for catalog, orders, users and operational workflows.',
-    technologies: ['Admin', 'RBAC', 'Analytics'],
+    technologies: ['Next.js', 'TypeScript', 'RBAC', 'Analytics'],
     status: 'Live',
     github: 'https://github.com/waltergkaturuza/Munda-Market',
-    type: 'web',
+    demo: 'https://munda-market-k4ht.vercel.app/',
+    type: 'system',
+    detailsOverride: {
+      summary:
+        'Admin console for Munda Market, supporting catalog management, order operations, user governance, and analytics dashboards for day-to-day marketplace administration.',
+      technologies: ['Next.js', 'TypeScript', 'React', 'RBAC', 'Admin Dashboard', 'Analytics', 'Vercel'],
+      features: [
+        '**Catalog Management** – create, update, and organize products and inventory records.',
+        '**Order Operations** – monitor order flow, fulfillment status, and operational exceptions.',
+        '**User & Role Governance** – role-based access for admins, staff, and operational teams.',
+        '**Analytics Dashboards** – visibility into sales activity, user behavior, and platform performance.',
+        '**Secure Admin Access** – authenticated console workflows for internal business users.',
+      ],
+    },
   },
   {
     id: 'retailcloud',
@@ -380,7 +393,33 @@ function escapeXml(str: string) {
 
 function sitePreviewSources(url: string) {
   const encoded = encodeURIComponent(url.trim())
-  return [`/api/site-screenshot?url=${encoded}`]
+  return [
+    `https://api.microlink.io/?url=${encoded}&screenshot=true&meta=false&viewport.width=1200&viewport.height=630`,
+    `/api/site-screenshot?url=${encoded}`,
+  ]
+}
+
+async function fetchMicrolinkPreviewUrl(demo: string) {
+  const encoded = encodeURIComponent(demo)
+  const endpoint = `https://api.microlink.io/?url=${encoded}&screenshot=true&viewport.width=1200&viewport.height=630`
+
+  const clientResponse = await fetch(endpoint)
+  if (clientResponse.ok) {
+    const payload = (await clientResponse.json()) as {
+      data?: { screenshot?: { url?: string; width?: number } }
+    }
+    const url = payload.data?.screenshot?.url
+    const width = payload.data?.screenshot?.width ?? 0
+    if (url && width >= 700) return url
+  }
+
+  const serverResponse = await fetch(`/api/site-preview-url?url=${encoded}`)
+  if (serverResponse.ok) {
+    const payload = (await serverResponse.json()) as { url?: string }
+    if (payload.url) return payload.url
+  }
+
+  return null
 }
 
 function isLikelyPlaceholderImage(width: number, height: number) {
@@ -402,23 +441,37 @@ function ProjectThumbnail({
 }) {
   const fallbackThumb = svgThumbDataUri(title, subtitle)
   const [remotePreview, setRemotePreview] = useState<string | null>(null)
+  const [previewResolved, setPreviewResolved] = useState(false)
   const [sourceIndex, setSourceIndex] = useState(0)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    if (!demo || previewImage) return
+    if (previewImage) {
+      setPreviewResolved(true)
+      return
+    }
+    if (!demo) {
+      setPreviewResolved(true)
+      return
+    }
 
     let cancelled = false
-    fetch(`/api/site-preview-url?url=${encodeURIComponent(demo)}`)
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: { url?: string } | null) => {
-        if (!cancelled && data?.url) {
-          setRemotePreview(data.url)
-          setSourceIndex(0)
-          setLoaded(false)
+    setPreviewResolved(false)
+    setRemotePreview(null)
+    setSourceIndex(0)
+    setLoaded(false)
+
+    fetchMicrolinkPreviewUrl(demo)
+      .then((url) => {
+        if (!cancelled && url) {
+          setRemotePreview(url)
         }
       })
-      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) {
+          setPreviewResolved(true)
+        }
+      })
 
     return () => {
       cancelled = true
@@ -428,40 +481,43 @@ function ProjectThumbnail({
   const sources = [
     ...(previewImage ? [previewImage] : []),
     ...(remotePreview ? [remotePreview] : []),
-    ...(demo ? sitePreviewSources(demo) : []),
-    fallbackThumb,
+    ...(previewResolved && demo ? sitePreviewSources(demo) : []),
+    ...(previewResolved ? [fallbackThumb] : []),
   ]
   const currentSrc = sources[Math.min(sourceIndex, sources.length - 1)]
+  const showImage = previewResolved && currentSrc
 
   return (
     <div className={`${containerClassName} relative overflow-hidden`}>
-      {!loaded && demo && (
+      {(!loaded || !previewResolved) && demo && (
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200" />
       )}
-      <img
-        key={currentSrc}
-        src={currentSrc}
-        alt={`${title} site preview`}
-        className={`h-full w-full object-cover object-top transition-all duration-300 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03] ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        loading="lazy"
-        onLoad={(event) => {
-          const img = event.currentTarget
-          if (
-            demo &&
-            isLikelyPlaceholderImage(img.naturalWidth, img.naturalHeight) &&
-            sourceIndex < sources.length - 1
-          ) {
+      {showImage && (
+        <img
+          key={currentSrc}
+          src={currentSrc}
+          alt={`${title} site preview`}
+          className={`h-full w-full object-cover object-top transition-all duration-300 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          loading="lazy"
+          onLoad={(event) => {
+            const img = event.currentTarget
+            if (
+              demo &&
+              isLikelyPlaceholderImage(img.naturalWidth, img.naturalHeight) &&
+              sourceIndex < sources.length - 1
+            ) {
+              setLoaded(false)
+              setSourceIndex((prev) => prev + 1)
+              return
+            }
+            setLoaded(true)
+          }}
+          onError={() => {
             setLoaded(false)
-            setSourceIndex((prev) => prev + 1)
-            return
-          }
-          setLoaded(true)
-        }}
-        onError={() => {
-          setLoaded(false)
-          setSourceIndex((prev) => (prev < sources.length - 1 ? prev + 1 : prev))
-        }}
-      />
+            setSourceIndex((prev) => (prev < sources.length - 1 ? prev + 1 : prev))
+          }}
+        />
+      )}
     </div>
   )
 }
