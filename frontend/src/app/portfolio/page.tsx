@@ -37,6 +37,12 @@ type GitHubRepo = {
   updated_at: string
 }
 
+type ProjectDetails = {
+  title: string
+  summary: string
+  features: string[]
+}
+
 const FEATURED_WORK: PortfolioProject[] = [
   {
     id: 'tnf-main',
@@ -173,7 +179,7 @@ function ProjectThumbnail({
   title,
   subtitle,
   demo,
-  containerClassName = 'h-48 bg-emerald-900/40',
+  containerClassName = 'h-56 bg-black/20',
 }: {
   title: string
   subtitle: string
@@ -184,11 +190,11 @@ function ProjectThumbnail({
   const previewThumb = demo ? sitePreviewUrl(demo) : fallbackThumb
 
   return (
-    <div className={containerClassName}>
+    <div className={`${containerClassName} overflow-hidden`}>
       <img
         src={previewThumb}
         alt={`${title} thumbnail`}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
         loading="lazy"
         onError={(event) => {
           event.currentTarget.onerror = null
@@ -203,11 +209,96 @@ function detailsLabel(projectType?: PortfolioProject['type']) {
   return projectType === 'system' ? 'View app details' : 'View site details'
 }
 
+function parseGitHubRepo(githubUrl?: string) {
+  if (!githubUrl) return null
+  const match = githubUrl.match(/github\.com\/([^/]+)\/([^/?#]+)/i)
+  if (!match) return null
+  return { owner: match[1], repo: match[2].replace(/\.git$/i, '') }
+}
+
+function baseProjectDetails(project: PortfolioProject): ProjectDetails {
+  return {
+    title: project.title,
+    summary: project.description,
+    features: project.technologies.slice(0, 6).map((tech) => `${tech} implementation`),
+  }
+}
+
+function summarizeReadme(markdown: string, fallback: PortfolioProject): ProjectDetails {
+  const withoutCode = markdown.replace(/```[\s\S]*?```/g, ' ')
+  const withoutHtml = withoutCode.replace(/<[^>]+>/g, ' ')
+  const lines = withoutHtml
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  const skipHeadings = [
+    'installation',
+    'setup',
+    'getting started',
+    'deploy',
+    'contributing',
+    'license',
+    'author',
+    'credits',
+    'acknowledgment',
+    'faq',
+    'roadmap',
+    'support',
+    'contact',
+  ]
+
+  const usefulLines: string[] = []
+  const bulletCandidates: string[] = []
+  let skipSection = false
+
+  for (const line of lines) {
+    if (line.startsWith('#')) {
+      const heading = line.replace(/^#+\s*/, '').toLowerCase()
+      skipSection = skipHeadings.some((word) => heading.includes(word))
+      continue
+    }
+    if (skipSection) continue
+    if (/^!\[[^\]]*]\([^)]*\)$/.test(line)) continue
+    if (line.includes('shields.io')) continue
+
+    if (/^[-*]\s+/.test(line)) {
+      const bullet = line.replace(/^[-*]\s+/, '').trim()
+      if (bullet.length >= 12 && bullet.length <= 180) {
+        bulletCandidates.push(bullet)
+      }
+      continue
+    }
+
+    const cleanLine = line
+      .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+      .replace(/`/g, '')
+      .trim()
+    if (cleanLine.length >= 24) {
+      usefulLines.push(cleanLine)
+    }
+  }
+
+  const summary = usefulLines.slice(0, 3).join(' ')
+  const features = bulletCandidates.slice(0, 7)
+
+  return {
+    title: fallback.title,
+    summary: summary || fallback.description,
+    features: features.length > 0 ? features : fallback.technologies.map((tech) => `${tech} support`),
+  }
+}
+
 export default function Portfolio() {
   const [githubRepos, setGithubRepos] = useState<GitHubRepo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showMoreGithub, setShowMoreGithub] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+  const [detailsError, setDetailsError] = useState<string | null>(null)
+  const [selectedDetails, setSelectedDetails] = useState<ProjectDetails | null>(null)
+  const [detailsCache, setDetailsCache] = useState<Record<string, ProjectDetails>>({})
 
   useEffect(() => {
     async function fetchData() {
@@ -301,6 +392,47 @@ export default function Portfolio() {
   const featured = [...FEATURED_WORK, ...githubFeaturedCandidates]
   const githubFeaturedIds = new Set(githubFeaturedCandidates.map((project) => project.id))
   const moreGithubProjects = githubProjects.filter((project) => !githubFeaturedIds.has(project.id))
+
+  async function openProjectDetails(project: PortfolioProject) {
+    setDetailsOpen(true)
+    setDetailsError(null)
+    setSelectedDetails(baseProjectDetails(project))
+
+    if (detailsCache[project.id]) {
+      setSelectedDetails(detailsCache[project.id])
+      return
+    }
+
+    const parsed = parseGitHubRepo(project.github)
+    if (!parsed) return
+
+    setDetailsLoading(true)
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/readme`,
+        {
+          headers: {
+            Accept: 'application/vnd.github.raw+json',
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(`Readme fetch failed: ${response.status}`)
+      }
+
+      const markdown = await response.text()
+      const summarized = summarizeReadme(markdown, project)
+      setDetailsCache((prev) => ({ ...prev, [project.id]: summarized }))
+      setSelectedDetails(summarized)
+    } catch (readmeError) {
+      console.error('Unable to fetch README details', readmeError)
+      setDetailsError('Could not load README summary. Showing project overview.')
+      setSelectedDetails(baseProjectDetails(project))
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -409,65 +541,82 @@ export default function Portfolio() {
               {featured.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950/95 backdrop-blur-sm rounded-2xl shadow-xl border border-emerald-800/70 overflow-hidden hover:border-emerald-500/70 hover:shadow-2xl transition-all"
+                  className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all"
                 >
-                  <ProjectThumbnail
-                    title={project.title}
-                    subtitle={project.description}
-                    demo={project.demo}
-                  />
+                  {project.github ? (
+                    <button
+                      type="button"
+                      onClick={() => openProjectDetails(project)}
+                      className="group block w-full text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      aria-label={`View details for ${project.title}`}
+                    >
+                      <ProjectThumbnail
+                        title={project.title}
+                        subtitle={project.description}
+                        demo={project.demo}
+                      />
+                    </button>
+                  ) : (
+                    <ProjectThumbnail
+                      title={project.title}
+                      subtitle={project.description}
+                      demo={project.demo}
+                    />
+                  )}
+                  <div className="border-y border-gray-200 px-4 py-2 text-center bg-gray-50">
+                    <p className="text-sm text-gray-600">Click image to view app screenshots</p>
+                  </div>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg md:text-xl font-semibold text-emerald-50 tracking-tight">
+                      <h3 className="text-2xl font-semibold text-gray-900 tracking-tight leading-tight">
                         {project.title}
                       </h3>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         project.status === 'Live' 
-                          ? 'bg-emerald-400/15 text-emerald-200 border border-emerald-400/25' 
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
                           : project.status === 'Suspended'
-                            ? 'bg-red-400/15 text-red-200 border border-red-400/25'
-                            : 'bg-amber-400/15 text-amber-200 border border-amber-400/25'
+                            ? 'bg-red-100 text-red-700 border border-red-200'
+                            : 'bg-amber-100 text-amber-700 border border-amber-200'
                       }`}>
                         {project.status || 'Project'}
                       </span>
                     </div>
-                    <p className="text-emerald-100/90 text-sm mb-4 leading-relaxed">
+                    <p className="text-gray-700 text-[1.05rem] mb-4 leading-relaxed line-clamp-3">
                       {project.description}
                     </p>
                     <div className="flex flex-wrap gap-1 mb-4">
                       {(project.technologies ?? []).slice(0, 3).map((tech: string, index: number) => (
                         <span
                           key={index}
-                          className="bg-emerald-900/60 text-emerald-100 text-xs px-2 py-1 rounded-full border border-emerald-700/60"
+                          className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full border border-gray-200"
                         >
                           {tech}
                         </span>
                       ))}
                       {(project.technologies?.length ?? 0) > 3 && (
-                        <span className="bg-emerald-900/60 text-emerald-100 text-xs px-2 py-1 rounded-full border border-emerald-700/60">
+                        <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full border border-gray-200">
                           +{(project.technologies?.length ?? 0) - 3} more
                         </span>
                       )}
                     </div>
                     <div className="flex gap-2">
                       {project.github && (
-                        <a 
-                          href={project.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 text-center bg-white/15 text-white text-sm px-3 py-2 rounded-lg hover:bg-white/20 transition-colors border border-white/20"
+                        <button
+                          type="button"
+                          onClick={() => openProjectDetails(project)}
+                          className="flex-1 text-center bg-emerald-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-emerald-600 transition-colors"
                         >
                           {detailsLabel(project.type)}
-                        </a>
+                        </button>
                       )}
                       {project.demo && (
                         <a 
                           href={project.demo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 text-center bg-crimson-900 text-white text-sm px-3 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
+                          className="flex-1 text-center bg-fuchsia-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-fuchsia-600 transition-colors"
                         >
-                          Live Demo
+                          {project.type === 'system' ? 'Launch App' : 'Visit Site'}
                         </a>
                       )}
                     </div>
@@ -501,44 +650,62 @@ export default function Portfolio() {
               {moreGithubProjects.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
                   {moreGithubProjects.map((project) => (
-                    <div key={project.id} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 overflow-hidden hover:border-white/25 transition-all">
-                      <ProjectThumbnail
-                        title={project.title}
-                        subtitle={project.technologies.join(' • ')}
-                        demo={project.demo}
-                        containerClassName="h-40 bg-black/20"
-                      />
+                    <div key={project.id} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                      {project.github ? (
+                        <button
+                          type="button"
+                          onClick={() => openProjectDetails(project)}
+                          className="group block w-full text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                          aria-label={`View details for ${project.title}`}
+                        >
+                          <ProjectThumbnail
+                            title={project.title}
+                            subtitle={project.technologies.join(' • ')}
+                            demo={project.demo}
+                            containerClassName="h-56 bg-black/20"
+                          />
+                        </button>
+                      ) : (
+                        <ProjectThumbnail
+                          title={project.title}
+                          subtitle={project.technologies.join(' • ')}
+                          demo={project.demo}
+                          containerClassName="h-56 bg-black/20"
+                        />
+                      )}
+                      <div className="border-y border-gray-200 px-4 py-2 text-center bg-gray-50">
+                        <p className="text-sm text-gray-600">Click image to view app screenshots</p>
+                      </div>
                       <div className="p-6">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-lg font-semibold text-white">{project.title}</h3>
+                          <h3 className="text-2xl font-semibold text-gray-900 leading-tight">{project.title}</h3>
                           <span className={`text-xs px-2 py-1 rounded-full ${
                             project.status === 'Live'
-                              ? 'bg-emerald-400/15 text-emerald-200 border border-emerald-400/25'
-                              : 'bg-white/10 text-gray-100 border border-white/15'
+                              ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                              : 'bg-gray-100 text-gray-700 border border-gray-200'
                           }`}>
                             {project.status}
                           </span>
                         </div>
-                        <p className="text-gray-200 text-sm mb-4 line-clamp-3">{project.description}</p>
+                        <p className="text-gray-700 text-[1.05rem] mb-4 line-clamp-3">{project.description}</p>
                         <div className="flex gap-2">
                           {project.github && (
-                            <a
-                              href={project.github}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 text-center bg-white/15 text-white text-sm px-3 py-2 rounded-lg hover:bg-white/20 transition-colors border border-white/20"
+                            <button
+                              type="button"
+                              onClick={() => openProjectDetails(project)}
+                              className="flex-1 text-center bg-emerald-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-emerald-600 transition-colors"
                             >
                               {detailsLabel(project.type)}
-                            </a>
+                            </button>
                           )}
                           {project.demo && (
                             <a
                               href={project.demo}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex-1 text-center bg-crimson-900 text-white text-sm px-3 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
+                              className="flex-1 text-center bg-fuchsia-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-fuchsia-600 transition-colors"
                             >
-                              Live
+                              {project.type === 'system' ? 'Launch App' : 'Visit Site'}
                             </a>
                           )}
                         </div>
@@ -621,6 +788,44 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {detailsOpen && selectedDetails && (
+        <div className="fixed inset-0 z-50 bg-black/60 p-4 md:p-6">
+          <div className="mx-auto max-w-3xl h-full md:h-auto md:max-h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900">{selectedDetails.title}</h3>
+              <button
+                type="button"
+                onClick={() => setDetailsOpen(false)}
+                className="text-gray-500 hover:text-gray-800 text-3xl leading-none"
+                aria-label="Close details"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="px-5 py-4 overflow-y-auto">
+              {detailsLoading && (
+                <p className="text-sm text-gray-500 mb-3">Loading README summary...</p>
+              )}
+              {detailsError && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4">
+                  {detailsError}
+                </p>
+              )}
+
+              <p className="text-gray-700 leading-relaxed mb-6">{selectedDetails.summary}</p>
+
+              <h4 className="text-2xl font-semibold text-gray-900 mb-3">Key Features</h4>
+              <ul className="list-disc pl-6 space-y-2 text-gray-800">
+                {selectedDetails.features.map((feature, index) => (
+                  <li key={`${selectedDetails.title}-${index}`}>{feature}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
