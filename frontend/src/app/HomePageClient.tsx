@@ -48,16 +48,20 @@ export default function HomePageClient() {
             </div>
 
             {/* Hero text - below logo on mobile, right on desktop */}
-            <div className="text-center lg:text-left order-2">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[2.75rem] xl:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
-                <span className="block">{t(lang, 'home.hero.title.part1')}</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">
-                  {t(lang, 'home.hero.title.part2')}
-                </span>
-              </h1>
-              <p className="text-xl text-gray-200 mb-8 max-w-3xl lg:max-w-none mx-auto lg:mx-0">
-                {t(lang, 'home.hero.subtitle')}
-              </p>
+            <div className="text-center lg:text-left order-2 min-w-0 w-full">
+              <div className="w-full max-w-3xl lg:max-w-none mx-auto lg:mx-0">
+                <h1 className="font-bold mb-6 leading-[1.1] tracking-tight">
+                  <span className="block w-full text-white text-[clamp(1.35rem,3.6vw,3.25rem)] lg:whitespace-nowrap">
+                    {t(lang, 'home.hero.title.part1')}
+                  </span>
+                  <span className="block w-full mt-1 text-[clamp(1.35rem,3.6vw,3.25rem)] text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">
+                    {t(lang, 'home.hero.title.part2')}
+                  </span>
+                </h1>
+                <p className="text-xl text-gray-200 mb-8 w-full">
+                  {t(lang, 'home.hero.subtitle')}
+                </p>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/contact" className="bg-crimson-900 hover:bg-crimson-800 text-white font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
                   {t(lang, 'home.hero.primaryCta')}

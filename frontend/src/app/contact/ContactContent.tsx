@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
   EnvelopeIcon,
@@ -17,6 +16,7 @@ import { requestsAPI, type BlobDocument } from '@/lib/api'
 import BlobFileUpload from '@/components/BlobFileUpload'
 import { trackEvent, trackPageView } from '@/lib/analytics'
 import { COMPANY_CONTACT } from '@/constants/company'
+import TrackRequestPanel from '@/components/TrackRequestPanel'
 
 const services = [
   { id: 'web-development', name: 'Web Development' },
@@ -463,13 +463,7 @@ export default function ContactContent() {
                   </p>
                 </div>
               </div>
-              <Link
-                href="/track-request"
-                className="inline-flex items-center justify-center w-full px-6 py-3 rounded-lg bg-crimson-900 hover:bg-crimson-800 text-white font-medium transition-colors shadow-md"
-              >
-                <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
-                Track your request
-              </Link>
+              <TrackRequestPanel variant="embedded" />
             </div>
 
             {/* Quick Response Promise */}
