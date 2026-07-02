@@ -199,10 +199,15 @@ function ProjectThumbnail({
   )
 }
 
+function detailsLabel(projectType?: PortfolioProject['type']) {
+  return projectType === 'system' ? 'View app details' : 'View site details'
+}
+
 export default function Portfolio() {
   const [githubRepos, setGithubRepos] = useState<GitHubRepo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showMoreGithub, setShowMoreGithub] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
@@ -400,7 +405,7 @@ export default function Portfolio() {
             Featured Work
           </h2>
           {featured.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
               {featured.map((project) => (
                 <div
                   key={project.id}
@@ -452,7 +457,7 @@ export default function Portfolio() {
                           rel="noopener noreferrer"
                           className="flex-1 text-center bg-white/15 text-white text-sm px-3 py-2 rounded-lg hover:bg-white/20 transition-colors border border-white/20"
                         >
-                          GitHub
+                          {detailsLabel(project.type)}
                         </a>
                       )}
                       {project.demo && (
@@ -480,59 +485,73 @@ export default function Portfolio() {
 
         {/* More from GitHub */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">More from GitHub</h2>
-          {moreGithubProjects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {moreGithubProjects.map((project) => (
-                <div key={project.id} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 overflow-hidden hover:border-white/25 transition-all">
-                  <ProjectThumbnail
-                    title={project.title}
-                    subtitle={project.technologies.join(' • ')}
-                    demo={project.demo}
-                    containerClassName="h-40 bg-black/20"
-                  />
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-white">{project.title}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        project.status === 'Live'
-                          ? 'bg-emerald-400/15 text-emerald-200 border border-emerald-400/25'
-                          : 'bg-white/10 text-gray-100 border border-white/15'
-                      }`}>
-                        {project.status}
-                      </span>
+          <div className="text-center mb-8">
+            <button
+              type="button"
+              onClick={() => setShowMoreGithub((prev) => !prev)}
+              className="bg-white/15 backdrop-blur-sm border border-white/25 text-white px-6 py-3 rounded-lg hover:bg-white/20 transition-colors font-medium"
+            >
+              {showMoreGithub ? 'Hide More from GitHub' : 'View More from GitHub'}
+            </button>
+          </div>
+
+          {showMoreGithub && (
+            <>
+              <h2 className="text-3xl font-bold text-white text-center mb-12">More from GitHub</h2>
+              {moreGithubProjects.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                  {moreGithubProjects.map((project) => (
+                    <div key={project.id} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 overflow-hidden hover:border-white/25 transition-all">
+                      <ProjectThumbnail
+                        title={project.title}
+                        subtitle={project.technologies.join(' • ')}
+                        demo={project.demo}
+                        containerClassName="h-40 bg-black/20"
+                      />
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-lg font-semibold text-white">{project.title}</h3>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            project.status === 'Live'
+                              ? 'bg-emerald-400/15 text-emerald-200 border border-emerald-400/25'
+                              : 'bg-white/10 text-gray-100 border border-white/15'
+                          }`}>
+                            {project.status}
+                          </span>
+                        </div>
+                        <p className="text-gray-200 text-sm mb-4 line-clamp-3">{project.description}</p>
+                        <div className="flex gap-2">
+                          {project.github && (
+                            <a
+                              href={project.github}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 text-center bg-white/15 text-white text-sm px-3 py-2 rounded-lg hover:bg-white/20 transition-colors border border-white/20"
+                            >
+                              {detailsLabel(project.type)}
+                            </a>
+                          )}
+                          {project.demo && (
+                            <a
+                              href={project.demo}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 text-center bg-crimson-900 text-white text-sm px-3 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
+                            >
+                              Live
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-gray-200 text-sm mb-4 line-clamp-3">{project.description}</p>
-                    <div className="flex gap-2">
-                      {project.github && (
-                        <a
-                          href={project.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 text-center bg-white/15 text-white text-sm px-3 py-2 rounded-lg hover:bg-white/20 transition-colors border border-white/20"
-                        >
-                          Repo
-                        </a>
-                      )}
-                      {project.demo && (
-                        <a
-                          href={project.demo}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 text-center bg-crimson-900 text-white text-sm px-3 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
-                        >
-                          Live
-                        </a>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10 text-gray-200">
-              No public repos found yet.
-            </div>
+              ) : (
+                <div className="text-center py-10 text-gray-200">
+                  No public repos found yet.
+                </div>
+              )}
+            </>
           )}
         </div>
 
