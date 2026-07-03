@@ -88,11 +88,6 @@ export default function SiteFooter() {
                   +263 717 935 866
                 </a>
               </li>
-              <li className="hover:text-olive-300 transition-colors duration-200">
-                <a href="tel:+263774211041" className="block py-1">
-                  +263 774 211 041
-                </a>
-              </li>
             </ul>
           </div>
         </div>

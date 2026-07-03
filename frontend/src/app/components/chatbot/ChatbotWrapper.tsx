@@ -1,6 +1,7 @@
 'use client'
 
 import EnhancedChatbot from './EnhancedChatbot'
+import WhatsAppFloat from '@/components/WhatsAppFloat'
 import { trackEvent } from '@/lib/analytics'
 
 const ChatbotWrapper = () => {
@@ -23,7 +24,9 @@ const ChatbotWrapper = () => {
   }
 
   return (
-    <EnhancedChatbot
+    <>
+      <WhatsAppFloat />
+      <EnhancedChatbot
       position="bottom-right"
       theme="default"
       enablePersistence={true}
@@ -32,6 +35,7 @@ const ChatbotWrapper = () => {
       onSessionStart={handleSessionStart}
       onError={handleError}
     />
+    </>
   )
 }
 

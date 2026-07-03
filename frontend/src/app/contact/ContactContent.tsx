@@ -437,9 +437,6 @@ export default function ContactContent() {
                       <p className="text-granite-600">
                         <a href="tel:+263717935866" className="hover:text-crimson-600 transition-colors block py-1">+263 717 935 866</a>
                       </p>
-                      <p className="text-granite-600">
-                        <a href="tel:+263774211041" className="hover:text-crimson-600 transition-colors block py-1">+263 774 211 041</a>
-                      </p>
                     </div>
                   </div>
                 </div>
