@@ -134,8 +134,10 @@ export class UpdateRequestDto {
 }
 
 export class CreateMessageDto {
+  /** Set from URL param in controller; optional in multipart body */
+  @IsOptional()
   @IsString()
-  requestId: string;
+  requestId?: string;
 
   @IsString()
   senderName: string;

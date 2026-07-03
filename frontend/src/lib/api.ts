@@ -423,7 +423,8 @@ export const requestsAPI = {
   },
   addMessage: async (requestId: string, messageData: any, attachments?: File[]) => {
     const formData = new FormData()
-    
+    formData.append('requestId', requestId)
+
     Object.keys(messageData).forEach(key => {
       if (messageData[key] !== null && messageData[key] !== undefined) {
         formData.append(key, messageData[key])
