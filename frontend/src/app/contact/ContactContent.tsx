@@ -17,7 +17,7 @@ import BlobFileUpload from '@/components/BlobFileUpload'
 import { trackEvent, trackPageView } from '@/lib/analytics'
 import { COMPANY_CONTACT } from '@/constants/company'
 import TrackRequestPanel from '@/components/TrackRequestPanel'
-import { warmupBackend, isNetworkOrTimeoutError, BACKEND_WARMUP_MESSAGE } from '@/lib/warmupBackend'
+import { warmupBackend, isNetworkOrTimeoutError, BACKEND_WARMUP_MESSAGE, SUBMIT_TIMEOUT_MESSAGE } from '@/lib/warmupBackend'
 
 const services = [
   { id: 'web-development', name: 'Web Development' },
@@ -121,7 +121,7 @@ export default function ContactContent() {
       trackEvent('request_failed', { reason: err.response?.data?.message || err.message })
       setError(
         isNetworkOrTimeoutError(err)
-          ? BACKEND_WARMUP_MESSAGE
+          ? SUBMIT_TIMEOUT_MESSAGE
           : err.response?.data?.message || 'Failed to send message. Please try again.'
       )
       console.error('Form submission error:', err)

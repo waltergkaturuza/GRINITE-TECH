@@ -114,7 +114,11 @@ export class InvoicesService {
       await this.syncParentInvoicePayments(parent_invoice_id);
     }
 
-    return this.findOne(savedInvoice.id);
+    const withItems = await this.invoiceRepository.findOne({
+      where: { id: savedInvoice.id },
+      relations: ['items'],
+    });
+    return withItems ?? savedInvoice;
   }
 
   async findAll(page: number = 1, limit: number = 10, status?: InvoiceStatus, clientId?: string, documentType?: string, search?: string): Promise<{ invoices: Invoice[]; total: number }> {

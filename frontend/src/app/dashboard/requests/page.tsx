@@ -214,7 +214,7 @@ export default function RequestsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full max-w-none px-4 sm:px-5 lg:px-6 py-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Project Requests</h1>
@@ -318,9 +318,9 @@ export default function RequestsPage() {
         )}
 
         {/* Requests Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+        <div className="bg-white rounded-lg shadow overflow-hidden w-full">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full table-auto divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

@@ -39,26 +39,64 @@ export class RequestsService {
 
   async create(createRequestDto: CreateRequestDto, files?: any[]): Promise<ProjectRequest> {
     const { documents: blobDocuments, ...dto } = createRequestDto;
-    const request = this.requestRepository.create({
-      ...dto,
-      serviceInterested: dto.serviceInterested?.trim() || 'general',
-      projectBudget: dto.projectBudget?.trim() || 'not-specified',
-      projectTimeline: dto.projectTimeline?.trim() || 'not-specified',
-      trackingId: this.generateTrackingId(),
-    });
-    const savedRequest = await this.requestRepository.save(request);
 
-    // Pre-uploaded Blob documents (Inquiries/category/date/file-name)
-    if (blobDocuments && blobDocuments.length > 0) {
-      await this.saveBlobDocuments(savedRequest, blobDocuments);
-    } else if (files && files.length > 0) {
+    const savedRequest = await this.requestRepository.manager.transaction(async (em) => {
+      const requestRepo = em.getRepository(ProjectRequest);
+      const documentRepo = em.getRepository(RequestDocument);
+      const messageRepo = em.getRepository(RequestMessage);
+
+      const request = requestRepo.create({
+        ...dto,
+        serviceInterested: dto.serviceInterested?.trim() || 'general',
+        projectBudget: dto.projectBudget?.trim() || 'not-specified',
+        projectTimeline: dto.projectTimeline?.trim() || 'not-specified',
+        trackingId: this.generateTrackingId(),
+      });
+      const saved = await requestRepo.save(request);
+
+      if (blobDocuments?.length) {
+        for (const doc of blobDocuments) {
+          if (!doc.url?.startsWith('http')) {
+            throw new BadRequestException(`Invalid document URL for ${doc.originalName}`);
+          }
+          await documentRepo.save(
+            documentRepo.create({
+              request: saved,
+              originalName: doc.originalName,
+              fileName: doc.pathname?.split('/').pop() || doc.originalName,
+              filePath: doc.url,
+              fileSize: doc.fileSize,
+              mimeType: doc.mimeType || 'application/octet-stream',
+            }),
+          );
+        }
+      }
+
+      await messageRepo.save(
+        messageRepo.create({
+          request: saved,
+          senderName: 'System',
+          senderEmail: 'system@quantistech.co.zw',
+          senderType: 'system',
+          message: 'New project request received',
+          isRead: false,
+          isInternal: true,
+        }),
+      );
+
+      return saved;
+    });
+
+    if (files?.length) {
       await this.saveRequestDocuments(savedRequest, files);
     }
 
-    // Send notification to admins (implement email service later)
-    await this.createSystemMessage(savedRequest.id, 'New project request received');
-
-    return this.findOne(savedRequest.id);
+    // Return quickly — avoid heavy findOne (messages + sender) that caused client timeouts
+    const withDocuments = await this.requestRepository.findOne({
+      where: { id: savedRequest.id },
+      relations: ['documents'],
+    });
+    return withDocuments ?? savedRequest;
   }
 
   async findAll(

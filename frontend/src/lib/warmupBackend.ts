@@ -34,3 +34,6 @@ export function isNetworkOrTimeoutError(err: unknown): boolean {
 
 export const BACKEND_WARMUP_MESSAGE =
   'Our server is waking up (this can take up to a minute on first use). Please wait, then try again.'
+
+export const SUBMIT_TIMEOUT_MESSAGE =
+  'The server took too long to respond. Your request may already have been saved — please do not submit again. Use Track Request or WhatsApp if you need help.'

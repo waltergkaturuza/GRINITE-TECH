@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 export async function ensureInvoiceSchema(dataSource: DataSource): Promise<void> {
@@ -6,20 +6,12 @@ export async function ensureInvoiceSchema(dataSource: DataSource): Promise<void>
   await bootstrap.run();
 }
 
+/** Runs once in api/index.ts after boot — not onModuleInit (that blocked every cold start). */
 @Injectable()
-export class InvoiceSchemaBootstrap implements OnModuleInit {
+export class InvoiceSchemaBootstrap {
   private readonly logger = new Logger(InvoiceSchemaBootstrap.name);
 
   constructor(private readonly dataSource: DataSource) {}
-
-  async onModuleInit() {
-    if (process.env.NODE_ENV !== 'production') return;
-    try {
-      await this.run();
-    } catch (error) {
-      this.logger.error('Invoice schema bootstrap failed', error instanceof Error ? error.stack : error);
-    }
-  }
 
   async run() {
     await this.ensureInvoiceSchema();

@@ -43,6 +43,7 @@ export class RequestsController {
     return {
       success: true,
       data: request,
+      trackingId: request.trackingId,
       message: 'Project request submitted successfully',
     };
   }
