@@ -5,6 +5,7 @@ import { Project } from '../../projects/entities/project.entity';
 export enum InvoiceStatus {
   DRAFT = 'draft',
   SENT = 'sent',
+  PARTIALLY_PAID = 'partially_paid',
   PAID = 'paid',
   OVERDUE = 'overdue',
   CANCELLED = 'cancelled'
@@ -40,8 +41,18 @@ export class Invoice {
   @Column({ nullable: true })
   project_id: string;
 
+  @ManyToOne(() => Invoice, { nullable: true })
+  @JoinColumn({ name: 'parent_invoice_id' })
+  parent_invoice: Invoice;
+
+  @Column({ nullable: true })
+  parent_invoice_id: number;
+
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  amount_paid: number;
+
   @Column({ type: 'varchar', default: 'invoice' })
-  document_type: 'invoice' | 'quotation';
+  document_type: 'invoice' | 'quotation' | 'receipt';
 
   @Column()
   issue_date: Date;
@@ -122,6 +133,48 @@ export class Invoice {
   @Column({ nullable: true })
   company_website: string;
 
+  @Column({ nullable: true })
+  company_code: string;
+
+  @Column({ nullable: true })
+  company_vat_code: string;
+
+  @Column({ nullable: true })
+  company_bank_name: string;
+
+  @Column({ nullable: true })
+  company_bank_branch: string;
+
+  @Column({ nullable: true })
+  company_account_name: string;
+
+  @Column({ nullable: true })
+  company_usd_account: string;
+
+  @Column({ nullable: true })
+  company_zig_account: string;
+
+  @Column({ nullable: true })
+  company_swift: string;
+
+  @Column({ nullable: true })
+  company_iban: string;
+
+  @Column({ nullable: true })
+  buyer_company_code: string;
+
+  @Column({ nullable: true })
+  buyer_vat_code: string;
+
+  @Column({ nullable: true })
+  buyer_bank_name: string;
+
+  @Column({ nullable: true })
+  buyer_swift: string;
+
+  @Column({ nullable: true })
+  buyer_iban: string;
+
   @CreateDateColumn()
   created_at: Date;
 
@@ -143,6 +196,9 @@ export class InvoiceItem {
   @Column()
   description: string;
 
+  @Column({ default: 'ea' })
+  unit: string;
+
   @Column()
   quantity: number;
 
@@ -154,6 +210,9 @@ export class InvoiceItem {
 
   @Column({ nullable: true })
   tax_rate: number;
+
+  @Column('decimal', { precision: 5, scale: 2, default: 0, nullable: true })
+  discount_percent: number;
 
   @CreateDateColumn()
   created_at: Date;

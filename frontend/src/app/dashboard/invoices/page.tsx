@@ -13,6 +13,9 @@ import { invoicesAPI } from '../../../lib/api'
 import InvoiceForm from '../../../components/invoices/InvoiceForm'
 import InvoiceView from '../../../components/invoices/InvoiceView'
 import InvoiceActions from '../../../components/invoices/InvoiceActions'
+import ReceiptForm from '../../../components/invoices/ReceiptForm'
+import ReceiptView from '../../../components/invoices/ReceiptView'
+import ReceiptActions from '../../../components/invoices/ReceiptActions'
 
 interface InvoiceStats {
   total_invoices: number
@@ -34,7 +37,8 @@ export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [openForPrint, setOpenForPrint] = useState(false)
-  const [activeTab, setActiveTab] = useState<'invoices' | 'quotations'>('invoices')
+  const [activeTab, setActiveTab] = useState<'invoices' | 'quotations' | 'receipts'>('invoices')
+  const [linkedInvoiceForReceipt, setLinkedInvoiceForReceipt] = useState<any>(null)
   
   // Filters and pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -55,7 +59,7 @@ export default function InvoicesPage() {
       const params: any = {
         page: currentPage,
         limit: itemsPerPage,
-        documentType: activeTab === 'quotations' ? 'quotation' : 'invoice'
+        documentType: activeTab === 'quotations' ? 'quotation' : activeTab === 'receipts' ? 'receipt' : 'invoice'
       }
       
       if (statusFilter) params.status = statusFilter
@@ -87,6 +91,7 @@ export default function InvoicesPage() {
       await invoicesAPI.createInvoice(invoiceData)
       setShowForm(false)
       setSelectedInvoice(null)
+      setLinkedInvoiceForReceipt(null)
       loadInvoices()
       loadStats()
     } catch (error) {
@@ -140,9 +145,25 @@ export default function InvoicesPage() {
     setShowForm(true)
   }
 
-  const handleViewInvoice = (invoice: any) => {
-    setSelectedInvoice(invoice)
-    setShowView(true)
+  const handleViewInvoice = async (invoice: any) => {
+    try {
+      const full = invoice.document_type === 'invoice'
+        ? await invoicesAPI.getInvoice(invoice.id)
+        : invoice
+      setSelectedInvoice(full)
+      setShowView(true)
+    } catch {
+      setSelectedInvoice(invoice)
+      setShowView(true)
+    }
+  }
+
+  const handleRecordPayment = (invoice: any) => {
+    setLinkedInvoiceForReceipt(invoice)
+    setSelectedInvoice(null)
+    setShowView(false)
+    setActiveTab('receipts')
+    setShowForm(true)
   }
 
   const filteredInvoices = invoices
@@ -170,7 +191,28 @@ export default function InvoicesPage() {
     setShowView(true)
   }
 
+  const tabLabel = activeTab === 'quotations' ? 'quotations' : activeTab === 'receipts' ? 'receipts' : 'invoices'
+  const isReceiptTab = activeTab === 'receipts'
+  const selectedIsReceipt = selectedInvoice?.document_type === 'receipt' || isReceiptTab
+
   if (showForm) {
+    if (selectedIsReceipt) {
+      return (
+        <div className="space-y-6">
+          <ReceiptForm
+            receipt={selectedInvoice}
+            linkedInvoice={linkedInvoiceForReceipt}
+            onSubmit={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
+            onCancel={() => {
+              setShowForm(false)
+              setSelectedInvoice(null)
+              setLinkedInvoiceForReceipt(null)
+            }}
+            isLoading={isFormLoading}
+          />
+        </div>
+      )
+    }
     return (
       <div className="space-y-6">
         <InvoiceForm
@@ -192,9 +234,9 @@ export default function InvoicesPage() {
       {/* Header */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Invoices & Quotations</h1>
+          <h1 className="text-2xl font-bold text-white">Invoices, Quotations & Receipts</h1>
           <p className="mt-2 text-sm text-gray-300">
-            Manage invoices, quotations and billing
+            Manage invoices, quotations, receipts and billing
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex gap-2">
@@ -203,7 +245,7 @@ export default function InvoicesPage() {
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 active:bg-green-700 transition-colors duration-200"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-            {activeTab === 'quotations' ? 'Create Quotation' : 'Create Invoice'}
+            {activeTab === 'quotations' ? 'Create Quotation' : activeTab === 'receipts' ? 'Create Receipt' : 'Create Invoice'}
           </button>
         </div>
       </div>
@@ -222,7 +264,7 @@ export default function InvoicesPage() {
             Invoice History
           </button>
           <button
-            onClick={() => { setActiveTab('quotations'); setCurrentPage(1) }}
+            onClick={() => { setActiveTab('quotations'); setCurrentPage(1); setStatusFilter('') }}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'quotations'
                 ? 'border-amber-500 text-amber-400'
@@ -231,11 +273,21 @@ export default function InvoicesPage() {
           >
             Quotations
           </button>
+          <button
+            onClick={() => { setActiveTab('receipts'); setCurrentPage(1); setStatusFilter('') }}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'receipts'
+                ? 'border-amber-500 text-amber-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+            }`}
+          >
+            Receipts
+          </button>
         </nav>
       </div>
 
-      {/* Stats */}
-      {stats && (
+      {/* Stats - hide on receipts tab */}
+      {stats && !isReceiptTab && (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
             <div className="p-5">
@@ -329,6 +381,7 @@ export default function InvoicesPage() {
               <option value="">All Statuses</option>
               <option value="draft">Draft</option>
               <option value="sent">Sent</option>
+              <option value="partially_paid">Partially Paid</option>
               <option value="paid">Paid</option>
               <option value="overdue">Overdue</option>
               <option value="cancelled">Cancelled</option>
@@ -338,7 +391,7 @@ export default function InvoicesPage() {
           {/* Results Count */}
           <div className="flex items-center text-gray-300">
             <span className="text-sm">
-              Showing {filteredInvoices.length} of {totalCount} {activeTab}
+              Showing {filteredInvoices.length} of {totalCount} {tabLabel}
             </span>
           </div>
         </div>
@@ -349,24 +402,24 @@ export default function InvoicesPage() {
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-white mb-4">
             {statusFilter ? `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} ` : 'All '}
-            {activeTab === 'quotations' ? 'Quotations' : 'Invoices'}
+            {activeTab === 'quotations' ? 'Quotations' : activeTab === 'receipts' ? 'Receipts' : 'Invoices'}
           </h3>
           
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
-              <p className="text-gray-300 mt-2">Loading invoices...</p>
+              <p className="text-gray-300 mt-2">Loading {tabLabel}...</p>
             </div>
           ) : filteredInvoices.length === 0 ? (
             <div className="text-center py-8">
               <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-300">No {activeTab} found</p>
+              <p className="text-gray-300">No {tabLabel} found</p>
               <button
                 onClick={() => setShowForm(true)}
                 className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 active:bg-green-700 transition-colors duration-200"
               >
                 <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
-                Create {activeTab === 'quotations' ? 'Your First Quotation' : 'Your First Invoice'}
+                Create {activeTab === 'quotations' ? 'Your First Quotation' : activeTab === 'receipts' ? 'Your First Receipt' : 'Your First Invoice'}
               </button>
             </div>
           ) : (
@@ -379,7 +432,9 @@ export default function InvoicesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden md:table-cell">Project</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Issue Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      {isReceiptTab ? 'Payment Date' : 'Due Date'}
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status & Actions</th>
                   </tr>
                 </thead>
@@ -404,22 +459,39 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
                         {formatCurrency(invoice.total_amount)}
+                        {!isReceiptTab && activeTab === 'invoices' && Number(invoice.amount_paid) > 0 && (
+                          <div className="text-xs text-gray-400 font-normal">
+                            Paid: {formatCurrency(Number(invoice.amount_paid))}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {formatDate(invoice.issue_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {formatDate(invoice.due_date)}
+                        {isReceiptTab
+                          ? (invoice.payment_date ? formatDate(invoice.payment_date) : formatDate(invoice.due_date))
+                          : formatDate(invoice.due_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <InvoiceActions
-                          invoice={invoice}
-                          onEdit={handleEditInvoice}
-                          onView={handleViewInvoice}
-                          onDelete={handleDeleteInvoice}
-                          onStatusUpdate={handleStatusUpdate}
-                          onDownloadPDF={handleDownloadPDF}
-                        />
+                        {isReceiptTab ? (
+                          <ReceiptActions
+                            receipt={invoice}
+                            onEdit={handleEditInvoice}
+                            onView={handleViewInvoice}
+                            onDelete={handleDeleteInvoice}
+                            onDownload={handleDownloadPDF}
+                          />
+                        ) : (
+                          <InvoiceActions
+                            invoice={invoice}
+                            onEdit={handleEditInvoice}
+                            onView={handleViewInvoice}
+                            onDelete={handleDeleteInvoice}
+                            onStatusUpdate={handleStatusUpdate}
+                            onDownloadPDF={handleDownloadPDF}
+                          />
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -506,22 +578,40 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      {/* Invoice View Modal */}
+      {/* Document View Modal */}
       {showView && selectedInvoice && (
-        <InvoiceView
-          invoice={selectedInvoice}
-          autoPrint={openForPrint}
-          onClose={() => {
-            setShowView(false)
-            setSelectedInvoice(null)
-            setOpenForPrint(false)
-          }}
-          onEdit={() => {
-            setShowView(false)
-            setShowForm(true)
-            setOpenForPrint(false)
-          }}
-        />
+        selectedInvoice.document_type === 'receipt' || isReceiptTab ? (
+          <ReceiptView
+            receipt={selectedInvoice}
+            autoPrint={openForPrint}
+            onClose={() => {
+              setShowView(false)
+              setSelectedInvoice(null)
+              setOpenForPrint(false)
+            }}
+            onEdit={() => {
+              setShowView(false)
+              setShowForm(true)
+              setOpenForPrint(false)
+            }}
+          />
+        ) : (
+          <InvoiceView
+            invoice={selectedInvoice}
+            autoPrint={openForPrint}
+            onRecordPayment={handleRecordPayment}
+            onClose={() => {
+              setShowView(false)
+              setSelectedInvoice(null)
+              setOpenForPrint(false)
+            }}
+            onEdit={() => {
+              setShowView(false)
+              setShowForm(true)
+              setOpenForPrint(false)
+            }}
+          />
+        )
       )}
     </div>
   )

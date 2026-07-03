@@ -9,14 +9,7 @@ import {
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline'
 import { usersAPI, projectsAPI } from '../../lib/api'
-
-interface InvoiceItem {
-  description: string
-  quantity: number
-  unit_price: number
-  tax_rate: number
-  total_price: number
-}
+import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
 
 interface InvoiceFormProps {
   invoice?: any
@@ -24,6 +17,15 @@ interface InvoiceFormProps {
   onCancel: () => void
   isLoading?: boolean
   documentType?: 'invoice' | 'quotation'
+}
+
+interface InvoiceItem {
+  description: string
+  unit: string
+  quantity: number
+  unit_price: number
+  tax_rate: number
+  total_price: number
 }
 
 export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = false, documentType = 'invoice' }: InvoiceFormProps) {
@@ -42,10 +44,31 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
     billing_address: '',
     billing_email: '',
     billing_phone: '',
+    company_name: QUANTIS_LETTERHEAD.company_name,
+    company_logo_url: QUANTIS_LETTERHEAD.company_logo_url,
+    company_address: QUANTIS_LETTERHEAD.company_address,
+    company_email: QUANTIS_LETTERHEAD.company_email,
+    company_phone: QUANTIS_LETTERHEAD.company_phone,
+    company_website: QUANTIS_LETTERHEAD.company_website,
+    company_code: '',
+    company_vat_code: '',
+    company_bank_name: QUANTIS_LETTERHEAD.company_bank_name,
+    company_bank_branch: QUANTIS_LETTERHEAD.company_bank_branch,
+    company_account_name: QUANTIS_LETTERHEAD.company_account_name,
+    company_usd_account: QUANTIS_LETTERHEAD.company_usd_account,
+    company_zig_account: QUANTIS_LETTERHEAD.company_zig_account,
+    company_swift: '',
+    company_iban: '',
+    buyer_company_code: '',
+    buyer_vat_code: '',
+    buyer_bank_name: '',
+    buyer_swift: '',
+    buyer_iban: '',
   })
   const [items, setItems] = useState<InvoiceItem[]>([
     {
       description: '',
+      unit: 'ea',
       quantity: 1,
       unit_price: 0,
       tax_rate: 10,
@@ -75,11 +98,32 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
         billing_address: invoice.billing_address || '',
         billing_email: invoice.billing_email || '',
         billing_phone: invoice.billing_phone || '',
+        company_name: invoice.company_name || QUANTIS_LETTERHEAD.company_name,
+        company_logo_url: invoice.company_logo_url || QUANTIS_LETTERHEAD.company_logo_url,
+        company_address: invoice.company_address || QUANTIS_LETTERHEAD.company_address,
+        company_email: invoice.company_email || QUANTIS_LETTERHEAD.company_email,
+        company_phone: invoice.company_phone || QUANTIS_LETTERHEAD.company_phone,
+        company_website: invoice.company_website || QUANTIS_LETTERHEAD.company_website,
+        company_code: invoice.company_code || '',
+        company_vat_code: invoice.company_vat_code || '',
+        company_bank_name: invoice.company_bank_name || QUANTIS_LETTERHEAD.company_bank_name,
+        company_bank_branch: invoice.company_bank_branch || QUANTIS_LETTERHEAD.company_bank_branch,
+        company_account_name: invoice.company_account_name || QUANTIS_LETTERHEAD.company_account_name,
+        company_usd_account: invoice.company_usd_account || QUANTIS_LETTERHEAD.company_usd_account,
+        company_zig_account: invoice.company_zig_account || QUANTIS_LETTERHEAD.company_zig_account,
+        company_swift: invoice.company_swift || '',
+        company_iban: invoice.company_iban || '',
+        buyer_company_code: invoice.buyer_company_code || '',
+        buyer_vat_code: invoice.buyer_vat_code || '',
+        buyer_bank_name: invoice.buyer_bank_name || '',
+        buyer_swift: invoice.buyer_swift || '',
+        buyer_iban: invoice.buyer_iban || '',
       })
       
       if (invoice.items && invoice.items.length > 0) {
         setItems(invoice.items.map((item: any) => ({
           description: item.description || '',
+          unit: item.unit || 'ea',
           quantity: item.quantity || 1,
           unit_price: item.unit_price || 0,
           tax_rate: item.tax_rate || 10,
@@ -131,6 +175,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
   const addItem = () => {
     setItems([...items, {
       description: '',
+      unit: 'ea',
       quantity: 1,
       unit_price: 0,
       tax_rate: formData.tax_rate,
@@ -333,6 +378,32 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
           />
         </div>
 
+        {/* Seller bank details */}
+        <div className="border border-granite-600 rounded-lg p-4">
+          <h4 className="text-white font-medium mb-3">Seller Banking Details</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input placeholder="Bank" value={formData.company_bank_name} onChange={(e) => setFormData(p => ({ ...p, company_bank_name: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="Branch (incl. code)" value={formData.company_bank_branch} onChange={(e) => setFormData(p => ({ ...p, company_bank_branch: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="Account name" value={formData.company_account_name} onChange={(e) => setFormData(p => ({ ...p, company_account_name: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm md:col-span-2" />
+            <input placeholder="USD account number" value={formData.company_usd_account} onChange={(e) => setFormData(p => ({ ...p, company_usd_account: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="ZiG account number" value={formData.company_zig_account} onChange={(e) => setFormData(p => ({ ...p, company_zig_account: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="Company code" value={formData.company_code} onChange={(e) => setFormData(p => ({ ...p, company_code: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="VAT code" value={formData.company_vat_code} onChange={(e) => setFormData(p => ({ ...p, company_vat_code: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+          </div>
+        </div>
+
+        {/* Buyer bank details */}
+        <div className="border border-granite-600 rounded-lg p-4">
+          <h4 className="text-white font-medium mb-3">Buyer Bank Details</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input placeholder="Bank name" value={formData.buyer_bank_name} onChange={(e) => setFormData(p => ({ ...p, buyer_bank_name: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="SWIFT" value={formData.buyer_swift} onChange={(e) => setFormData(p => ({ ...p, buyer_swift: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="IBAN / Account" value={formData.buyer_iban} onChange={(e) => setFormData(p => ({ ...p, buyer_iban: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="Company code" value={formData.buyer_company_code} onChange={(e) => setFormData(p => ({ ...p, buyer_company_code: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+            <input placeholder="VAT code" value={formData.buyer_vat_code} onChange={(e) => setFormData(p => ({ ...p, buyer_vat_code: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
+          </div>
+        </div>
+
         {/* Invoice Items */}
         <div>
           <div className="flex justify-between items-center mb-4">
@@ -350,10 +421,8 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
           <div className="space-y-4">
             {items.map((item, index) => (
               <div key={index} className="grid grid-cols-12 gap-3 items-end p-4 bg-granite-700 rounded-lg border border-granite-600">
-                <div className="col-span-5">
-                  <label className="block text-xs font-medium text-gray-300 mb-1">
-                    Description
-                  </label>
+                <div className="col-span-4">
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Description</label>
                   <input
                     type="text"
                     value={item.description}
@@ -361,6 +430,16 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
                     className="w-full px-2 py-1 bg-granite-600 border border-granite-500 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
                     placeholder="Service or product description"
                     required
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Unit</label>
+                  <input
+                    type="text"
+                    value={item.unit}
+                    onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                    className="w-full px-2 py-1 bg-granite-600 border border-granite-500 rounded text-white text-sm"
                   />
                 </div>
 

@@ -5,6 +5,20 @@ import { Invoice, InvoiceItem, InvoiceStatus } from './entities/invoice.entity';
 import { CreateInvoiceDto, UpdateInvoiceDto, UpdateInvoiceStatusDto, InvoiceStatsDto } from './dto/invoice.dto';
 import { User } from '../users/entities/user.entity';
 
+const QUANTIS_COMPANY_DEFAULTS = {
+  company_name: 'Quantis Technologies Private Limited',
+  company_logo_url: '/quantis-letterhead.png',
+  company_address: 'Suite R8, Kuwirirana House\nCnr Angwa and George Silundika, Harare',
+  company_email: 'waltergkaturuza@gmail.com',
+  company_phone: '+263777937721',
+  company_website: 'https://www.quantistechnologies.co.zw',
+  company_bank_name: 'CBZ',
+  company_bank_branch: 'Southerton (Code: 6110)',
+  company_account_name: 'Quantis Technologies',
+  company_usd_account: '02327737470013',
+  company_zig_account: '02327737470023',
+};
+
 @Injectable()
 export class InvoicesService {
   constructor(
@@ -17,24 +31,62 @@ export class InvoicesService {
   ) {}
 
   async create(createInvoiceDto: CreateInvoiceDto): Promise<Invoice> {
-    const { client_id, project_id, document_type = 'invoice', items, ...invoiceData } = createInvoiceDto;
+    const {
+      client_id, project_id, document_type = 'invoice', items,
+      payment_date, payment_reference, payment_method, parent_invoice_id,
+      ...invoiceData
+    } = createInvoiceDto;
+    const isReceipt = document_type === 'receipt';
 
-    // Verify client exists
     const client = await this.userRepository.findOne({ where: { id: client_id } });
     if (!client) {
       throw new NotFoundException('Client not found');
     }
 
-    // Calculate totals
-    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+    let parentInvoice: Invoice | null = null;
+    if (isReceipt && parent_invoice_id) {
+      parentInvoice = await this.invoiceRepository.findOne({
+        where: { id: parent_invoice_id, document_type: 'invoice' },
+      });
+      if (!parentInvoice) {
+        throw new NotFoundException('Linked invoice not found');
+      }
+    }
+
+    const calcLineTotal = (item: { quantity: number; unit_price: number; discount_percent?: number }) => {
+      const gross = item.quantity * item.unit_price;
+      const discountPct = item.discount_percent || 0;
+      return gross * (1 - discountPct / 100);
+    };
+
+    const subtotal = items.reduce((sum, item) => sum + calcLineTotal(item), 0);
     const taxAmount = (invoiceData.tax_rate || 0) * subtotal / 100;
     const totalAmount = subtotal + taxAmount - (invoiceData.discount_amount || 0);
 
+    if (isReceipt && parentInvoice) {
+      const balanceDue = parseFloat(String(parentInvoice.total_amount)) - parseFloat(String(parentInvoice.amount_paid || 0));
+      if (totalAmount > balanceDue + 0.01) {
+        throw new BadRequestException(`Payment amount (${totalAmount}) exceeds balance due (${balanceDue.toFixed(2)})`);
+      }
+    }
+
     const invoiceNumber = await this.generateInvoiceNumber(document_type);
 
-    // Create invoice
+    const invoiceDefaults = isReceipt ? {
+      status: InvoiceStatus.PAID,
+      payment_date: payment_date ? new Date(payment_date) : new Date(invoiceData.issue_date),
+      payment_reference: payment_reference || parentInvoice?.invoice_number,
+      payment_method: payment_method || 'Receipt',
+      parent_invoice_id: parent_invoice_id || null,
+      ...QUANTIS_COMPANY_DEFAULTS,
+    } : {
+      amount_paid: 0,
+      ...QUANTIS_COMPANY_DEFAULTS,
+    };
+
     const invoice = this.invoiceRepository.create({
       ...invoiceData,
+      ...invoiceDefaults,
       client_id,
       project_id: project_id || null,
       document_type: document_type || 'invoice',
@@ -46,17 +98,21 @@ export class InvoicesService {
 
     const savedInvoice = await this.invoiceRepository.save(invoice);
 
-    // Create invoice items
     const invoiceItems = items.map(item => {
-      const totalPrice = item.quantity * item.unit_price;
+      const totalPrice = calcLineTotal(item);
       return this.invoiceItemRepository.create({
         ...item,
+        unit: item.unit || 'ea',
         total_price: totalPrice,
         invoice: savedInvoice,
       });
     });
 
     await this.invoiceItemRepository.save(invoiceItems);
+
+    if (isReceipt && parent_invoice_id) {
+      await this.syncParentInvoicePayments(parent_invoice_id);
+    }
 
     return this.findOne(savedInvoice.id);
   }
@@ -108,30 +164,109 @@ export class InvoicesService {
     };
   }
 
-  async findOne(id: number): Promise<Invoice> {
+  async findOne(id: number): Promise<any> {
     const invoice = await this.invoiceRepository.findOne({
       where: { id },
-      relations: ['client', 'project', 'items'],
+      relations: ['client', 'project', 'items', 'parent_invoice'],
     });
 
     if (!invoice) {
       throw new NotFoundException('Invoice not found');
     }
 
+    if (invoice.document_type === 'invoice') {
+      const receipts = await this.invoiceRepository.find({
+        where: { parent_invoice_id: id, document_type: 'receipt' },
+        order: { created_at: 'ASC' },
+      });
+      return { ...invoice, receipts, balance_due: this.getBalanceDue(invoice) };
+    }
+
     return invoice;
+  }
+
+  async getOpenInvoices(): Promise<any[]> {
+    const invoices = await this.invoiceRepository.find({
+      where: [
+        { document_type: 'invoice', status: InvoiceStatus.SENT },
+        { document_type: 'invoice', status: InvoiceStatus.PARTIALLY_PAID },
+        { document_type: 'invoice', status: InvoiceStatus.OVERDUE },
+      ],
+      relations: ['client'],
+      order: { created_at: 'DESC' },
+    });
+    return invoices.map(inv => ({
+      ...inv,
+      balance_due: this.getBalanceDue(inv),
+    }));
+  }
+
+  async getInvoiceReceipts(id: number): Promise<Invoice[]> {
+    await this.findOne(id);
+    return this.invoiceRepository.find({
+      where: { parent_invoice_id: id, document_type: 'receipt' },
+      order: { created_at: 'ASC' },
+    });
+  }
+
+  private getBalanceDue(invoice: Invoice): number {
+    const total = parseFloat(String(invoice.total_amount || 0));
+    const paid = parseFloat(String(invoice.amount_paid || 0));
+    return Math.max(0, total - paid);
+  }
+
+  private async syncParentInvoicePayments(parentInvoiceId: number): Promise<void> {
+    const parent = await this.invoiceRepository.findOne({ where: { id: parentInvoiceId } });
+    if (!parent || parent.document_type !== 'invoice') return;
+
+    const receipts = await this.invoiceRepository.find({
+      where: { parent_invoice_id: parentInvoiceId, document_type: 'receipt' },
+    });
+
+    const amountPaid = receipts.reduce(
+      (sum, r) => sum + parseFloat(String(r.total_amount || 0)),
+      0,
+    );
+    const total = parseFloat(String(parent.total_amount || 0));
+    let status = parent.status;
+
+    if (amountPaid >= total - 0.01) {
+      status = InvoiceStatus.PAID;
+    } else if (amountPaid > 0) {
+      status = InvoiceStatus.PARTIALLY_PAID;
+    } else if (parent.status === InvoiceStatus.PAID || parent.status === InvoiceStatus.PARTIALLY_PAID) {
+      status = InvoiceStatus.SENT;
+    }
+
+    await this.invoiceRepository.update(parentInvoiceId, {
+      amount_paid: amountPaid,
+      status,
+      payment_date: amountPaid >= total - 0.01 ? new Date() : parent.payment_date,
+    });
   }
 
   async update(id: number, updateInvoiceDto: UpdateInvoiceDto): Promise<Invoice> {
     const invoice = await this.findOne(id);
     
-    if (invoice.status === InvoiceStatus.PAID) {
+    if (invoice.status === InvoiceStatus.PAID && invoice.document_type !== 'receipt') {
       throw new BadRequestException('Cannot update a paid invoice');
     }
 
-    const { client_id, project_id, document_type, items, ...updateData } = updateInvoiceDto;
+    const oldParentId = invoice.parent_invoice_id;
+    const { client_id, project_id, document_type, items, payment_date, payment_reference, payment_method, parent_invoice_id, ...updateData } = updateInvoiceDto;
 
     if (project_id !== undefined) updateData['project_id'] = project_id || null;
     if (document_type) updateData['document_type'] = document_type;
+    if (payment_date) updateData['payment_date'] = new Date(payment_date);
+    if (payment_reference !== undefined) updateData['payment_reference'] = payment_reference;
+    if (payment_method !== undefined) updateData['payment_method'] = payment_method;
+    if (parent_invoice_id !== undefined) updateData['parent_invoice_id'] = parent_invoice_id || null;
+
+    const calcLineTotal = (item: { quantity: number; unit_price: number; discount_percent?: number }) => {
+      const gross = item.quantity * item.unit_price;
+      const discountPct = item.discount_percent || 0;
+      return gross * (1 - discountPct / 100);
+    };
 
     // Update client if provided
     if (client_id) {
@@ -148,9 +283,9 @@ export class InvoicesService {
       await this.invoiceItemRepository.delete({ invoice: { id } });
 
       // Calculate new totals
-      const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-      const taxAmount = (updateData.tax_rate || invoice.tax_rate) * subtotal / 100;
-      const totalAmount = subtotal + taxAmount - (updateData.discount_amount || invoice.discount_amount);
+      const subtotal = items.reduce((sum, item) => sum + calcLineTotal(item), 0);
+      const taxAmount = (updateData.tax_rate ?? invoice.tax_rate) * subtotal / 100;
+      const totalAmount = subtotal + taxAmount - (updateData.discount_amount ?? invoice.discount_amount);
 
       updateData['subtotal'] = subtotal;
       updateData['tax_amount'] = taxAmount;
@@ -158,19 +293,36 @@ export class InvoicesService {
 
       // Create new items
       const invoiceItems = items.map(item => {
-        const totalPrice = item.quantity * item.unit_price;
+        const totalPrice = calcLineTotal(item);
         return this.invoiceItemRepository.create({
           ...item,
+          unit: item.unit || 'ea',
           total_price: totalPrice,
           invoice,
         });
       });
 
       await this.invoiceItemRepository.save(invoiceItems);
+
+      if (invoice.document_type === 'receipt' && parent_invoice_id) {
+        const parent = await this.invoiceRepository.findOne({ where: { id: parent_invoice_id } });
+        if (parent) {
+          const balanceDue = this.getBalanceDue(parent) + parseFloat(String(invoice.total_amount || 0));
+          if (totalAmount > balanceDue + 0.01) {
+            throw new BadRequestException(`Payment amount exceeds balance due`);
+          }
+        }
+      }
     }
 
-    // Update invoice
     await this.invoiceRepository.update(id, updateData);
+
+    if (invoice.document_type === 'receipt') {
+      const parentId = parent_invoice_id ?? oldParentId ?? invoice.parent_invoice_id;
+      if (parentId) await this.syncParentInvoicePayments(parentId);
+      if (oldParentId && oldParentId !== parentId) await this.syncParentInvoicePayments(oldParentId);
+    }
+
     return this.findOne(id);
   }
 
@@ -190,13 +342,21 @@ export class InvoicesService {
   }
 
   async remove(id: number): Promise<void> {
-    const invoice = await this.findOne(id);
+    const invoice = await this.invoiceRepository.findOne({ where: { id } });
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
     
-    if (invoice.status === InvoiceStatus.PAID) {
+    if (invoice.status === InvoiceStatus.PAID && invoice.document_type !== 'receipt') {
       throw new BadRequestException('Cannot delete a paid invoice');
     }
 
+    const parentId = invoice.parent_invoice_id;
     await this.invoiceRepository.remove(invoice);
+
+    if (invoice.document_type === 'receipt' && parentId) {
+      await this.syncParentInvoicePayments(parentId);
+    }
   }
 
   async getStats(): Promise<InvoiceStatsDto> {
@@ -266,8 +426,8 @@ export class InvoicesService {
     };
   }
 
-  private async generateInvoiceNumber(type: 'invoice' | 'quotation' = 'invoice'): Promise<string> {
-    const prefix = type === 'quotation' ? 'QUO' : 'INV';
+  private async generateInvoiceNumber(type: 'invoice' | 'quotation' | 'receipt' = 'invoice'): Promise<string> {
+    const prefix = type === 'quotation' ? 'QUO' : type === 'receipt' ? 'REC' : 'INV';
     const result = await this.invoiceRepository
       .createQueryBuilder('inv')
       .select('COUNT(inv.id)', 'count')

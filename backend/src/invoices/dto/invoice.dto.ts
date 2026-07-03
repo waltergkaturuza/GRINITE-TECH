@@ -21,6 +21,15 @@ export class CreateInvoiceItemDto {
   @IsNumber()
   @Min(0)
   tax_rate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount_percent?: number;
+
+  @IsOptional()
+  @IsString()
+  unit?: string;
 }
 
 export class CreateInvoiceDto {
@@ -34,7 +43,7 @@ export class CreateInvoiceDto {
 
   @IsOptional()
   @IsString()
-  document_type?: 'invoice' | 'quotation';
+  document_type?: 'invoice' | 'quotation' | 'receipt';
 
   @IsNotEmpty()
   @IsDateString()
@@ -82,6 +91,98 @@ export class CreateInvoiceDto {
   @IsString()
   billing_phone?: string;
 
+  @IsOptional()
+  @IsString()
+  payment_reference?: string;
+
+  @IsOptional()
+  @IsDateString()
+  payment_date?: string;
+
+  @IsOptional()
+  @IsString()
+  payment_method?: string;
+
+  @IsOptional()
+  @IsString()
+  company_name?: string;
+
+  @IsOptional()
+  @IsString()
+  company_address?: string;
+
+  @IsOptional()
+  @IsString()
+  company_email?: string;
+
+  @IsOptional()
+  @IsString()
+  company_phone?: string;
+
+  @IsOptional()
+  @IsString()
+  company_website?: string;
+
+  @IsOptional()
+  @IsNumber()
+  parent_invoice_id?: number;
+
+  @IsOptional()
+  @IsString()
+  company_code?: string;
+
+  @IsOptional()
+  @IsString()
+  company_vat_code?: string;
+
+  @IsOptional()
+  @IsString()
+  company_bank_name?: string;
+
+  @IsOptional()
+  @IsString()
+  company_bank_branch?: string;
+
+  @IsOptional()
+  @IsString()
+  company_account_name?: string;
+
+  @IsOptional()
+  @IsString()
+  company_usd_account?: string;
+
+  @IsOptional()
+  @IsString()
+  company_zig_account?: string;
+
+  @IsOptional()
+  @IsString()
+  company_swift?: string;
+
+  @IsOptional()
+  @IsString()
+  company_iban?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_company_code?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_vat_code?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_bank_name?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_swift?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_iban?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateInvoiceItemDto)
@@ -99,7 +200,7 @@ export class UpdateInvoiceDto {
 
   @IsOptional()
   @IsString()
-  document_type?: 'invoice' | 'quotation';
+  document_type?: 'invoice' | 'quotation' | 'receipt';
 
   @IsOptional()
   @IsDateString()
@@ -150,6 +251,98 @@ export class UpdateInvoiceDto {
   @IsOptional()
   @IsString()
   billing_phone?: string;
+
+  @IsOptional()
+  @IsString()
+  payment_reference?: string;
+
+  @IsOptional()
+  @IsDateString()
+  payment_date?: string;
+
+  @IsOptional()
+  @IsString()
+  payment_method?: string;
+
+  @IsOptional()
+  @IsString()
+  company_name?: string;
+
+  @IsOptional()
+  @IsString()
+  company_address?: string;
+
+  @IsOptional()
+  @IsString()
+  company_email?: string;
+
+  @IsOptional()
+  @IsString()
+  company_phone?: string;
+
+  @IsOptional()
+  @IsString()
+  company_website?: string;
+
+  @IsOptional()
+  @IsNumber()
+  parent_invoice_id?: number;
+
+  @IsOptional()
+  @IsString()
+  company_code?: string;
+
+  @IsOptional()
+  @IsString()
+  company_vat_code?: string;
+
+  @IsOptional()
+  @IsString()
+  company_bank_name?: string;
+
+  @IsOptional()
+  @IsString()
+  company_bank_branch?: string;
+
+  @IsOptional()
+  @IsString()
+  company_account_name?: string;
+
+  @IsOptional()
+  @IsString()
+  company_usd_account?: string;
+
+  @IsOptional()
+  @IsString()
+  company_zig_account?: string;
+
+  @IsOptional()
+  @IsString()
+  company_swift?: string;
+
+  @IsOptional()
+  @IsString()
+  company_iban?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_company_code?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_vat_code?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_bank_name?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_swift?: string;
+
+  @IsOptional()
+  @IsString()
+  buyer_iban?: string;
 
   @IsOptional()
   @IsArray()

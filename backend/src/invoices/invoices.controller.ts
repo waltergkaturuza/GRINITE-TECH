@@ -57,6 +57,13 @@ export class InvoicesController {
     );
   }
 
+  @Get('open')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get invoices with outstanding balance for receipt linking' })
+  getOpenInvoices() {
+    return this.invoicesService.getOpenInvoices();
+  }
+
   @Get('stats')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get invoice statistics' })
@@ -70,6 +77,13 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Get client revenue stats' })
   getClientRevenue(@Param('clientId') clientId: string) {
     return this.invoicesService.getClientRevenue(clientId);
+  }
+
+  @Get(':id/receipts')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get receipts linked to an invoice' })
+  getInvoiceReceipts(@Param('id', ParseIntPipe) id: number) {
+    return this.invoicesService.getInvoiceReceipts(id);
   }
 
   @Get(':id')

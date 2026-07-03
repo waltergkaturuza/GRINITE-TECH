@@ -518,9 +518,9 @@ export const invoicesAPI = {
   getInvoices: async (params?: {
     page?: number
     limit?: number
-    status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+    status?: 'draft' | 'sent' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled'
     clientId?: string
-    documentType?: 'invoice' | 'quotation'
+    documentType?: 'invoice' | 'quotation' | 'receipt'
     search?: string
   }) => {
     const response = await api.get('/invoices', { params })
@@ -533,7 +533,7 @@ export const invoicesAPI = {
   createInvoice: async (invoiceData: {
     client_id: string
     project_id?: string
-    document_type?: 'invoice' | 'quotation'
+    document_type?: 'invoice' | 'quotation' | 'receipt'
     issue_date: string
     due_date: string
     payment_terms?: 'net_15' | 'net_30' | 'net_45' | 'net_60' | 'due_on_receipt'
@@ -581,6 +581,10 @@ export const invoicesAPI = {
   },
   getInvoiceStats: async () => {
     const response = await api.get('/invoices/stats')
+    return response.data
+  },
+  getOpenInvoices: async () => {
+    const response = await api.get('/invoices/open')
     return response.data
   },
   getClientRevenue: async (clientId: string) => {

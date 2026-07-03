@@ -87,6 +87,8 @@ export default function InvoiceActions({
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
+      case 'partially_paid':
+        return 'bg-amber-100 text-amber-800 border-amber-200'
       case 'paid':
         return 'bg-green-100 text-green-800 border-green-200'
       case 'sent':
@@ -104,7 +106,7 @@ export default function InvoiceActions({
 
   const canEdit = invoice.status === 'draft'
   const canSend = invoice.status === 'draft'
-  const canMarkPaid = invoice.status === 'sent' || invoice.status === 'overdue'
+  const canMarkPaid = invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'partially_paid'
   const canDelete = invoice.status !== 'paid'
 
   return (
@@ -235,6 +237,7 @@ export function QuickStatusUpdate({ invoice, onStatusUpdate }: QuickStatusUpdate
     >
       <option value="draft">Draft</option>
       <option value="sent">Sent</option>
+      <option value="partially_paid">Partially Paid</option>
       <option value="paid">Paid</option>
       <option value="overdue">Overdue</option>
       <option value="cancelled">Cancelled</option>

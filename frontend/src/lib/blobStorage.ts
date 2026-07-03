@@ -26,6 +26,7 @@ export type BlobUploadType =
   | { type: 'inquiry'; category: string }
   | { type: 'invoice'; projectOrClient: string; invoiceNumber: string }
   | { type: 'quotation'; projectOrClient: string; quotationNumber: string }
+  | { type: 'receipt'; projectOrClient: string; receiptNumber: string }
   | { type: 'hostingExpense'; expenseId?: string; provider?: string }
   | { type: 'generic'; folder: string }
 
@@ -52,6 +53,8 @@ export function buildBlobPath(uploadType: BlobUploadType, originalFilename: stri
       return `Invoices/${slugify(uploadType.projectOrClient)}/${date}/${uploadType.invoiceNumber}_${filename}`
     case 'quotation':
       return `Quotations/${slugify(uploadType.projectOrClient)}/${date}/${uploadType.quotationNumber}_${filename}`
+    case 'receipt':
+      return `Receipts/${slugify(uploadType.projectOrClient)}/${date}/${uploadType.receiptNumber}_${filename}`
     case 'hostingExpense': {
       const base = `HostingExpenses/${uploadType.provider ? slugify(uploadType.provider) : 'misc'}`
       return `${base}/${date}/${uploadType.expenseId || 'new'}_${filename}`
