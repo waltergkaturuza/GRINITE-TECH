@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { loadAllEntities } from '../src/database/all-entities';
 import { AppModule } from '../src/app.module';
@@ -43,8 +43,10 @@ async function bootstrap(): Promise<express.Express> {
     }),
   );
 
-  // API prefix
-  app.setGlobalPrefix('api/v1');
+  // API prefix (keep / root as a welcome page)
+  app.setGlobalPrefix('api/v1', {
+    exclude: [{ path: '/', method: RequestMethod.GET }],
+  });
 
   await app.init();
 
