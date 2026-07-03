@@ -69,11 +69,3 @@ export const ALL_ENTITIES: Function[] = [
   Invoice,
   InvoiceItem,
 ];
-
-/** @deprecated Use ALL_ENTITIES — kept for api/index.ts compatibility */
-export async function loadAllEntities(): Promise<Function[]> {
-  if (!ALL_ENTITIES.some((entity) => entity.name === 'Invoice')) {
-    throw new Error('Invoice entity failed to load — check entity imports');
-  }
-  return ALL_ENTITIES;
-}

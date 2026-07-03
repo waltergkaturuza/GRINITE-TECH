@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Invoice, InvoiceItem } from '../database/all-entities';
@@ -22,6 +22,8 @@ const QUANTIS_COMPANY_DEFAULTS = {
 
 @Injectable()
 export class InvoicesService {
+  private readonly logger = new Logger(InvoicesService.name);
+
   constructor(
     @InjectRepository(Invoice)
     private invoiceRepository: Repository<Invoice>,
@@ -29,7 +31,11 @@ export class InvoicesService {
     private invoiceItemRepository: Repository<InvoiceItem>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) {
+    if (!this.invoiceRepository.metadata?.name) {
+      this.logger.error('Invoice repository has no TypeORM metadata — check DataSource entity registration');
+    }
+  }
 
   async create(createInvoiceDto: CreateInvoiceDto): Promise<Invoice> {
     const {

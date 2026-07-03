@@ -3,7 +3,6 @@ import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { Invoice, ALL_ENTITIES } from '../src/database/all-entities';
 import { AppModule } from '../src/app.module';
-import { ensureInvoiceSchema } from '../src/invoices/invoice-schema.bootstrap';
 import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import express from 'express';
@@ -58,13 +57,6 @@ async function bootstrap(): Promise<express.Express> {
   }
 
   cachedServer = expressApp;
-
-  // Don't block the first response — schema sync runs in the background
-  if (process.env.NODE_ENV === 'production') {
-    ensureInvoiceSchema(app.get(DataSource)).catch((error) => {
-      console.error('Invoice schema bootstrap failed on startup', error);
-    });
-  }
 
   return cachedServer;
 }

@@ -15,7 +15,7 @@ import { ALL_ENTITIES } from './all-entities';
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
             entities: ALL_ENTITIES,
-            autoLoadEntities: true,
+            autoLoadEntities: false,
             synchronize: false,
             ssl: {
               rejectUnauthorized: false,
@@ -32,7 +32,7 @@ import { ALL_ENTITIES } from './all-entities';
           type: 'better-sqlite3',
           database: ':memory:',
           entities: ALL_ENTITIES,
-          autoLoadEntities: true,
+          autoLoadEntities: false,
           synchronize: true,
           logging: true,
         };

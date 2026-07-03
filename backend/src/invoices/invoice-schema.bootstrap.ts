@@ -1,23 +1,29 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
-export async function ensureInvoiceSchema(dataSource: DataSource): Promise<void> {
-  const bootstrap = new InvoiceSchemaBootstrap(dataSource);
-  await bootstrap.run();
-}
-
-/** Runs once in api/index.ts after boot — not onModuleInit (that blocked every cold start). */
+/**
+ * Ensures invoice tables exist via raw SQL only — never touches repositories or entity metadata.
+ * Runs through Nest lifecycle so it uses the same injected DataSource as TypeOrmModule.
+ */
 @Injectable()
-export class InvoiceSchemaBootstrap {
+export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
   private readonly logger = new Logger(InvoiceSchemaBootstrap.name);
 
   constructor(private readonly dataSource: DataSource) {}
 
-  async run() {
-    await this.ensureInvoiceSchema();
+  async onApplicationBootstrap() {
+    if (process.env.NODE_ENV !== 'production') return;
+    try {
+      await this.syncSchema();
+    } catch (error) {
+      this.logger.error(
+        'Invoice schema bootstrap failed',
+        error instanceof Error ? error.stack : error,
+      );
+    }
   }
 
-  private async ensureInvoiceSchema() {
+  private async syncSchema() {
     const tableExists = await this.dataSource.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables
@@ -49,7 +55,7 @@ export class InvoiceSchemaBootstrap {
     const rowCount = countResult[0]?.count ?? 0;
 
     if (rowCount > 0) {
-      this.logger.warn(`Invoices table has old schema and ${rowCount} rows — run manual migration`);
+      this.logger.warn(`Invoices table has old schema and ${rowCount} rows — adding columns`);
       await this.addMissingColumns();
       return;
     }
