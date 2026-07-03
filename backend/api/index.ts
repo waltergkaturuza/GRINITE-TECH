@@ -21,7 +21,10 @@ async function bootstrap(): Promise<express.Express> {
   const app = await NestFactory.create(
     AppModule,
     new ExpressAdapter(expressApp),
-    { bodyParser: true },
+    {
+      bodyParser: true,
+      logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : undefined,
+    },
   );
 
   // Security middleware

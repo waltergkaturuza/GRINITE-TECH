@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+import { getApiBaseUrl } from './apiBase'
 
 function getSessionId() {
   if (typeof window === 'undefined') return undefined;
@@ -15,7 +15,9 @@ function getSessionId() {
 }
 
 export async function trackPageView(path: string) {
-  if (!API_BASE || typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return
+  const API_BASE = getApiBaseUrl()
+  if (!API_BASE) return
   try {
     const sessionId = getSessionId();
     await fetch(`${API_BASE}/analytics/page-view`, {
@@ -34,7 +36,9 @@ export async function trackPageView(path: string) {
 }
 
 export async function trackEvent(eventName: string, metadata: Record<string, any> = {}) {
-  if (!API_BASE || typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return
+  const API_BASE = getApiBaseUrl()
+  if (!API_BASE) return
   try {
     const sessionId = getSessionId();
     await fetch(`${API_BASE}/analytics/event`, {

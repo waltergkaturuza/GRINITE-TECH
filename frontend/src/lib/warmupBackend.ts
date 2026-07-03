@@ -1,6 +1,8 @@
+import { getApiBaseUrl } from '@/lib/apiBase'
+
 /** Ping the serverless API so NestJS can finish cold start before a form submit. */
 export async function warmupBackend(timeoutMs = 120_000): Promise<boolean> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL
+  const apiUrl = getApiBaseUrl()
   if (!apiUrl || typeof window === 'undefined') return false
 
   try {

@@ -18,6 +18,13 @@
       "memory": 1024
     }
   },
+  "crons": [
+    {
+      "path": "/api/v1/health",
+      "schedule": "*/5 * * * *"
+    }
+  ],
+  "regions": ["iad1"],
   "env": {
     "NODE_ENV": "production"
   }

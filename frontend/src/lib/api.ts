@@ -1,7 +1,8 @@
 import axios from 'axios'
+import { getApiBaseUrl } from './apiBase'
 
 const api = axios.create({ 
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://api.quantistechnologies.co.zw/api/v1',
+  baseURL: getApiBaseUrl(),
   timeout: 90000,
   headers: {
     'Content-Type': 'application/json',
