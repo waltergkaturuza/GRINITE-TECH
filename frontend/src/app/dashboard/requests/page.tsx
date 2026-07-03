@@ -530,9 +530,19 @@ export default function RequestsPage() {
                       <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
                         <DocumentIcon className="h-5 w-5 text-gray-400 mr-3" />
                         <span className="text-sm text-gray-900">{doc.originalName}</span>
-                        <button className="ml-auto text-blue-600 hover:text-blue-800 text-sm">
-                          Download
-                        </button>
+                        {doc.filePath ? (
+                          <a
+                            href={doc.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={doc.originalName}
+                            className="ml-auto text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Download
+                          </a>
+                        ) : (
+                          <span className="ml-auto text-gray-400 text-sm">Unavailable</span>
+                        )}
                       </div>
                     ))}
                   </div>

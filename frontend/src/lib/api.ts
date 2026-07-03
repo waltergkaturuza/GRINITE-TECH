@@ -367,31 +367,30 @@ export interface BlobDocument {
 }
 
 export const requestsAPI = {
-  /** Submit request with optional pre-uploaded Blob documents (Inquiries/category/date/file-name) */
-  submitRequest: async (requestData: any, files?: File[] | BlobDocument[]) => {
-    const formData = new FormData()
+  /** Submit request; attachments must already be uploaded to Blob (URLs only). */
+  submitRequest: async (requestData: any, documents?: File[] | BlobDocument[]) => {
+    const isRawFiles = documents?.length && documents[0] instanceof File
 
-    Object.keys(requestData).forEach(key => {
-      if (requestData[key] !== null && requestData[key] !== undefined) {
-        formData.append(key, requestData[key])
-      }
-    })
-
-    if (files && files.length > 0) {
-      const first = files[0]
-      if (first instanceof File) {
-        files.forEach(f => formData.append('files', f as File))
-      } else {
-        formData.append('documents', JSON.stringify(files))
-      }
+    if (isRawFiles) {
+      const formData = new FormData()
+      Object.keys(requestData).forEach(key => {
+        if (requestData[key] != null) formData.append(key, requestData[key])
+      })
+      documents!.forEach(f => formData.append('files', f as File))
+      const response = await api.post('/requests', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000,
+      })
+      return response.data
     }
 
-    const response = await api.post('/requests', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      timeout: 120000,
-    })
+    const response = await api.post('/requests/submit', {
+      ...requestData,
+      serviceInterested: requestData.serviceInterested || 'general',
+      projectBudget: requestData.projectBudget || 'not-specified',
+      projectTimeline: requestData.projectTimeline || 'not-specified',
+      documents: documents?.length ? documents : undefined,
+    }, { timeout: 120000 })
     return response.data
   },
   getRequests: async (params?: {

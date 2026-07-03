@@ -1,24 +1,21 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ALL_ENTITIES, assertEntitiesLoaded } from './all-entities';
-import { Invoice, InvoiceItem } from '../invoices/entities/invoice.entity';
-
-assertEntitiesLoaded();
+import { loadAllEntities } from './all-entities';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Invoice, InvoiceItem]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
+      useFactory: async (configService: ConfigService) => {
+        const entities = await loadAllEntities();
         const isProduction = configService.get('NODE_ENV') === 'production';
 
         if (isProduction) {
           return {
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
-            entities: ALL_ENTITIES,
+            entities,
             autoLoadEntities: true,
             synchronize: false,
             ssl: {
@@ -35,7 +32,7 @@ assertEntitiesLoaded();
         return {
           type: 'better-sqlite3',
           database: ':memory:',
-          entities: ALL_ENTITIES,
+          entities,
           autoLoadEntities: true,
           synchronize: true,
           logging: true,

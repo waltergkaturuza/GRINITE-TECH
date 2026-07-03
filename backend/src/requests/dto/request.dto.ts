@@ -12,6 +12,7 @@ export class BlobDocumentDto {
   @IsString()
   originalName: string;
 
+  @Transform(({ value }) => (typeof value === 'string' ? parseInt(value, 10) : value))
   @IsNumber()
   fileSize: number;
 
@@ -34,14 +35,17 @@ export class CreateRequestDto {
   @IsString()
   phone?: string;
 
+  @IsOptional()
   @IsString()
-  serviceInterested: string;
+  serviceInterested?: string;
 
+  @IsOptional()
   @IsString()
-  projectBudget: string;
+  projectBudget?: string;
 
+  @IsOptional()
   @IsString()
-  projectTimeline: string;
+  projectTimeline?: string;
 
   @IsString()
   description: string;

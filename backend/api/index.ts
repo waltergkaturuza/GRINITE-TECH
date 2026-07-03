@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ExpressAdapter } from '@nestjs/platform-express';
+import { loadAllEntities } from '../src/database/all-entities';
 import { AppModule } from '../src/app.module';
 import { ensureInvoiceSchema } from '../src/invoices/invoice-schema.bootstrap';
 import { DataSource } from 'typeorm';
@@ -13,6 +13,9 @@ let cachedServer: express.Express | null = null;
 
 async function bootstrap(): Promise<express.Express> {
   if (cachedServer) return cachedServer;
+
+  // Ensure invoice entity class is loaded before Nest boot (Vercel serverless)
+  await loadAllEntities();
 
   const expressApp = express();
   const app = await NestFactory.create(

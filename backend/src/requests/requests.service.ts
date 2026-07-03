@@ -41,6 +41,9 @@ export class RequestsService {
     const { documents: blobDocuments, ...dto } = createRequestDto;
     const request = this.requestRepository.create({
       ...dto,
+      serviceInterested: dto.serviceInterested?.trim() || 'general',
+      projectBudget: dto.projectBudget?.trim() || 'not-specified',
+      projectTimeline: dto.projectTimeline?.trim() || 'not-specified',
       trackingId: this.generateTrackingId(),
     });
     const savedRequest = await this.requestRepository.save(request);

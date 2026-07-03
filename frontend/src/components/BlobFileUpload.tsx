@@ -7,6 +7,7 @@ import { uploadToBlob, type BlobUploadType } from '@/lib/blobStorage'
 interface BlobFileUploadProps {
   uploadType: BlobUploadType
   onUploaded: (url: string, pathname: string, file: File) => void
+  onUploadingChange?: (uploading: boolean) => void
   accept?: string
   maxSize?: number
   maxFiles?: number
@@ -18,6 +19,7 @@ interface BlobFileUploadProps {
 export default function BlobFileUpload({
   uploadType,
   onUploaded,
+  onUploadingChange,
   accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,image/*',
   maxSize = 10 * 1024 * 1024,
   maxFiles = 10,
@@ -36,6 +38,7 @@ export default function BlobFileUpload({
 
       setError(null)
       setUploading(true)
+      onUploadingChange?.(true)
 
       for (const file of arr) {
         if (file.size > maxSize) {
@@ -50,8 +53,9 @@ export default function BlobFileUpload({
         }
       }
       setUploading(false)
+      onUploadingChange?.(false)
     },
-    [uploadType, onUploaded, maxSize, maxFiles]
+    [uploadType, onUploaded, onUploadingChange, maxSize, maxFiles]
   )
 
   const onDrop = useCallback(

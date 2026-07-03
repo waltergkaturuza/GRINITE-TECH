@@ -43,6 +43,7 @@ export default function ContactContent() {
     description: ''
   })
   const [uploadedDocs, setUploadedDocs] = useState<BlobDocument[]>([])
+  const [isUploadingDocs, setIsUploadingDocs] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -88,9 +89,14 @@ export default function ContactContent() {
         }
       }
 
+      if (isUploadingDocs) {
+        setError('Please wait for file uploads to finish before submitting.')
+        return
+      }
+
       const result = await requestsAPI.submitRequest(formData, uploadedDocs)
       
-      if (result.success) {
+      if (result?.success !== false && (result?.data || result?.success)) {
         trackEvent('request_submitted', {
           serviceInterested: formData.serviceInterested,
           projectBudget: formData.projectBudget,
@@ -324,6 +330,7 @@ export default function ContactContent() {
                     type: 'inquiry',
                     category: formData.serviceInterested || 'general',
                   }}
+                  onUploadingChange={setIsUploadingDocs}
                   onUploaded={(url, pathname, file) =>
                     setUploadedDocs(prev => [
                       ...prev,
@@ -337,8 +344,11 @@ export default function ContactContent() {
                     ])
                   }
                   label="Drop files here or click to upload"
-                  hint="PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, Images, ZIP up to 10MB each"
+                  hint="Files upload immediately to secure storage. PDF, DOC, images up to 10MB each."
                 />
+                {isUploadingDocs && (
+                  <p className="text-sm text-amber-700 mt-2">Uploading to storage…</p>
+                )}
                 {uploadedDocs.length > 0 && (
                   <div className="mt-4 space-y-2">
                     {uploadedDocs.map((doc, index) => (
@@ -348,7 +358,7 @@ export default function ContactContent() {
                           <div>
                             <p className="text-sm font-medium text-gray-900">{doc.originalName}</p>
                             <p className="text-xs text-gray-500">
-                              {(doc.fileSize / 1024 / 1024).toFixed(2)} MB
+                              {(doc.fileSize / 1024 / 1024).toFixed(2)} MB · Uploaded
                             </p>
                           </div>
                         </div>
@@ -367,7 +377,7 @@ export default function ContactContent() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploadingDocs}
                 className="w-full bg-gradient-to-r from-crimson-600 to-amber-500 text-white font-semibold py-4 px-8 rounded-xl hover:from-crimson-700 hover:to-amber-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (

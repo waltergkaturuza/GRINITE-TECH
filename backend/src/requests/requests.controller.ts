@@ -35,6 +35,18 @@ import { RequestStatus } from './entities/request.entity';
 export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}
 
+  @Post('submit')
+  @ApiOperation({ summary: 'Submit a project request with pre-uploaded blob document URLs (JSON)' })
+  @ApiResponse({ status: 201, description: 'Request submitted successfully' })
+  async createWithBlobDocuments(@Body() createRequestDto: CreateRequestDto) {
+    const request = await this.requestsService.create(createRequestDto);
+    return {
+      success: true,
+      data: request,
+      message: 'Project request submitted successfully',
+    };
+  }
+
   @Post()
   @ApiOperation({ summary: 'Submit a new project request' })
   @ApiConsumes('multipart/form-data')
