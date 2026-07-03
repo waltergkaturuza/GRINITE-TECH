@@ -3,6 +3,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module';
+import { ensureInvoiceSchema } from '../src/invoices/invoice-schema.bootstrap';
+import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import express from 'express';
 import { corsOptions } from '../src/config/cors.config';
@@ -49,6 +51,15 @@ async function bootstrap(): Promise<express.Express> {
   SwaggerModule.setup('api/docs', app, document);
 
   await app.init();
+
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      await ensureInvoiceSchema(app.get(DataSource));
+    } catch (error) {
+      console.error('Invoice schema bootstrap failed on startup', error);
+    }
+  }
+
   cachedServer = expressApp;
   return cachedServer;
 }

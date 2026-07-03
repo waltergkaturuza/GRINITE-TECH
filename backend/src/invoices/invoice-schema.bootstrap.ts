@@ -1,6 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
+export async function ensureInvoiceSchema(dataSource: DataSource): Promise<void> {
+  const bootstrap = new InvoiceSchemaBootstrap(dataSource);
+  await bootstrap.run();
+}
+
 @Injectable()
 export class InvoiceSchemaBootstrap implements OnModuleInit {
   private readonly logger = new Logger(InvoiceSchemaBootstrap.name);
@@ -9,12 +14,15 @@ export class InvoiceSchemaBootstrap implements OnModuleInit {
 
   async onModuleInit() {
     if (process.env.NODE_ENV !== 'production') return;
-
     try {
-      await this.ensureInvoiceSchema();
+      await this.run();
     } catch (error) {
       this.logger.error('Invoice schema bootstrap failed', error instanceof Error ? error.stack : error);
     }
+  }
+
+  async run() {
+    await this.ensureInvoiceSchema();
   }
 
   private async ensureInvoiceSchema() {
