@@ -1,44 +1,28 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User } from '../users/entities/user.entity';
-import { Project } from '../projects/entities/project.entity';
-import { Milestone } from '../projects/entities/milestone.entity';
-import { Module as ProjectModule } from '../projects/entities/module.entity';
-import { Feature } from '../projects/entities/feature.entity';
-import { ProjectType } from '../entities/project-type.entity';
-import { Product } from '../products/entities/product.entity';
-import { Payment } from '../payments/entities/payment.entity';
-import { ChatSession } from '../chatbot/entities/chat-session.entity';
-import { ProjectRequest, RequestDocument, RequestMessage, MessageAttachment } from '../requests/entities/request.entity';
-import { AnalyticsEvent, PageView } from '../analytics/analytics.entity';
-import { HostingExpense } from '../hosting-expenses/entities/hosting-expense.entity';
-import { LedgerAccount } from '../ledger/entities/ledger-account.entity';
-import { LedgerEntry } from '../ledger/entities/ledger-entry.entity';
+import { ALL_ENTITIES, assertEntitiesLoaded } from './all-entities';
 import { Invoice, InvoiceItem } from '../invoices/entities/invoice.entity';
 
-const PRODUCTION_ENTITIES = [
-  User, Project, Milestone, ProjectModule, Feature, ProjectType, Product, Payment,
-  ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment,
-  PageView, AnalyticsEvent, HostingExpense, LedgerAccount, LedgerEntry, Invoice, InvoiceItem,
-];
+assertEntitiesLoaded();
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Invoice, InvoiceItem]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const isProduction = configService.get('NODE_ENV') === 'production';
-        
+
         if (isProduction) {
-          // PostgreSQL configuration for production (Neon)
           return {
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
-            entities: PRODUCTION_ENTITIES,
-            synchronize: true, // Temporarily enabled to create schema
+            entities: ALL_ENTITIES,
+            autoLoadEntities: true,
+            synchronize: true,
             ssl: {
-              rejectUnauthorized: false
+              rejectUnauthorized: false,
             },
             extra: {
               connectionTimeoutMillis: 15000,
@@ -46,16 +30,16 @@ const PRODUCTION_ENTITIES = [
             },
             logging: false,
           };
-        } else {
-          // SQLite configuration for development
-          return {
-            type: 'better-sqlite3',
-            database: ':memory:',
-            entities: PRODUCTION_ENTITIES,
-            synchronize: true, // Only for development
-            logging: true,
-          };
         }
+
+        return {
+          type: 'better-sqlite3',
+          database: ':memory:',
+          entities: ALL_ENTITIES,
+          autoLoadEntities: true,
+          synchronize: true,
+          logging: true,
+        };
       },
       inject: [ConfigService],
     }),

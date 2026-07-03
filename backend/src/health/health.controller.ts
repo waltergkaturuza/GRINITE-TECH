@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
+import { Invoice } from '../invoices/entities/invoice.entity';
 
 @Controller('health')
 export class HealthController {
@@ -13,6 +14,13 @@ export class HealthController {
   async getHealth() {
     let invoicesTable = false;
     let invoiceCount: number | null = null;
+    let invoiceEntityRegistered = false;
+
+    try {
+      invoiceEntityRegistered = this.dataSource.hasMetadata(Invoice);
+    } catch {
+      invoiceEntityRegistered = false;
+    }
 
     if (this.configService.get('NODE_ENV') === 'production') {
       try {
@@ -38,6 +46,7 @@ export class HealthController {
       environment: this.configService.get('NODE_ENV'),
       hasDatabase: !!this.configService.get('DATABASE_URL'),
       hasJwtSecret: !!this.configService.get('JWT_SECRET'),
+      invoiceEntityRegistered,
       invoicesTable,
       invoiceCount,
     };
