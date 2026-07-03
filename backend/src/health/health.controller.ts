@@ -1,18 +1,45 @@
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 
 @Controller('health')
 export class HealthController {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private dataSource: DataSource,
+  ) {}
 
   @Get()
-  getHealth() {
+  async getHealth() {
+    let invoicesTable = false;
+    let invoiceCount: number | null = null;
+
+    if (this.configService.get('NODE_ENV') === 'production') {
+      try {
+        const tableCheck = await this.dataSource.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = 'invoices'
+          ) AS exists
+        `);
+        invoicesTable = !!tableCheck[0]?.exists;
+        if (invoicesTable) {
+          const countResult = await this.dataSource.query('SELECT COUNT(*)::int AS count FROM invoices');
+          invoiceCount = countResult[0]?.count ?? 0;
+        }
+      } catch {
+        invoicesTable = false;
+      }
+    }
+
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
       environment: this.configService.get('NODE_ENV'),
       hasDatabase: !!this.configService.get('DATABASE_URL'),
       hasJwtSecret: !!this.configService.get('JWT_SECRET'),
+      invoicesTable,
+      invoiceCount,
     };
   }
 

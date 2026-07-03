@@ -28,6 +28,7 @@ export class Invoice {
   invoice_number: string;
 
   @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'client_id' })
   client: User;
 
   @Column()
