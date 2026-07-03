@@ -17,6 +17,7 @@ import BlobFileUpload from '@/components/BlobFileUpload'
 import { trackEvent, trackPageView } from '@/lib/analytics'
 import { COMPANY_CONTACT } from '@/constants/company'
 import TrackRequestPanel from '@/components/TrackRequestPanel'
+import { warmupBackend, isNetworkOrTimeoutError, BACKEND_WARMUP_MESSAGE } from '@/lib/warmupBackend'
 
 const services = [
   { id: 'web-development', name: 'Web Development' },
@@ -45,9 +46,13 @@ export default function ContactContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [backendReady, setBackendReady] = useState(false)
 
   useEffect(() => {
     trackPageView('/contact')
+
+    // Wake up serverless backend while the user fills the form
+    warmupBackend().then(setBackendReady).catch(() => setBackendReady(false))
 
     // Pre-fill service if coming from a specific service page
     const serviceParam = searchParams.get('service')
@@ -74,6 +79,15 @@ export default function ContactContent() {
     setError('')
 
     try {
+      if (!backendReady) {
+        const ready = await warmupBackend()
+        setBackendReady(ready)
+        if (!ready) {
+          setError(BACKEND_WARMUP_MESSAGE)
+          return
+        }
+      }
+
       const result = await requestsAPI.submitRequest(formData, uploadedDocs)
       
       if (result.success) {
@@ -98,8 +112,12 @@ export default function ContactContent() {
         setError(result.message || 'Failed to send message. Please try again.')
       }
     } catch (err: any) {
-      trackEvent('request_failed', { reason: err.response?.data?.message })
-      setError(err.response?.data?.message || 'Failed to send message. Please try again.')
+      trackEvent('request_failed', { reason: err.response?.data?.message || err.message })
+      setError(
+        isNetworkOrTimeoutError(err)
+          ? BACKEND_WARMUP_MESSAGE
+          : err.response?.data?.message || 'Failed to send message. Please try again.'
+      )
       console.error('Form submission error:', err)
     } finally {
       setIsSubmitting(false)
@@ -355,7 +373,7 @@ export default function ContactContent() {
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Sending...
+                    {!backendReady ? 'Connecting to server...' : 'Sending...'}
                   </div>
                 ) : (
                   'Send Message'

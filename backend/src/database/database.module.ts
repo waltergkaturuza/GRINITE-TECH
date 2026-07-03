@@ -20,7 +20,7 @@ assertEntitiesLoaded();
             url: configService.get('DATABASE_URL'),
             entities: ALL_ENTITIES,
             autoLoadEntities: true,
-            synchronize: true,
+            synchronize: false,
             ssl: {
               rejectUnauthorized: false,
             },

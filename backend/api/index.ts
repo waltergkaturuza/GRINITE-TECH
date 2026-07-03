@@ -40,27 +40,17 @@ async function bootstrap(): Promise<express.Express> {
   // API prefix
   app.setGlobalPrefix('api/v1');
 
-  // Swagger
-  const config = new DocumentBuilder()
-    .setTitle('Quantis Technologies API')
-    .setDescription('Comprehensive business management platform API')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
-
   await app.init();
 
+  cachedServer = expressApp;
+
+  // Don't block the first response — schema sync runs in the background
   if (process.env.NODE_ENV === 'production') {
-    try {
-      await ensureInvoiceSchema(app.get(DataSource));
-    } catch (error) {
+    ensureInvoiceSchema(app.get(DataSource)).catch((error) => {
       console.error('Invoice schema bootstrap failed on startup', error);
-    }
+    });
   }
 
-  cachedServer = expressApp;
   return cachedServer;
 }
 
