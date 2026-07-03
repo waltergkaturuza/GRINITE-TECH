@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, Generated, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Project } from '../../projects/entities/project.entity';
 
@@ -25,7 +25,6 @@ export class Invoice {
   id: number;
 
   @Column({ unique: true })
-  @Generated('increment')
   invoice_number: string;
 
   @ManyToOne(() => User, { eager: true })
@@ -60,18 +59,10 @@ export class Invoice {
   @Column()
   due_date: Date;
 
-  @Column({
-    type: 'enum',
-    enum: InvoiceStatus,
-    default: InvoiceStatus.DRAFT
-  })
+  @Column({ type: 'varchar', default: InvoiceStatus.DRAFT })
   status: InvoiceStatus;
 
-  @Column({
-    type: 'enum',
-    enum: PaymentTerms,
-    default: PaymentTerms.NET_30
-  })
+  @Column({ type: 'varchar', default: PaymentTerms.NET_30 })
   payment_terms: PaymentTerms;
 
   @Column('decimal', { precision: 10, scale: 2 })
@@ -191,6 +182,7 @@ export class InvoiceItem {
   id: number;
 
   @ManyToOne(() => Invoice, invoice => invoice.items, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'invoice_id' })
   invoice: Invoice;
 
   @Column()

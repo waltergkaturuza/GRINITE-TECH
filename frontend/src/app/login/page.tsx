@@ -18,6 +18,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     trackPageView('/login')
+    // Wake up serverless backend before the user submits (cold start can take 30–60s)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
+    if (apiUrl) {
+      fetch(`${apiUrl}/health`, { method: 'GET' }).catch(() => {})
+    }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +42,16 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       trackEvent('login_failed')
-      setError(err.response?.data?.message || 'Login failed')
+      const isNetwork =
+        err.code === 'ERR_NETWORK' ||
+        err.code === 'ECONNABORTED' ||
+        err.message?.includes('timeout') ||
+        err.message?.includes('Network Error')
+      setError(
+        isNetwork
+          ? 'Cannot reach the server. The API may be waking up—wait 30 seconds and try again. If this persists, check that the backend is deployed on Vercel.'
+          : err.response?.data?.message || 'Login failed'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -146,35 +160,6 @@ export default function LoginPage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
             </form>
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-transparent text-gray-400">Or continue with</span>
-                </div>
-              </div>
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <button className="w-full inline-flex justify-center py-3 px-4 rounded-xl border border-white/20 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-200">
-                  <span>Google</span>
-                </button>
-                <button className="w-full inline-flex justify-center py-3 px-4 rounded-xl border border-white/20 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-200">
-                  <span>GitHub</span>
-                </button>
-              </div>
-            </div>
-            <div className="mt-8 text-center">
-              <p className="text-gray-300">
-                Don't have an account?{' '}
-                <Link
-                  href="/signup"
-                  className="text-cyan-400 hover:text-yellow-400 font-medium transition-colors duration-200"
-                >
-                  Signup
-                </Link>
-              </p>
-            </div>
           </div>
         </div>
       </div>

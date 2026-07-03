@@ -15,6 +15,13 @@ import { AnalyticsEvent, PageView } from '../analytics/analytics.entity';
 import { HostingExpense } from '../hosting-expenses/entities/hosting-expense.entity';
 import { LedgerAccount } from '../ledger/entities/ledger-account.entity';
 import { LedgerEntry } from '../ledger/entities/ledger-entry.entity';
+import { Invoice, InvoiceItem } from '../invoices/entities/invoice.entity';
+
+const PRODUCTION_ENTITIES = [
+  User, Project, Milestone, ProjectModule, Feature, ProjectType, Product, Payment,
+  ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment,
+  PageView, AnalyticsEvent, HostingExpense, LedgerAccount, LedgerEntry, Invoice, InvoiceItem,
+];
 
 @Module({
   imports: [
@@ -28,10 +35,14 @@ import { LedgerEntry } from '../ledger/entities/ledger-entry.entity';
           return {
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
-            entities: [User, Project, Milestone, ProjectModule, Feature, ProjectType, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment, PageView, AnalyticsEvent, HostingExpense, LedgerAccount, LedgerEntry],
+            entities: PRODUCTION_ENTITIES,
             synchronize: true, // Temporarily enabled to create schema
             ssl: {
               rejectUnauthorized: false
+            },
+            extra: {
+              connectionTimeoutMillis: 15000,
+              query_timeout: 15000,
             },
             logging: false,
           };
@@ -40,7 +51,7 @@ import { LedgerEntry } from '../ledger/entities/ledger-entry.entity';
           return {
             type: 'better-sqlite3',
             database: ':memory:',
-            entities: [User, Project, Milestone, ProjectModule, Feature, ProjectType, Product, Payment, ChatSession, ProjectRequest, RequestDocument, RequestMessage, MessageAttachment, PageView, AnalyticsEvent, HostingExpense, LedgerAccount, LedgerEntry],
+            entities: PRODUCTION_ENTITIES,
             synchronize: true, // Only for development
             logging: true,
           };
