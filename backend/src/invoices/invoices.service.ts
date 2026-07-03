@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
-import { Invoice, InvoiceItem, InvoiceStatus } from './entities/invoice.entity';
+import { Invoice, InvoiceItem } from '../database/all-entities';
+import { InvoiceStatus } from './entities/invoice.entity';
 import { CreateInvoiceDto, UpdateInvoiceDto, UpdateInvoiceStatusDto, InvoiceStatsDto } from './dto/invoice.dto';
 import { User } from '../users/entities/user.entity';
 

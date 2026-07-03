@@ -1,21 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { loadAllEntities } from './all-entities';
+import { ALL_ENTITIES } from './all-entities';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        const entities = await loadAllEntities();
+      useFactory: (configService: ConfigService) => {
         const isProduction = configService.get('NODE_ENV') === 'production';
 
         if (isProduction) {
           return {
             type: 'postgres',
             url: configService.get('DATABASE_URL'),
-            entities,
+            entities: ALL_ENTITIES,
             autoLoadEntities: true,
             synchronize: false,
             ssl: {
@@ -32,7 +31,7 @@ import { loadAllEntities } from './all-entities';
         return {
           type: 'better-sqlite3',
           database: ':memory:',
-          entities,
+          entities: ALL_ENTITIES,
           autoLoadEntities: true,
           synchronize: true,
           logging: true,

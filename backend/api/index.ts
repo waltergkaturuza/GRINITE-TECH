@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { loadAllEntities } from '../src/database/all-entities';
+import { Invoice, ALL_ENTITIES } from '../src/database/all-entities';
 import { AppModule } from '../src/app.module';
 import { ensureInvoiceSchema } from '../src/invoices/invoice-schema.bootstrap';
 import { DataSource } from 'typeorm';
@@ -14,8 +14,10 @@ let cachedServer: express.Express | null = null;
 async function bootstrap(): Promise<express.Express> {
   if (cachedServer) return cachedServer;
 
-  // Ensure invoice entity class is loaded before Nest boot (Vercel serverless)
-  await loadAllEntities();
+  // Touch entity registry so Vercel bundle retains every @Entity class
+  if (!ALL_ENTITIES.some((entity) => entity.name === 'Invoice')) {
+    throw new Error('Invoice entity missing from ALL_ENTITIES registry');
+  }
 
   const expressApp = express();
   const app = await NestFactory.create(
@@ -49,6 +51,11 @@ async function bootstrap(): Promise<express.Express> {
   });
 
   await app.init();
+
+  const dataSource = app.get(DataSource);
+  if (!dataSource.hasMetadata(Invoice)) {
+    console.error('CRITICAL: Invoice entity metadata not registered after TypeORM init');
+  }
 
   cachedServer = expressApp;
 

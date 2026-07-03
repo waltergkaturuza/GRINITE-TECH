@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InvoicesService } from './invoices.service';
 import { InvoicesController } from './invoices.controller';
 import { InvoiceSchemaBootstrap } from './invoice-schema.bootstrap';
-import { Invoice, InvoiceItem } from './entities/invoice.entity';
+import { Invoice, InvoiceItem } from '../database/all-entities';
 import { User } from '../users/entities/user.entity';
 import { Project } from '../projects/entities/project.entity';
 

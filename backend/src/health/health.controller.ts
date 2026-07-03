@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
-import { Invoice } from '../invoices/entities/invoice.entity';
+import { Invoice } from '../database/all-entities';
 
 @Controller('health')
 export class HealthController {
