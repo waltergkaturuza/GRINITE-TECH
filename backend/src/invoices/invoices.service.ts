@@ -61,14 +61,15 @@ export class InvoicesService {
     }
 
     const calcLineTotal = (item: { quantity: number; unit_price: number; discount_percent?: number }) => {
-      const gross = item.quantity * item.unit_price;
-      const discountPct = item.discount_percent || 0;
-      return gross * (1 - discountPct / 100);
+      const qty = Number(item.quantity) || 0;
+      const price = Number(item.unit_price) || 0;
+      const discountPct = Number(item.discount_percent) || 0;
+      return qty * price * (1 - discountPct / 100);
     };
 
     const subtotal = items.reduce((sum, item) => sum + calcLineTotal(item), 0);
-    const taxAmount = (invoiceData.tax_rate || 0) * subtotal / 100;
-    const totalAmount = subtotal + taxAmount - (invoiceData.discount_amount || 0);
+    const taxAmount = (Number(invoiceData.tax_rate) || 0) * subtotal / 100;
+    const totalAmount = subtotal + taxAmount - (Number(invoiceData.discount_amount) || 0);
 
     if (isReceipt && parentInvoice) {
       const balanceDue = parseFloat(String(parentInvoice.total_amount)) - parseFloat(String(parentInvoice.amount_paid || 0));
@@ -371,70 +372,84 @@ export class InvoicesService {
   }
 
   async getStats(): Promise<InvoiceStatsDto> {
-    const totalInvoices = await this.invoiceRepository.count();
-    
-    const [totalRevenueResult] = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .select('SUM(invoice.total_amount)', 'total')
-      .where('invoice.status = :status', { status: InvoiceStatus.PAID })
-      .getRawOne();
+    const empty: InvoiceStatsDto = {
+      total_invoices: 0,
+      total_revenue: 0,
+      paid_invoices: 0,
+      pending_invoices: 0,
+      draft_invoices: 0,
+      overdue_invoices: 0,
+      monthly_revenue: 0,
+      monthly_growth: 0,
+    }
 
-    const paidInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.PAID } });
-    const pendingInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.SENT } });
-    const draftInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.DRAFT } });
-    const overdueInvoices = await this.invoiceRepository.count({ 
-      where: { 
-        status: InvoiceStatus.SENT,
-        due_date: Between(new Date('1900-01-01'), new Date())
-      } 
-    });
+    try {
+      const totalInvoices = await this.invoiceRepository.count();
 
-    // Calculate monthly revenue
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+      const totalRevenueResult = await this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .select('COALESCE(SUM(invoice.total_amount), 0)', 'total')
+        .where('invoice.status = :status', { status: InvoiceStatus.PAID })
+        .getRawOne();
 
-    const [monthlyRevenueResult] = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .select('SUM(invoice.total_amount)', 'monthly')
-      .where('invoice.status = :status', { status: InvoiceStatus.PAID })
-      .andWhere('invoice.payment_date BETWEEN :start AND :end', { 
-        start: startOfMonth, 
-        end: endOfMonth 
-      })
-      .getRawOne();
+      const paidInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.PAID } });
+      const pendingInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.SENT } });
+      const draftInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.DRAFT } });
+      const overdueInvoices = await this.invoiceRepository.count({
+        where: {
+          status: InvoiceStatus.SENT,
+          due_date: Between(new Date('1900-01-01'), new Date()),
+        },
+      });
 
-    // Calculate previous month for growth
-    const startOfPrevMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
-    const endOfPrevMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0);
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
-    const [prevMonthRevenueResult] = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .select('SUM(invoice.total_amount)', 'previous')
-      .where('invoice.status = :status', { status: InvoiceStatus.PAID })
-      .andWhere('invoice.payment_date BETWEEN :start AND :end', { 
-        start: startOfPrevMonth, 
-        end: endOfPrevMonth 
-      })
-      .getRawOne();
+      const monthlyRevenueResult = await this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .select('COALESCE(SUM(invoice.total_amount), 0)', 'monthly')
+        .where('invoice.status = :status', { status: InvoiceStatus.PAID })
+        .andWhere('invoice.payment_date BETWEEN :start AND :end', {
+          start: startOfMonth,
+          end: endOfMonth,
+        })
+        .getRawOne();
 
-    const totalRevenue = parseFloat(totalRevenueResult?.total || '0');
-    const monthlyRevenue = parseFloat(monthlyRevenueResult?.monthly || '0');
-    const prevMonthRevenue = parseFloat(prevMonthRevenueResult?.previous || '0');
+      const startOfPrevMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+      const endOfPrevMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0);
 
-    const monthlyGrowth = prevMonthRevenue > 0 
-      ? ((monthlyRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 
-      : monthlyRevenue > 0 ? 100 : 0;
+      const prevMonthRevenueResult = await this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .select('COALESCE(SUM(invoice.total_amount), 0)', 'previous')
+        .where('invoice.status = :status', { status: InvoiceStatus.PAID })
+        .andWhere('invoice.payment_date BETWEEN :start AND :end', {
+          start: startOfPrevMonth,
+          end: endOfPrevMonth,
+        })
+        .getRawOne();
 
-    return {
-      total_invoices: totalInvoices,
-      total_revenue: totalRevenue,
-      paid_invoices: paidInvoices,
-      pending_invoices: pendingInvoices,
-      draft_invoices: draftInvoices,
-      overdue_invoices: overdueInvoices,
-      monthly_revenue: monthlyRevenue,
-      monthly_growth: monthlyGrowth,
-    };
+      const totalRevenue = parseFloat(String(totalRevenueResult?.total ?? '0')) || 0;
+      const monthlyRevenue = parseFloat(String(monthlyRevenueResult?.monthly ?? '0')) || 0;
+      const prevMonthRevenue = parseFloat(String(prevMonthRevenueResult?.previous ?? '0')) || 0;
+
+      const monthlyGrowth = prevMonthRevenue > 0
+        ? ((monthlyRevenue - prevMonthRevenue) / prevMonthRevenue) * 100
+        : monthlyRevenue > 0 ? 100 : 0;
+
+      return {
+        total_invoices: totalInvoices,
+        total_revenue: totalRevenue,
+        paid_invoices: paidInvoices,
+        pending_invoices: pendingInvoices,
+        draft_invoices: draftInvoices,
+        overdue_invoices: overdueInvoices,
+        monthly_revenue: monthlyRevenue,
+        monthly_growth: monthlyGrowth,
+      };
+    } catch (error) {
+      this.logger.error('Failed to load invoice stats', error instanceof Error ? error.stack : error);
+      return empty;
+    }
   }
 
   private async generateInvoiceNumber(type: 'invoice' | 'quotation' | 'receipt' = 'invoice'): Promise<string> {
@@ -467,29 +482,36 @@ export class InvoicesService {
 
   async duplicateInvoice(id: number): Promise<Invoice> {
     const originalInvoice = await this.findOne(id);
-    
+    const toNumber = (value: unknown, fallback = 0) => {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
+    };
+
     const duplicateData = {
       client_id: originalInvoice.client_id,
       project_id: originalInvoice.project_id,
       document_type: originalInvoice.document_type || 'invoice',
       issue_date: new Date().toISOString(),
-      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       payment_terms: originalInvoice.payment_terms,
-      tax_rate: originalInvoice.tax_rate,
-      discount_amount: originalInvoice.discount_amount,
+      tax_rate: toNumber(originalInvoice.tax_rate),
+      discount_amount: toNumber(originalInvoice.discount_amount),
       notes: originalInvoice.notes,
       terms_conditions: originalInvoice.terms_conditions,
       billing_address: originalInvoice.billing_address,
       billing_email: originalInvoice.billing_email,
       billing_phone: originalInvoice.billing_phone,
-      items: originalInvoice.items.map(item => ({
+      items: (originalInvoice.items || []).map((item: any) => ({
         description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        tax_rate: item.tax_rate,
+        quantity: toNumber(item.quantity, 1) || 1,
+        unit_price: toNumber(item.unit_price),
+        tax_rate: toNumber(item.tax_rate),
+        unit: item.unit || 'ea',
+        discount_percent: toNumber(item.discount_percent),
       })),
     };
 
-    return this.create(duplicateData as CreateInvoiceDto);
+    const created = await this.create(duplicateData as CreateInvoiceDto);
+    return this.findOne(created.id);
   }
 }

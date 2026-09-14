@@ -22,12 +22,13 @@ const dateSegment = (): string => {
 }
 
 export type BlobUploadType =
-  | { type: 'project'; projectName: string; subfolder?: 'supporting' | 'funding' }
+  | { type: 'project'; projectName: string; subfolder?: string }
   | { type: 'inquiry'; category: string }
   | { type: 'invoice'; projectOrClient: string; invoiceNumber: string }
   | { type: 'quotation'; projectOrClient: string; quotationNumber: string }
   | { type: 'receipt'; projectOrClient: string; receiptNumber: string }
   | { type: 'hostingExpense'; expenseId?: string; provider?: string }
+  | { type: 'company'; category: string }
   | { type: 'generic'; folder: string }
 
 /**
@@ -37,8 +38,16 @@ export type BlobUploadType =
  * - Invoices: Invoices/{project_or_client}/{date}/{invoice_number}_{file-name}
  * - Quotations: Quotations/{project_or_client}/{date}/{quotation_number}_{file-name}
  */
+const uniqueFilename = (name: string): string => {
+  const sanitized = sanitizeFilename(name)
+  const stamp = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  const dot = sanitized.lastIndexOf('.')
+  if (dot <= 0) return `${sanitized}-${stamp}`
+  return `${sanitized.slice(0, dot)}-${stamp}${sanitized.slice(dot)}`
+}
+
 export function buildBlobPath(uploadType: BlobUploadType, originalFilename: string): string {
-  const filename = sanitizeFilename(originalFilename)
+  const filename = uniqueFilename(originalFilename)
   const date = dateSegment()
 
   switch (uploadType.type) {
@@ -59,6 +68,8 @@ export function buildBlobPath(uploadType: BlobUploadType, originalFilename: stri
       const base = `HostingExpenses/${uploadType.provider ? slugify(uploadType.provider) : 'misc'}`
       return `${base}/${date}/${uploadType.expenseId || 'new'}_${filename}`
     }
+    case 'company':
+      return `Company/${slugify(uploadType.category)}/${date}/${filename}`
     case 'generic':
       return `${uploadType.folder}/${date}/${filename}`
     default:

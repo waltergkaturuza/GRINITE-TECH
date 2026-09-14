@@ -988,4 +988,60 @@ export const insightsAPI = {
   },
 }
 
+export type CompanyDocument = {
+  id: string
+  title: string
+  description?: string
+  category: string
+  scope: 'company' | 'project'
+  projectId?: string
+  project?: { id: string; title: string }
+  url: string
+  pathname: string
+  originalName: string
+  fileSize: number
+  mimeType?: string
+  uploadedBy?: { firstName?: string; lastName?: string; email?: string }
+  createdAt: string
+  updatedAt: string
+}
+
+export const documentsAPI = {
+  list: async (params?: { category?: string; projectId?: string; scope?: string; search?: string }) => {
+    const response = await api.get('/documents', { params })
+    return response.data as CompanyDocument[]
+  },
+  categories: async (params?: { projectId?: string; scope?: string }) => {
+    const response = await api.get('/documents/categories', { params })
+    return response.data as {
+      company: string[]
+      project: string[]
+      counts: { category: string; count: number }[]
+    }
+  },
+  create: async (data: {
+    title: string
+    description?: string
+    category: string
+    scope?: 'company' | 'project'
+    projectId?: string
+    url: string
+    pathname: string
+    originalName: string
+    fileSize?: number
+    mimeType?: string
+  }) => {
+    const response = await api.post('/documents', data)
+    return response.data as CompanyDocument
+  },
+  update: async (id: string, data: { title?: string; description?: string; category?: string }) => {
+    const response = await api.patch(`/documents/${id}`, data)
+    return response.data as CompanyDocument
+  },
+  remove: async (id: string) => {
+    const response = await api.delete(`/documents/${id}`)
+    return response.data
+  },
+}
+
 export default api

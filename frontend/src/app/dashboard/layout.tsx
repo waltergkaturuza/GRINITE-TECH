@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { ComponentType, SVGProps } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { isStaffRole, isPathAllowedForStaff } from '@/lib/dashboardRoles'
+import { isStaffRole, isPathAllowedForStaff, canManageCompanyDocuments } from '@/lib/dashboardRoles'
 import {
   Bars3Icon,
   XMarkIcon,
@@ -23,6 +23,7 @@ import {
   ServerStackIcon,
   BanknotesIcon,
   NewspaperIcon,
+  FolderIcon,
   ArrowRightOnRectangleIcon,
   GlobeAltIcon,
   ChevronLeftIcon,
@@ -45,6 +46,7 @@ const ALL_NAVIGATION: NavItem[] = [
   { name: 'Project Indicators', href: '/dashboard/indicators', icon: ChartBarIcon },
   { name: 'Clients', href: '/dashboard/clients', icon: UsersIcon },
   { name: 'Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon },
+  { name: 'Documents', href: '/dashboard/documents', icon: FolderIcon },
   { name: 'Products', href: '/dashboard/products', icon: ShoppingCartIcon },
   { name: 'News & Updates', href: '/dashboard/insights', icon: NewspaperIcon },
   { name: 'Analytics', href: '/dashboard/analytics', icon: ChartBarIcon },
@@ -94,9 +96,14 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!user) return
-    if (!isStaffRole(user.role)) return
-    if (pathname === '/dashboard' || !isPathAllowedForStaff(pathname)) {
-      router.replace('/dashboard/requests')
+    if (isStaffRole(user.role)) {
+      if (pathname === '/dashboard' || !isPathAllowedForStaff(pathname)) {
+        router.replace('/dashboard/requests')
+      }
+      return
+    }
+    if (!canManageCompanyDocuments(user.role) && pathname.startsWith('/dashboard/documents')) {
+      router.replace('/dashboard')
     }
   }, [user, pathname, router])
 
@@ -116,15 +123,20 @@ export default function DashboardLayout({
   }
 
   const navigation = useMemo(() => {
-    if (!user || !isStaffRole(user.role)) return ALL_NAVIGATION
-    const staffHrefs = new Set([
-      '/dashboard/requests',
-      '/dashboard/products',
-      '/dashboard/insights',
-      '/dashboard/chat',
-      '/dashboard/settings',
-    ])
-    return ALL_NAVIGATION.filter((item) => staffHrefs.has(item.href))
+    if (isStaffRole(user?.role)) {
+      const staffHrefs = new Set([
+        '/dashboard/requests',
+        '/dashboard/products',
+        '/dashboard/insights',
+        '/dashboard/chat',
+        '/dashboard/settings',
+      ])
+      return ALL_NAVIGATION.filter((item) => staffHrefs.has(item.href))
+    }
+    if (!canManageCompanyDocuments(user?.role)) {
+      return ALL_NAVIGATION.filter((item) => item.href !== '/dashboard/documents')
+    }
+    return ALL_NAVIGATION
   }, [user])
 
   if (!user) {

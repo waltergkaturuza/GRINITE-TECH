@@ -34,7 +34,10 @@ export default function ReceiptActions({
     setIsLoading(true)
     try {
       const duplicated = await invoicesAPI.duplicateInvoice(receipt.id)
-      onEdit(duplicated)
+      const full = duplicated?.id
+        ? await invoicesAPI.getInvoice(duplicated.id).catch(() => duplicated)
+        : duplicated
+      onEdit(full)
     } catch (error) {
       console.error('Failed to duplicate receipt:', error)
       alert('Failed to duplicate receipt. Please try again.')

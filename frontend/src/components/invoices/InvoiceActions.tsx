@@ -54,8 +54,10 @@ export default function InvoiceActions({
     setIsLoading(true)
     try {
       const duplicatedInvoice = await invoicesAPI.duplicateInvoice(invoice.id)
-      // Navigate to edit the duplicated invoice
-      onEdit(duplicatedInvoice)
+      const full = duplicatedInvoice?.id
+        ? await invoicesAPI.getInvoice(duplicatedInvoice.id).catch(() => duplicatedInvoice)
+        : duplicatedInvoice
+      onEdit(full)
     } catch (error) {
       console.error('Failed to duplicate invoice:', error)
       alert('Failed to duplicate invoice. Please try again.')

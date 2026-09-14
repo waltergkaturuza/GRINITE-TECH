@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { usersAPI, invoicesAPI } from '../../lib/api'
 import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
-import { getBalanceDue, formatCurrency } from '../../lib/invoiceUtils'
+import { getBalanceDue, formatCurrency, asMoney } from '../../lib/invoiceUtils'
 
 interface ReceiptItem {
   description: string
@@ -94,7 +94,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
         setItems(
           receipt.items.map((item: any) => ({
             description: item.description || '',
-            quantity: item.quantity || 1,
+            quantity: asMoney(item.quantity) || 1,
             unit_price: Number(item.unit_price) || 0,
             discount_percent: Number(item.discount_percent) || 0,
             total_price: Number(item.total_price) || 0,
@@ -208,8 +208,8 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
   }
 
   const calculateTotals = () => {
-    const subtotal = items.reduce((sum, item) => sum + item.total_price, 0)
-    const taxAmount = (formData.tax_rate / 100) * subtotal
+    const subtotal = items.reduce((sum, item) => sum + asMoney(item.total_price), 0)
+    const taxAmount = (asMoney(formData.tax_rate) / 100) * subtotal
     return { subtotal, taxAmount, total: subtotal + taxAmount }
   }
 
@@ -489,7 +489,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
                   />
                 </div>
                 <div className="col-span-8 md:col-span-1 flex items-end">
-                  <span className="text-sm text-gray-300 pb-1.5">${item.total_price.toFixed(2)}</span>
+                  <span className="text-sm text-gray-300 pb-1.5">${asMoney(item.total_price).toFixed(2)}</span>
                 </div>
                 <div className="col-span-4 md:col-span-1 flex items-end justify-end">
                   {items.length > 1 && (
@@ -508,15 +508,15 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
         <div className="bg-granite-700/50 rounded-lg p-4 space-y-2 text-right max-w-xs ml-auto">
           <div className="flex justify-between text-gray-300">
             <span>Sub-total:</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>${asMoney(subtotal).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-gray-300">
             <span>VAT ({formData.tax_rate}%):</span>
-            <span>${taxAmount.toFixed(2)}</span>
+            <span>${asMoney(taxAmount).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-white font-bold text-lg border-t border-granite-600 pt-2">
             <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
+            <span>${asMoney(total).toFixed(2)}</span>
           </div>
         </div>
 

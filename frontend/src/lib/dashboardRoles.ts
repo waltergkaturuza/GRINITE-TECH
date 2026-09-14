@@ -7,6 +7,11 @@ export function isStaffRole(role: string | undefined): boolean {
   return normalizeDashboardRole(role) === 'staff'
 }
 
+export function canManageCompanyDocuments(role: string | undefined): boolean {
+  const r = normalizeDashboardRole(role)
+  return r === 'admin' || r === 'developer'
+}
+
 export const STAFF_ALLOWED_PATH_PREFIXES = [
   '/dashboard/requests',
   '/dashboard/products',

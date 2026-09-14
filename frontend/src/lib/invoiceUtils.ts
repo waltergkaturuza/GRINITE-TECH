@@ -1,7 +1,35 @@
 import { QUANTIS_LETTERHEAD } from './companyLetterhead'
 
-export const formatCurrency = (amount: number, currency = QUANTIS_LETTERHEAD.currency) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount)
+export function asMoney(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(n) ? n : 0
+}
+
+export function normalizeInvoice(invoice: any) {
+  if (!invoice || typeof invoice !== 'object') return invoice
+  return {
+    ...invoice,
+    tax_rate: asMoney(invoice.tax_rate),
+    discount_amount: asMoney(invoice.discount_amount),
+    subtotal: asMoney(invoice.subtotal),
+    tax_amount: asMoney(invoice.tax_amount),
+    total_amount: asMoney(invoice.total_amount),
+    amount_paid: asMoney(invoice.amount_paid),
+    items: Array.isArray(invoice.items)
+      ? invoice.items.map((item: any) => ({
+          ...item,
+          quantity: asMoney(item.quantity) || 1,
+          unit_price: asMoney(item.unit_price),
+          tax_rate: asMoney(item.tax_rate),
+          total_price: asMoney(item.total_price),
+          discount_percent: asMoney(item.discount_percent),
+        }))
+      : invoice.items,
+  }
+}
+
+export const formatCurrency = (amount: unknown, currency = QUANTIS_LETTERHEAD.currency) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(asMoney(amount))
 
 export const formatDate = (dateString?: string) => {
   if (!dateString) return '—'

@@ -140,8 +140,13 @@ export default function InvoicesPage() {
     loadStats()
   }
 
-  const handleEditInvoice = (invoice: any) => {
-    setSelectedInvoice(invoice)
+  const handleEditInvoice = async (invoice: any) => {
+    try {
+      const full = invoice?.id ? await invoicesAPI.getInvoice(invoice.id) : invoice
+      setSelectedInvoice(full)
+    } catch {
+      setSelectedInvoice(invoice)
+    }
     setShowForm(true)
   }
 

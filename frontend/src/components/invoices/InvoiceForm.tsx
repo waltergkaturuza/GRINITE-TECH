@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { usersAPI, projectsAPI } from '../../lib/api'
 import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
+import { asMoney, normalizeInvoice } from '../../lib/invoiceUtils'
 
 interface InvoiceFormProps {
   invoice?: any
@@ -85,49 +86,50 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
   // Populate form when editing existing invoice
   useEffect(() => {
     if (invoice) {
+      const inv = normalizeInvoice(invoice)
       setFormData({
-        client_id: invoice.client_id || '',
-        project_id: invoice.project_id || '',
-        issue_date: invoice.issue_date ? new Date(invoice.issue_date).toISOString().split('T')[0] : formData.issue_date,
-        due_date: invoice.due_date ? new Date(invoice.due_date).toISOString().split('T')[0] : formData.due_date,
-        payment_terms: invoice.payment_terms || 'net_30',
-        tax_rate: invoice.tax_rate || 10,
-        discount_amount: invoice.discount_amount || 0,
-        notes: invoice.notes || '',
-        terms_conditions: invoice.terms_conditions || formData.terms_conditions,
-        billing_address: invoice.billing_address || '',
-        billing_email: invoice.billing_email || '',
-        billing_phone: invoice.billing_phone || '',
-        company_name: invoice.company_name || QUANTIS_LETTERHEAD.company_name,
-        company_logo_url: invoice.company_logo_url || QUANTIS_LETTERHEAD.company_logo_url,
-        company_address: invoice.company_address || QUANTIS_LETTERHEAD.company_address,
-        company_email: invoice.company_email || QUANTIS_LETTERHEAD.company_email,
-        company_phone: invoice.company_phone || QUANTIS_LETTERHEAD.company_phone,
-        company_website: invoice.company_website || QUANTIS_LETTERHEAD.company_website,
-        company_code: invoice.company_code || '',
-        company_vat_code: invoice.company_vat_code || '',
-        company_bank_name: invoice.company_bank_name || QUANTIS_LETTERHEAD.company_bank_name,
-        company_bank_branch: invoice.company_bank_branch || QUANTIS_LETTERHEAD.company_bank_branch,
-        company_account_name: invoice.company_account_name || QUANTIS_LETTERHEAD.company_account_name,
-        company_usd_account: invoice.company_usd_account || QUANTIS_LETTERHEAD.company_usd_account,
-        company_zig_account: invoice.company_zig_account || QUANTIS_LETTERHEAD.company_zig_account,
-        company_swift: invoice.company_swift || '',
-        company_iban: invoice.company_iban || '',
-        buyer_company_code: invoice.buyer_company_code || '',
-        buyer_vat_code: invoice.buyer_vat_code || '',
-        buyer_bank_name: invoice.buyer_bank_name || '',
-        buyer_swift: invoice.buyer_swift || '',
-        buyer_iban: invoice.buyer_iban || '',
+        client_id: inv.client_id || '',
+        project_id: inv.project_id || '',
+        issue_date: inv.issue_date ? new Date(inv.issue_date).toISOString().split('T')[0] : formData.issue_date,
+        due_date: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : formData.due_date,
+        payment_terms: inv.payment_terms || 'net_30',
+        tax_rate: asMoney(inv.tax_rate) || 10,
+        discount_amount: asMoney(inv.discount_amount),
+        notes: inv.notes || '',
+        terms_conditions: inv.terms_conditions || formData.terms_conditions,
+        billing_address: inv.billing_address || '',
+        billing_email: inv.billing_email || '',
+        billing_phone: inv.billing_phone || '',
+        company_name: inv.company_name || QUANTIS_LETTERHEAD.company_name,
+        company_logo_url: inv.company_logo_url || QUANTIS_LETTERHEAD.company_logo_url,
+        company_address: inv.company_address || QUANTIS_LETTERHEAD.company_address,
+        company_email: inv.company_email || QUANTIS_LETTERHEAD.company_email,
+        company_phone: inv.company_phone || QUANTIS_LETTERHEAD.company_phone,
+        company_website: inv.company_website || QUANTIS_LETTERHEAD.company_website,
+        company_code: inv.company_code || '',
+        company_vat_code: inv.company_vat_code || '',
+        company_bank_name: inv.company_bank_name || QUANTIS_LETTERHEAD.company_bank_name,
+        company_bank_branch: inv.company_bank_branch || QUANTIS_LETTERHEAD.company_bank_branch,
+        company_account_name: inv.company_account_name || QUANTIS_LETTERHEAD.company_account_name,
+        company_usd_account: inv.company_usd_account || QUANTIS_LETTERHEAD.company_usd_account,
+        company_zig_account: inv.company_zig_account || QUANTIS_LETTERHEAD.company_zig_account,
+        company_swift: inv.company_swift || '',
+        company_iban: inv.company_iban || '',
+        buyer_company_code: inv.buyer_company_code || '',
+        buyer_vat_code: inv.buyer_vat_code || '',
+        buyer_bank_name: inv.buyer_bank_name || '',
+        buyer_swift: inv.buyer_swift || '',
+        buyer_iban: inv.buyer_iban || '',
       })
       
-      if (invoice.items && invoice.items.length > 0) {
-        setItems(invoice.items.map((item: any) => ({
+      if (inv.items && inv.items.length > 0) {
+        setItems(inv.items.map((item: any) => ({
           description: item.description || '',
           unit: item.unit || 'ea',
-          quantity: item.quantity || 1,
-          unit_price: item.unit_price || 0,
-          tax_rate: item.tax_rate || 10,
-          total_price: item.total_price || 0
+          quantity: asMoney(item.quantity) || 1,
+          unit_price: asMoney(item.unit_price),
+          tax_rate: asMoney(item.tax_rate) || 10,
+          total_price: asMoney(item.total_price),
         })))
       }
     }
@@ -154,7 +156,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
   }
 
   const calculateItemTotal = (quantity: number, unitPrice: number) => {
-    return quantity * unitPrice
+    return asMoney(quantity) * asMoney(unitPrice)
   }
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: any) => {
@@ -190,14 +192,14 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
   }
 
   const calculateTotals = () => {
-    const subtotal = items.reduce((sum, item) => sum + item.total_price, 0)
-    const taxAmount = (formData.tax_rate / 100) * subtotal
-    const total = subtotal + taxAmount - formData.discount_amount
-    
+    const subtotal = items.reduce((sum, item) => sum + asMoney(item.total_price), 0)
+    const taxAmount = (asMoney(formData.tax_rate) / 100) * subtotal
+    const total = subtotal + taxAmount - asMoney(formData.discount_amount)
+
     return {
       subtotal: subtotal.toFixed(2),
       taxAmount: taxAmount.toFixed(2),
-      total: total.toFixed(2)
+      total: total.toFixed(2),
     }
   }
 
@@ -475,7 +477,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
                     Total
                   </label>
                   <div className="px-2 py-1 bg-granite-600 border border-granite-500 rounded text-white text-sm font-medium">
-                    ${item.total_price.toFixed(2)}
+                    ${asMoney(item.total_price).toFixed(2)}
                   </div>
                 </div>
 
@@ -527,7 +529,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
               {formData.discount_amount > 0 && (
                 <div className="flex justify-between text-gray-300">
                   <span>Discount:</span>
-                  <span>-${formData.discount_amount.toFixed(2)}</span>
+                  <span>-${asMoney(formData.discount_amount).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-white font-bold text-lg border-t border-granite-600 pt-2">

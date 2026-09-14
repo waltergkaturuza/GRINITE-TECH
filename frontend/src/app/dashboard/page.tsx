@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { 
   BriefcaseIcon,
   DocumentIcon,
@@ -13,9 +14,11 @@ import {
   ExclamationTriangleIcon,
   ArrowTopRightOnSquareIcon,
   PlusIcon,
-  ArrowDownTrayIcon
+  FolderIcon
 } from '@heroicons/react/24/outline'
 import { projectsAPI, authAPI, dashboardAPI } from '../../lib/api'
+import DocumentManager from '@/components/DocumentManager'
+import { canManageCompanyDocuments } from '@/lib/dashboardRoles'
 
 interface Project {
   id: string
@@ -78,11 +81,6 @@ export default function DashboardPage() {
     } else if (action === 'edit') {
       router.push(`/dashboard/projects?id=${projectId}&action=edit`)
     }
-  }
-
-  const handleUploadFiles = () => {
-    // Placeholder for file upload functionality
-    alert('File upload functionality will be implemented soon!')
   }
 
   const handleContactTeam = () => {
@@ -422,7 +420,7 @@ export default function DashboardPage() {
                   <nav className="-mb-px flex space-x-8">
                     {[
                       { id: 'overview', name: 'Overview', icon: DocumentIcon },
-                      { id: 'files', name: 'Files', icon: DocumentIcon },
+                      { id: 'files', name: 'Files', icon: FolderIcon },
                       { id: 'messages', name: 'Messages', icon: ChatBubbleLeftRightIcon },
                       { id: 'settings', name: 'Settings', icon: CogIcon }
                     ].map((tab) => (
@@ -502,21 +500,30 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  {activeTab === 'files' && (
+                  {activeTab === 'files' && selectedProject && (
                     <div>
-                      <h3 className="font-semibold text-granite-800 mb-4">Project Files</h3>
-                      
-                      <div className="bg-gradient-to-r from-granite-50 to-granite-100 border border-granite-200 rounded-lg p-6 text-center">
-                        <DocumentIcon className="h-12 w-12 text-granite-400 mx-auto mb-4" />
-                        <p className="text-granite-600 mb-4">File management coming soon!</p>
-                        <button 
-                          onClick={handleUploadFiles}
-                          className="bg-crimson-600 hover:bg-crimson-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
-                        >
-                          <ArrowDownTrayIcon className="h-4 w-4 inline mr-2" />
-                          Upload Files
-                        </button>
+                      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <h3 className="font-semibold text-granite-800">Project Files</h3>
+                          <p className="text-sm text-granite-500">
+                            Store specs, designs, deliverables, contracts, and correspondence for this project.
+                          </p>
+                        </div>
+                        {canManageCompanyDocuments(user?.role) && (
+                          <Link
+                            href="/dashboard/documents"
+                            className="text-sm font-medium text-crimson-700 hover:text-crimson-800"
+                          >
+                            Company documents →
+                          </Link>
+                        )}
                       </div>
+                      <DocumentManager
+                        scope="project"
+                        projectId={selectedProject.id}
+                        projectName={selectedProject.title}
+                        tone="light"
+                      />
                     </div>
                   )}
 

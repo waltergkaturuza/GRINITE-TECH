@@ -10,13 +10,44 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-powerpoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.oasis.opendocument.spreadsheet',
   'image/jpeg',
   'image/png',
   'image/gif',
   'image/webp',
   'text/plain',
   'text/csv',
+  'application/zip',
+  'application/x-zip-compressed',
 ]
+const ALLOWED_EXTENSIONS = [
+  '.pdf',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.ppt',
+  '.pptx',
+  '.odt',
+  '.ods',
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.webp',
+  '.txt',
+  '.csv',
+  '.zip',
+]
+
+function isAllowedFile(contentType: string, pathname: string) {
+  const ext = pathname.toLowerCase().slice(pathname.lastIndexOf('.'))
+  if (ALLOWED_EXTENSIONS.includes(ext)) return true
+  if (contentType.startsWith('image/')) return true
+  if (ALLOWED_TYPES.includes(contentType)) return true
+  return false
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,7 +67,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (contentType && !ALLOWED_TYPES.includes(contentType) && !contentType.startsWith('image/')) {
+    if (!isAllowedFile(contentType, pathname)) {
       return NextResponse.json({ error: 'File type not allowed' }, { status: 400 })
     }
 
