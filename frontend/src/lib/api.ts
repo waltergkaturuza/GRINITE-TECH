@@ -564,7 +564,7 @@ export const invoicesAPI = {
     return response.data
   },
   updateInvoiceStatus: async (id: number, statusData: {
-    status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+    status: 'draft' | 'sent' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled'
     payment_date?: string
     payment_method?: string
     payment_reference?: string

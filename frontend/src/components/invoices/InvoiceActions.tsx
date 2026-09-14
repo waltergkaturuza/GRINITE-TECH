@@ -9,8 +9,6 @@ import {
   PaperAirplaneIcon,
   DocumentDuplicateIcon,
   CheckCircleIcon,
-  ClockIcon,
-  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import { invoicesAPI } from '../../lib/api'
 
@@ -87,6 +85,23 @@ export default function InvoiceActions({
     onDownloadPDF ? onDownloadPDF(invoice) : onView(invoice)
   }
 
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === invoice.status) return
+    setIsLoading(true)
+    try {
+      await invoicesAPI.updateInvoiceStatus(invoice.id, {
+        status: newStatus as any,
+        payment_date: newStatus === 'paid' ? new Date().toISOString() : undefined,
+      })
+      onStatusUpdate(invoice.id, newStatus)
+    } catch (error) {
+      console.error('Failed to update invoice status:', error)
+      alert('Failed to update invoice status. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'partially_paid':
@@ -114,12 +129,20 @@ export default function InvoiceActions({
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       {/* Status Badge */}
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(invoice.status)}`}>
-        {invoice.status === 'paid' && <CheckCircleIcon className="w-3 h-3 mr-1" />}
-        {invoice.status === 'sent' && <ClockIcon className="w-3 h-3 mr-1" />}
-        {invoice.status === 'overdue' && <ExclamationTriangleIcon className="w-3 h-3 mr-1" />}
-        {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-      </span>
+      <select
+        value={invoice.status}
+        onChange={(e) => handleStatusChange(e.target.value)}
+        disabled={isLoading}
+        className={`inline-flex items-center max-w-[9.5rem] px-2 py-1 rounded-full text-xs font-medium border cursor-pointer ${getStatusColor(invoice.status)}`}
+        title="Change invoice status"
+      >
+        <option value="draft">Draft</option>
+        <option value="sent">Sent</option>
+        <option value="partially_paid">Partially paid</option>
+        <option value="paid">Paid</option>
+        <option value="overdue">Overdue</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
 
       {/* Action Buttons */}
       <div className="flex items-center space-x-1">
