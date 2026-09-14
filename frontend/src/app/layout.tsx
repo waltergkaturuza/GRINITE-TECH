@@ -86,11 +86,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" translate="no" suppressHydrationWarning>
       <head>
+        <meta name="google" content="notranslate" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('qt_theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('qt_theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}var lang=localStorage.getItem('qt_lang');if(!lang||lang==='en'){var host=location.hostname;var expire='Thu, 01 Jan 1970 00:00:00 GMT';var domains=['',host,'.'+host];var parts=host.split('.');if(parts.length>=2)domains.push('.'+parts.slice(-2).join('.'));for(var i=0;i<domains.length;i++){var extra=domains[i]?';domain='+domains[i]:'';document.cookie='googtrans=;path=/'+extra+';expires='+expire;document.cookie='googtrans=/en/en;path=/'+extra;}document.documentElement.lang='en';document.documentElement.setAttribute('translate','no');document.documentElement.classList.remove('translated-ltr','translated-rtl');}else{document.documentElement.setAttribute('translate','yes');}}catch(e){}})();`,
           }}
         />
       </head>

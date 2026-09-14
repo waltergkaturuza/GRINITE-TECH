@@ -22,17 +22,19 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const stored = window.localStorage.getItem('qt_lang')
-    if (isLang(stored)) {
+    if (isLang(stored) && stored !== 'en') {
       setLangState(stored)
-      document.documentElement.lang = stored
+      document.documentElement.lang = stored === 'zh' ? 'zh-CN' : stored
+      return
     }
+    document.documentElement.lang = 'en'
   }, [])
 
   const setLang = (next: Lang) => {
     setLangState(next)
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('qt_lang', next)
-      document.documentElement.lang = next
+      document.documentElement.lang = next === 'zh' ? 'zh-CN' : next
     }
   }
 

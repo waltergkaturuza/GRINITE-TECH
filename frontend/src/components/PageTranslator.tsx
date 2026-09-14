@@ -31,15 +31,29 @@ declare global {
   }
 }
 
-function setTranslateCookie(googleLang: string) {
-  const value = googleLang === 'en' ? '/en/en' : `/en/${googleLang}`
-  document.cookie = `googtrans=${value};path=/`
-  document.cookie = `googtrans=${value};path=/;domain=${window.location.hostname}`
+function cookieDomains() {
+  const host = window.location.hostname
+  const domains = ['', host, `.${host}`]
+  const parts = host.split('.')
+  if (parts.length >= 2) domains.push(`.${parts.slice(-2).join('.')}`)
+  return Array.from(new Set(domains))
 }
 
-function clearTranslateCookie() {
-  document.cookie = 'googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT'
-  document.cookie = `googtrans=;path=/;domain=${window.location.hostname};expires=Thu, 01 Jan 1970 00:00:00 GMT`
+function writeGoogtrans(value: string | null) {
+  const expire = 'Thu, 01 Jan 1970 00:00:00 GMT'
+  for (const domain of cookieDomains()) {
+    const extra = domain ? `;domain=${domain}` : ''
+    if (value) {
+      document.cookie = `googtrans=${value};path=/${extra}`
+    } else {
+      document.cookie = `googtrans=;path=/${extra};expires=${expire}`
+    }
+  }
+}
+
+function pinEnglishCookie() {
+  writeGoogtrans(null)
+  writeGoogtrans('/en/en')
 }
 
 function comboSelect(): HTMLSelectElement | null {
@@ -49,24 +63,28 @@ function comboSelect(): HTMLSelectElement | null {
 function applyGoogleLanguage(googleLang: string) {
   const combo = comboSelect()
   if (!combo) return false
-  if (combo.value === googleLang) {
-    combo.dispatchEvent(new Event('change'))
-    return true
-  }
-  combo.value = googleLang
+  if (combo.value !== googleLang) combo.value = googleLang
   combo.dispatchEvent(new Event('change'))
   return true
+}
+
+function pageIsTranslated() {
+  return (
+    document.documentElement.classList.contains('translated-ltr') ||
+    document.documentElement.classList.contains('translated-rtl') ||
+    !!document.querySelector('iframe.skiptranslate')
+  )
 }
 
 export default function PageTranslator() {
   const { lang } = useLanguage()
   const pathname = usePathname()
-  const readyRef = useRef(false)
   const langRef = useRef(lang)
+  const wantsTranslate = lang !== 'en'
 
   langRef.current = lang
 
-  useEffect(() => {
+  if (typeof window !== 'undefined' && wantsTranslate) {
     window.googleTranslateElementInit = () => {
       if (!window.google?.translate?.TranslateElement) return
       const host = document.getElementById('google_translate_element')
@@ -80,19 +98,42 @@ export default function PageTranslator() {
         },
         'google_translate_element',
       )
-      readyRef.current = true
-      const target = GOOGLE_LANG[langRef.current]
-      window.setTimeout(() => applyGoogleLanguage(target), 250)
+      window.setTimeout(() => applyGoogleLanguage(GOOGLE_LANG[langRef.current]), 250)
     }
-  }, [])
+  }
 
   useEffect(() => {
-    const target = GOOGLE_LANG[lang]
-    if (target === 'en') {
-      clearTranslateCookie()
-    } else {
-      setTranslateCookie(target)
+    if (wantsTranslate) {
+      document.documentElement.setAttribute('translate', 'yes')
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang
+      document.querySelectorAll('meta[name="google"]').forEach((node) => {
+        if (node.getAttribute('content') === 'notranslate') node.remove()
+      })
+      return
     }
+
+    document.documentElement.setAttribute('translate', 'no')
+    document.documentElement.lang = 'en'
+    pinEnglishCookie()
+    if (!document.querySelector('meta[name="google"][content="notranslate"]')) {
+      const meta = document.createElement('meta')
+      meta.name = 'google'
+      meta.content = 'notranslate'
+      document.head.appendChild(meta)
+    }
+
+    if (pageIsTranslated() && sessionStorage.getItem('qt_en_reload') !== '1') {
+      sessionStorage.setItem('qt_en_reload', '1')
+      window.location.reload()
+      return
+    }
+    sessionStorage.removeItem('qt_en_reload')
+  }, [wantsTranslate, lang])
+
+  useEffect(() => {
+    if (!wantsTranslate) return
+    const target = GOOGLE_LANG[lang]
+    writeGoogtrans(`/en/${target}`)
 
     let tries = 0
     const tick = () => {
@@ -101,7 +142,9 @@ export default function PageTranslator() {
       window.setTimeout(tick, 250)
     }
     tick()
-  }, [lang, pathname])
+  }, [lang, pathname, wantsTranslate])
+
+  if (!wantsTranslate) return null
 
   return (
     <>
