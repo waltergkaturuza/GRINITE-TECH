@@ -16,6 +16,7 @@ import { requestsAPI, type BlobDocument } from '@/lib/api'
 import BlobFileUpload from '@/components/BlobFileUpload'
 import { trackEvent, trackPageView } from '@/lib/analytics'
 import { COMPANY_CONTACT } from '@/constants/company'
+import PageBackdrop from '@/components/PageBackdrop'
 import TrackRequestPanel from '@/components/TrackRequestPanel'
 import { warmupBackend, isNetworkOrTimeoutError, BACKEND_WARMUP_MESSAGE, SUBMIT_TIMEOUT_MESSAGE } from '@/lib/warmupBackend'
 
@@ -33,15 +34,7 @@ const services = [
 function ContactShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/wp4004960-engineer-wallpapers.jpg')" }}
-        aria-hidden
-      />
-      <div
-        className="absolute inset-0 bg-gradient-to-br from-granite-900/85 via-granite-800/75 to-crimson-950/80"
-        aria-hidden
-      />
+      <PageBackdrop src="/wp4004960-engineer-wallpapers.jpg" priority />
       <div className="relative z-10 pt-24 pb-16">{children}</div>
     </div>
   )

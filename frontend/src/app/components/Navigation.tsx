@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { Bars3Icon, XMarkIcon, UserIcon, MagnifyingGlassIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 import LoginModal from '@/components/LoginModal'
 import SignupModal from '@/components/SignupModal'
@@ -41,7 +41,7 @@ function ThemeToggle() {
       aria-pressed={isDark}
     >
       {isDark ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
-      <span className="hidden sm:inline">{isDark ? 'Dark' : 'Light'}</span>
+      <span className="hidden xl:inline">{isDark ? 'Dark' : 'Light'}</span>
     </button>
   )
 }
@@ -64,45 +64,26 @@ function LanguageMenu() {
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [isLangOpen])
 
-  const pill = (code: Lang, label: string) => (
-    <button
-      key={code}
-      type="button"
-      onClick={() => setLang(code)}
-      className={`px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors ${
-        lang === code
-          ? 'bg-emerald-800 text-white'
-          : 'bg-white text-emerald-800 hover:bg-emerald-50'
-      }`}
-    >
-      {label}
-    </button>
-  )
-
   const current = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0]
 
   return (
-    <div className="relative overflow-visible" ref={langMenuRef}>
-      <div className="flex items-stretch overflow-hidden rounded-md border border-emerald-800/30">
-        {pill('en', 'EN')}
-        {pill('fr', 'FR')}
-        {lang !== 'en' && lang !== 'fr' && (
-          <span className="bg-emerald-800 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white">
-            {current.label}
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={() => setIsLangOpen((v) => !v)}
-          className="border-l border-emerald-800/30 bg-white px-2 text-emerald-800 hover:bg-emerald-50"
-          aria-label="All languages"
-          aria-expanded={isLangOpen}
-        >
+    <div className="relative overflow-visible notranslate" ref={langMenuRef} translate="no">
+      <button
+        type="button"
+        onClick={() => setIsLangOpen((v) => !v)}
+        className="inline-flex items-stretch overflow-hidden rounded-md border border-emerald-800/30"
+        aria-label={`Language: ${current.name}`}
+        aria-expanded={isLangOpen}
+      >
+        <span className="bg-emerald-800 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white">
+          {current.label}
+        </span>
+        <span className="inline-flex items-center bg-white px-2 text-emerald-800 hover:bg-emerald-50">
           <svg className={`h-3 w-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="none">
             <path d="M5.5 7.5L10 12L14.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-        </button>
-      </div>
+        </span>
+      </button>
       {isLangOpen && (
         <div className="absolute right-0 top-full mt-2 w-60 rounded-xl border border-granite-200 bg-white py-2 shadow-xl z-[70]">
           <p className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
@@ -133,6 +114,33 @@ function LanguageMenu() {
   )
 }
 
+function GrooveChevron({ open = false }: { open?: boolean }) {
+  return (
+    <svg
+      className={`mt-0.5 h-3 w-3 text-slate-700 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M5.5 7.5L10 12L14.5 7.5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function grooveItemClass(active: boolean) {
+  return `flex w-full flex-col items-start gap-0.5 px-5 py-3.5 text-left text-[13px] font-semibold uppercase tracking-[0.16em] text-slate-800 ${
+    active
+      ? 'rounded-[1.15rem] border border-sky-100 bg-sky-100 shadow-[inset_0_1px_3px_rgba(15,23,42,0.05)]'
+      : 'rounded-[1.15rem] border border-white bg-slate-100 shadow-[inset_0_2px_6px_rgba(15,23,42,0.07),0_1px_0_rgba(255,255,255,0.95)]'
+  }`
+}
+
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -141,15 +149,21 @@ export default function Navigation() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isServicesOpen, setIsServicesOpen] = useState(false)
   const [isPortfolioOpen, setIsPortfolioOpen] = useState(false)
+  const [mobileAccordion, setMobileAccordion] = useState<'services' | 'portfolio' | null>(null)
   const { lang, setLang } = useLanguage()
   const servicesMenuRef = useRef<HTMLDivElement>(null)
   const portfolioMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const token = localStorage.getItem('token')
     setIsLoggedIn(!!token)
   }, [])
+
+  useEffect(() => {
+    if (!isMenuOpen) setMobileAccordion(null)
+  }, [isMenuOpen])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -206,10 +220,9 @@ export default function Navigation() {
   }
 
   const linkClass =
-    'text-sm font-medium text-emerald-800 hover:text-emerald-950 transition-colors duration-200'
-  const mobileLinkClass =
-    'block px-3 py-2 text-emerald-800 hover:text-emerald-950'
-  const dropdownItemClass = 'block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50'
+    'whitespace-nowrap text-xs xl:text-sm font-medium text-emerald-800 hover:text-emerald-950 transition-colors duration-200'
+  const dropdownItemClass =
+    'block rounded-xl border border-white bg-slate-100 px-4 py-2.5 text-sm text-slate-800 shadow-[inset_0_1px_3px_rgba(15,23,42,0.06)] hover:bg-sky-50'
   const portfolioSections = [
     { href: '/portfolio#technical-skills', id: 'technical-skills', key: 'nav.portfolio.skills' },
     { href: '/portfolio#featured-work', id: 'featured-work', key: 'nav.portfolio.featured' },
@@ -230,16 +243,16 @@ export default function Navigation() {
       <div className="w-full px-4 sm:px-6 lg:px-8 overflow-visible">
         <div className="flex items-center h-16 gap-3 overflow-visible">
           {/* Far left: cropped wordmark at bar height, not a taller bar */}
-          <Link href="/" className="flex items-center shrink-0 h-16 py-1.5">
+          <Link href="/" className="flex items-center shrink-0 h-16 py-1.5 max-w-[9.75rem] lg:max-w-[11.5rem] xl:max-w-[13.5rem]">
             <img
               src={QUANTIS_LOGO_URL}
               alt="Quantis Technologies logo"
-              className="h-full w-auto object-contain object-left"
+              className="h-full w-auto max-w-full object-contain object-left"
             />
           </Link>
 
-          {/* Center: About and other links */}
-          <div className="hidden md:flex flex-1 items-center justify-center gap-6 lg:gap-8 min-w-0">
+          {/* Center: desktop links from lg (1024+) so iPad portrait uses the menu */}
+          <div className="hidden lg:flex flex-1 items-center justify-center gap-3 xl:gap-7 min-w-0">
             <Link href="/" className={linkClass}>
               {t(lang, 'nav.home')}
             </Link>
@@ -259,46 +272,45 @@ export default function Navigation() {
                 </svg>
               </button>
               {isServicesOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl shadow-lg bg-white border border-granite-200 py-2 z-50">
+                <div className="absolute left-1/2 z-50 mt-2 w-64 -translate-x-1/2 space-y-1.5 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
                   <Link
                     href="/services"
-                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
+                    className={dropdownItemClass}
                     onClick={() => setIsServicesOpen(false)}
                   >
                     {t(lang, 'nav.services')}
                   </Link>
-                  <div className="my-1 h-px bg-granite-200" />
                   <Link
                     href="/services/custom-software"
-                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
+                    className={dropdownItemClass}
                     onClick={() => setIsServicesOpen(false)}
                   >
                     Custom software
                   </Link>
                   <Link
                     href="/services/fuel-management-system-africa"
-                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
+                    className={dropdownItemClass}
                     onClick={() => setIsServicesOpen(false)}
                   >
                     Fuel management systems
                   </Link>
                   <Link
                     href="/services/mobile-apps"
-                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
+                    className={dropdownItemClass}
                     onClick={() => setIsServicesOpen(false)}
                   >
                     Mobile apps
                   </Link>
                   <Link
                     href="/services/business-automation"
-                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
+                    className={dropdownItemClass}
                     onClick={() => setIsServicesOpen(false)}
                   >
                     Business automation
                   </Link>
                   <Link
                     href="/services/ecommerce"
-                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
+                    className={dropdownItemClass}
                     onClick={() => setIsServicesOpen(false)}
                   >
                     E‑commerce & digital products
@@ -328,7 +340,7 @@ export default function Navigation() {
                 </svg>
               </button>
               {isPortfolioOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl shadow-lg bg-white border border-granite-200 py-2 z-50">
+                <div className="absolute left-1/2 z-50 mt-2 w-64 -translate-x-1/2 space-y-1.5 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
                   {portfolioSections.map((item) => (
                     <Link
                       key={item.id}
@@ -362,7 +374,7 @@ export default function Navigation() {
           </div>
 
           {/* Far right: search, theme, language */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto notranslate" translate="no">
             <button
               onClick={() => setIsSearchOpen(true)}
               className="inline-flex items-center justify-center h-9 w-9 rounded-md text-emerald-800 hover:bg-emerald-50"
@@ -374,7 +386,7 @@ export default function Navigation() {
             <LanguageMenu />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden text-emerald-800 hover:text-emerald-950 p-1"
+              className="lg:hidden text-emerald-800 hover:text-emerald-950 p-1"
               aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {isMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
@@ -383,89 +395,180 @@ export default function Navigation() {
         </div>
 
         {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 border-t border-granite-200 bg-white">
-              <Link href="/" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                {t(lang, 'nav.home')}
-              </Link>
-              <Link href="/services" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                {t(lang, 'nav.services')}
-              </Link>
-              <Link href="/products" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                {t(lang, 'nav.products')}
-              </Link>
-              <Link href="/news" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                {t(lang, 'nav.news')}
-              </Link>
-              <div className="pt-1">
-                <Link href="/portfolio" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                  {t(lang, 'nav.portfolio')}
-                </Link>
-                <div className="ml-3 border-l border-granite-200">
-                  {portfolioSections.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      className={mobileLinkClass}
-                      onClick={() => goToPortfolioSection(item.id)}
-                    >
-                      {t(lang, item.key)}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              <Link href="/about" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                {t(lang, 'nav.about')}
-              </Link>
-              <Link href="/contact" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                {t(lang, 'nav.contact')}
-              </Link>
-              {isLoggedIn ? (
-                <>
-                  <Link href="/dashboard" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout()
-                      setIsMenuOpen(false)
-                    }}
-                    className="block w-full text-left mx-3 px-3 py-2.5 bg-crimson-900 text-white rounded-lg font-medium"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={openSignupModal}
-                  className="block px-3 py-2 bg-emerald-900 text-white rounded-lg font-medium mx-3"
-                >
-                  Get Started
-                </button>
-              )}
-              <div className="px-3 pt-3 pb-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 mb-2">
-                  Language
+          <div className="lg:hidden">
+            <div className="border-t border-slate-200 bg-white px-4 pb-5 pt-3">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-800">
+                  Menu
                 </p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {LANGUAGES.map((item) => (
+                <button
+                  type="button"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-700 hover:bg-slate-50"
+                  aria-label="Close menu"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-2.5">
+                <Link
+                  href="/"
+                  className={grooveItemClass(pathname === '/')}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t(lang, 'nav.home')}
+                </Link>
+
+                <div>
+                  <button
+                    type="button"
+                    className={grooveItemClass(pathname.startsWith('/services'))}
+                    aria-expanded={mobileAccordion === 'services'}
+                    onClick={() =>
+                      setMobileAccordion((current) => (current === 'services' ? null : 'services'))
+                    }
+                  >
+                    {t(lang, 'nav.services')}
+                    <GrooveChevron open={mobileAccordion === 'services'} />
+                  </button>
+                  {mobileAccordion === 'services' && (
+                    <div className="mt-1.5 space-y-1.5 pl-2">
+                      {[
+                        { href: '/services', label: t(lang, 'nav.services') },
+                        { href: '/services/custom-software', label: 'Custom software' },
+                        { href: '/services/fuel-management-system-africa', label: 'Fuel management systems' },
+                        { href: '/services/mobile-apps', label: 'Mobile apps' },
+                        { href: '/services/business-automation', label: 'Business automation' },
+                        { href: '/services/ecommerce', label: 'E‑commerce & digital products' },
+                      ].map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className="block w-full rounded-xl border border-white bg-slate-50 px-4 py-2.5 text-sm text-slate-700 shadow-[inset_0_1px_3px_rgba(15,23,42,0.05)]"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Link
+                  href="/products"
+                  className={grooveItemClass(pathname.startsWith('/products'))}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t(lang, 'nav.products')}
+                </Link>
+
+                <Link
+                  href="/news"
+                  className={grooveItemClass(pathname.startsWith('/news'))}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t(lang, 'nav.news')}
+                </Link>
+
+                <div>
+                  <button
+                    type="button"
+                    className={grooveItemClass(pathname.startsWith('/portfolio'))}
+                    aria-expanded={mobileAccordion === 'portfolio'}
+                    onClick={() =>
+                      setMobileAccordion((current) => (current === 'portfolio' ? null : 'portfolio'))
+                    }
+                  >
+                    {t(lang, 'nav.portfolio')}
+                    <GrooveChevron open={mobileAccordion === 'portfolio'} />
+                  </button>
+                  {mobileAccordion === 'portfolio' && (
+                    <div className="mt-1.5 space-y-1.5 pl-2">
+                      {portfolioSections.map((item) => (
+                        <Link
+                          key={item.id}
+                          href={item.href}
+                          className="block w-full rounded-xl border border-white bg-slate-50 px-4 py-2.5 text-sm text-slate-700 shadow-[inset_0_1px_3px_rgba(15,23,42,0.05)]"
+                          onClick={() => goToPortfolioSection(item.id)}
+                        >
+                          {t(lang, item.key)}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Link
+                  href="/about"
+                  className={grooveItemClass(pathname.startsWith('/about'))}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t(lang, 'nav.about')}
+                </Link>
+
+                <Link
+                  href="/contact"
+                  className={grooveItemClass(pathname.startsWith('/contact'))}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t(lang, 'nav.contact')}
+                </Link>
+
+                {isLoggedIn ? (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className={grooveItemClass(pathname.startsWith('/dashboard'))}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
                     <button
-                      key={item.code}
                       type="button"
                       onClick={() => {
-                        setLang(item.code)
+                        handleLogout()
                         setIsMenuOpen(false)
                       }}
-                      className={`rounded-md border px-2 py-1.5 text-left text-xs ${
-                        lang === item.code
-                          ? 'border-emerald-800 bg-emerald-800 text-white'
-                          : 'border-emerald-800/20 bg-white text-emerald-900'
-                      }`}
+                      className={`${grooveItemClass(false)} !bg-crimson-900 !text-white !border-crimson-800`}
                     >
-                      <span className="font-bold">{item.label}</span>
-                      <span className="ml-1.5 opacity-80">{item.name}</span>
+                      Logout
                     </button>
-                  ))}
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openSignupModal}
+                    className={`${grooveItemClass(false)} !bg-emerald-800 !text-white !border-emerald-700`}
+                  >
+                    Get Started
+                  </button>
+                )}
+
+                <div className="rounded-[1.15rem] border border-white bg-slate-100 px-4 py-3 shadow-[inset_0_2px_6px_rgba(15,23,42,0.07)]">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+                    Language
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {LANGUAGES.map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => {
+                          setLang(item.code)
+                          setIsMenuOpen(false)
+                        }}
+                        className={`rounded-lg border px-2 py-1.5 text-left text-xs ${
+                          lang === item.code
+                            ? 'border-emerald-800 bg-emerald-800 text-white'
+                            : 'border-white bg-white text-slate-800'
+                        }`}
+                      >
+                        <span className="font-bold">{item.label}</span>
+                        <span className="ml-1.5 opacity-80">{item.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

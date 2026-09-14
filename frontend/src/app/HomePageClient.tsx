@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { trackPageView } from '@/lib/analytics'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
+import PageBackdrop from '@/components/PageBackdrop'
 import SiteFooter from '@/components/SiteFooter'
 import CapabilitiesSlider from '@/components/CapabilitiesSlider'
 import { QUANTIS_LOGO_URL } from '@/constants/company'
@@ -23,12 +24,7 @@ export default function HomePageClient() {
 
       {/* Hero Section */}
       <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/wp4004960-engineer-wallpapers.jpg')" }}
-          aria-hidden
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-granite-900/85 via-granite-800/75 to-crimson-950/80" aria-hidden />
+        <PageBackdrop src="/wp4004960-engineer-wallpapers.jpg" priority />
 
         <div className="wide-container px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)] gap-6 lg:gap-8 xl:gap-10 items-center">

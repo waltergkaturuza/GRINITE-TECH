@@ -95,17 +95,17 @@ export default function ValuesTypingCards({ values }: { values: readonly ValueCa
         return (
           <div
             key={value.title}
-            className={`text-center bg-gradient-to-br from-granite-50 to-white p-8 rounded-2xl border transition-all duration-300 ${
+            className={`text-center bg-[#f7faf8] p-6 sm:p-8 rounded-2xl border transition-all duration-300 ${
               showPen
-                ? 'border-jungle-500 shadow-lg'
+                ? 'border-jungle-600 shadow-lg'
                 : 'border-granite-200 hover:shadow-lg'
             }`}
           >
-            <h3 className="text-xl font-bold text-jungle-700 dark:text-jungle-400 mb-4">
+            <h3 className="text-xl font-bold text-jungle-900 mb-4">
               {value.title}
             </h3>
             <p
-              className="text-jungle-700 dark:text-jungle-300 leading-relaxed min-h-[6.5em]"
+              className="text-jungle-800 leading-relaxed min-h-[5em] font-medium"
               aria-label={value.description}
             >
               <span aria-hidden>{shown}</span>

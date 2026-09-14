@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { insightsAPI } from '@/lib/api'
 import NewsSubscribeForm from '@/components/NewsSubscribeForm'
+import PageBackdrop from '@/components/PageBackdrop'
 import { warmupBackend } from '@/lib/warmupBackend'
 import { QUANTIS_LOGO_URL } from '@/constants/company'
 import {
@@ -102,15 +103,7 @@ export default function NewsHub() {
   return (
     <>
       <section className="relative overflow-hidden bg-granite-900 text-white">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/wallpaper.jpg')" }}
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-granite-900/85 via-granite-800/75 to-crimson-950/80"
-          aria-hidden
-        />
+        <PageBackdrop src="/wallpaper.jpg" priority />
         <div className="relative wide-container px-4 sm:px-6 lg:px-8 pt-24 pb-16">
           <p className="text-yellow-900 font-semibold tracking-[0.2em] uppercase text-xs mb-6">
             Quantis Insights

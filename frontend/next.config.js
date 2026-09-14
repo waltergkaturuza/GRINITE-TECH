@@ -15,6 +15,8 @@ const nextConfig = {
         hostname: '**.quantistechnologies.co.zw',
       },
     ],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560, 3840],
+    formats: ['image/avif', 'image/webp'],
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,

@@ -131,38 +131,38 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden"
+        className="w-full max-w-2xl rounded-2xl bg-white dark:bg-granite-800 shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center px-4 py-3 border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-2" />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search services, products, or pages…"
-            className="flex-1 bg-transparent outline-none text-sm text-gray-900 placeholder-gray-400"
+            className="flex-1 bg-transparent outline-none text-sm text-gray-900 dark:text-white placeholder-gray-400"
           />
-          <button onClick={onClose} className="ml-2 text-xs text-gray-500 hover:text-gray-800">
+          <button onClick={onClose} className="ml-2 text-xs text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
             Esc
           </button>
         </div>
 
         <div className="max-h-96 overflow-y-auto">
           {!query && (
-            <div className="px-4 pt-3 pb-1 text-xs text-gray-500 flex items-center space-x-2">
+            <div className="px-4 pt-3 pb-1 text-xs text-gray-500 dark:text-gray-300 flex items-center space-x-2">
               <CommandLineIcon className="h-4 w-4" />
               <span>Search pages, services, and products. Ctrl+K to open anytime.</span>
             </div>
           )}
 
-          {loading && <div className="px-4 py-4 text-sm text-gray-500">Searching…</div>}
+          {loading && <div className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300">Searching…</div>}
 
           {results && (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-white/10">
               {results.actions?.length > 0 && (
                 <div className="px-4 py-3">
-                  <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-300 mb-2 uppercase tracking-wide">
                     Pages
                   </p>
                   <ul className="space-y-1">
@@ -171,10 +171,10 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                         <Link
                           href={a.path}
                           onClick={onClose}
-                          className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 text-sm text-gray-800"
+                          className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
                         >
                           <span>{a.label}</span>
-                          <ArrowRightIcon className="h-4 w-4 text-gray-400" />
+                          <ArrowRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-300" />
                         </Link>
                       </li>
                     ))}
@@ -184,7 +184,7 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
 
               {results.services?.length > 0 && (
                 <div className="px-4 py-3">
-                  <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-300 mb-2 uppercase tracking-wide">
                     Services
                   </p>
                   <ul className="space-y-1">
@@ -193,13 +193,13 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                         <Link
                           href={`/services?highlight=${encodeURIComponent(s.title)}`}
                           onClick={onClose}
-                          className="block px-3 py-2 rounded-lg hover:bg-gray-100"
+                          className="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-900">{s.title}</span>
-                            <span className="ml-2 text-xs text-gray-500">{s.category}</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{s.title}</span>
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-300">{s.category}</span>
                           </div>
-                          <p className="mt-1 text-xs text-gray-500 line-clamp-2">{s.description}</p>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-300 line-clamp-2">{s.description}</p>
                         </Link>
                       </li>
                     ))}
@@ -209,7 +209,7 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
 
               {results.insights && results.insights.length > 0 && (
                 <div className="px-4 py-3">
-                  <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-300 mb-2 uppercase tracking-wide">
                     News & Updates
                   </p>
                   <ul className="space-y-1">
@@ -218,11 +218,11 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                         <Link
                           href={item.path}
                           onClick={onClose}
-                          className="block px-3 py-2 rounded-lg hover:bg-gray-100"
+                          className="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
                         >
-                          <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.name}</p>
                           {item.description && (
-                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">{item.description}</p>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-300 line-clamp-2">{item.description}</p>
                           )}
                         </Link>
                       </li>
@@ -232,7 +232,7 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
               )}
               {results.products?.length > 0 && (
                 <div className="px-4 py-3">
-                  <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-300 mb-2 uppercase tracking-wide">
                     Products
                   </p>
                   <ul className="space-y-1">
@@ -241,11 +241,11 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                         <Link
                           href={`/products?highlight=${encodeURIComponent(p.name)}`}
                           onClick={onClose}
-                          className="block px-3 py-2 rounded-lg hover:bg-gray-100"
+                          className="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
                         >
-                          <p className="text-sm font-medium text-gray-900">{p.name}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{p.name}</p>
                           {p.description && (
-                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">{p.description}</p>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-300 line-clamp-2">{p.description}</p>
                           )}
                         </Link>
                       </li>
@@ -257,7 +257,7 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
               {(results.products?.length || 0) === 0 &&
                 (results.services?.length || 0) === 0 &&
                 (results.actions?.length || 0) === 0 && (
-                  <div className="px-4 py-4 text-sm text-gray-500">No results for “{results.query}”.</div>
+                  <div className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300">No results for “{results.query}”.</div>
                 )}
             </div>
           )}

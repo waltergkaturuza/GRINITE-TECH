@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 const PHONE_SLIDES = [
@@ -50,10 +51,14 @@ export default function PhoneSlideshow() {
             reduceMotion ? 'duration-0' : 'duration-[900ms]'
           } ${index === active ? 'opacity-100' : 'opacity-0'}`}
         >
-          <img
+          <Image
             src={slide.src}
             alt=""
-            className={`h-full w-full object-cover object-center ${
+            fill
+            sizes="100vw"
+            quality={95}
+            priority={index === 0}
+            className={`object-cover object-center ${
               index === active && !reduceMotion ? 'quantis-kenburns' : ''
             }`}
           />

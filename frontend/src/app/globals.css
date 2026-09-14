@@ -37,6 +37,7 @@ html.dark .public-page .bg-granite-100 {
 
 html.dark .public-page .text-granite-800,
 html.dark .public-page .text-granite-900,
+html.dark .public-page .text-gray-800,
 html.dark .public-page .text-gray-900,
 html.dark .public-page .text-black {
   color: #f5f5f5;
@@ -283,4 +284,35 @@ html.dark .public-page .quantis-logo-on-light {
   .quantis-kenburns {
     animation: none;
   }
+}
+
+/* Google Translate widget: keep our chrome, hide Google's banner */
+#google_translate_element {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+}
+
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+.goog-te-gadget-icon,
+.goog-logo-link,
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.goog-tooltip,
+iframe.skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
 }
