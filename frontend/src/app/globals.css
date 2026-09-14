@@ -279,22 +279,12 @@ html.dark .public-page .quantis-logo-on-light {
   filter: invert(1) hue-rotate(180deg) brightness(1.45) contrast(1.05);
 }
 
-/* One-screen photo frame so tall pages don't over-crop landscape art. */
-.quantis-backdrop-frame {
-  max-height: 100vh;
-  max-height: 100svh;
-}
-
-/* Scale wallpapers to the frame: fit on phones, cover on wide screens. */
-.quantis-backdrop-img {
-  object-fit: contain;
-  object-position: center top;
-}
-
-@media (min-width: 768px) {
-  .quantis-backdrop-img {
-    object-fit: cover;
-  }
+/* Tile the wallpaper at full section width so tall pages fill without over-cropping. */
+.quantis-backdrop-stitch {
+  background-color: #101820;
+  background-repeat: repeat-y;
+  background-position: center top;
+  background-size: 100% auto;
 }
 
 @keyframes quantis-kenburns {
