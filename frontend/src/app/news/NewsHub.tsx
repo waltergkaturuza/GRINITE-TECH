@@ -13,6 +13,7 @@ import {
 import { insightsAPI } from '@/lib/api'
 import NewsSubscribeForm from '@/components/NewsSubscribeForm'
 import { warmupBackend } from '@/lib/warmupBackend'
+import { QUANTIS_LOGO_URL } from '@/constants/company'
 import {
   INSIGHT_CATEGORIES,
   InsightPost,
@@ -103,12 +104,21 @@ export default function NewsHub() {
       <section className="relative overflow-hidden bg-gradient-to-br from-granite-800 via-granite-900 to-crimson-950 text-white">
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_right,_#FEE715_0,_transparent_32%),radial-gradient(circle_at_bottom_left,_#A4193D_0,_transparent_40%)]" />
         <div className="relative wide-container px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-          <p className="text-yellow-900 font-semibold tracking-[0.2em] uppercase text-xs mb-4">
+          <p className="text-yellow-900 font-semibold tracking-[0.2em] uppercase text-xs mb-6">
             Quantis Insights
           </p>
-          <div className="grid lg:grid-cols-[1.4fr_0.8fr] gap-10 items-end">
+          <div className="grid lg:grid-cols-[1.4fr_0.8fr] gap-10 items-start">
             <div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-5">
+              <div className="overflow-visible w-full max-w-[360px] mb-6 sm:mb-8">
+                <div className="quantis-logo-hinge">
+                  <img
+                    src={QUANTIS_LOGO_URL}
+                    alt="Quantis Technologies"
+                    className="quantis-logo-on-dark h-24 sm:h-28 lg:h-28 w-auto max-w-full object-contain object-left"
+                  />
+                </div>
+              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-5">
                 News & Updates
               </h1>
               <p className="text-lg text-granite-200 max-w-2xl">

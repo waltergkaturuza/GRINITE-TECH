@@ -38,9 +38,9 @@ export default function SiteFooter() {
 
   return (
     <footer className="bg-granite-800 text-white py-12 border-t border-granite-700">
-      <div className="wide-container px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8">
-          <div>
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 xl:px-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
+          <div className="lg:col-span-2">
             <Link href="/" className="mb-4 inline-flex">
               <img
                 src={QUANTIS_LOGO_URL}
@@ -56,7 +56,7 @@ export default function SiteFooter() {
               <p>{COMPANY_CONTACT.addressLine2}</p>
             </address>
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <h4 className="font-semibold mb-4 text-peach-300">{t(lang, 'footer.sitemap')}</h4>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-gray-300">
               {SITEMAP_LINKS.map((item) => (
@@ -71,7 +71,7 @@ export default function SiteFooter() {
               ))}
             </ul>
           </div>
-          <div className="sm:col-span-2 lg:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-4">
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h4 className="font-semibold mb-4 text-crimson-300">
@@ -116,29 +116,29 @@ export default function SiteFooter() {
               <NewsSubscribeForm variant="footer" />
             </div>
           </div>
-          <div>
+          <div className="lg:col-span-3 min-w-0">
             <h4 className="font-semibold mb-4 text-olive-300">
               <Link href="/contact" className="hover:text-olive-200 transition-colors duration-200">
                 {t(lang, 'footer.contact')}
               </Link>
             </h4>
             <ul className="space-y-2 text-gray-300 text-sm sm:text-base">
-              <li className="hover:text-olive-300 transition-colors duration-200 break-words">
-                <a href={`mailto:${COMPANY_CONTACT.primaryEmail}`} className="block py-1">
+              <li className="hover:text-olive-300 transition-colors duration-200">
+                <a href={`mailto:${COMPANY_CONTACT.primaryEmail}`} className="block py-1 lg:whitespace-nowrap">
                   {COMPANY_CONTACT.primaryEmail}
                 </a>
               </li>
-              <li className="hover:text-olive-300 transition-colors duration-200 break-words">
-                <a href={`mailto:${COMPANY_CONTACT.supportEmail}`} className="block py-1">
+              <li className="hover:text-olive-300 transition-colors duration-200">
+                <a href={`mailto:${COMPANY_CONTACT.supportEmail}`} className="block py-1 lg:whitespace-nowrap">
                   {COMPANY_CONTACT.supportEmail}
                 </a>
               </li>
-              <li className="hover:text-olive-300 transition-colors duration-200 break-words">
+              <li className="hover:text-olive-300 transition-colors duration-200">
                 <a
                   href={COMPANY_CONTACT.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block py-1"
+                  className="block py-1 lg:whitespace-nowrap"
                 >
                   {COMPANY_CONTACT.websiteDisplay}
                 </a>
