@@ -50,7 +50,7 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 text-white py-20">
         <div className="wide-container px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="text-site-max font-bold mb-6">
             About <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">Quantis Technologies</span>
           </h1>
           <p className="text-xl md:text-2xl text-granite-200 mb-8 max-w-3xl mx-auto">

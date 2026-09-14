@@ -31,7 +31,7 @@ export default function MobileAppsPage() {
               <p className="text-sm font-semibold tracking-wide text-cyan-300 uppercase mb-3">
                 Mobile App Development
               </p>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <h1 className="text-site-max font-bold mb-4">
                 Experiences your users carry in their <span className="text-cyan-300">pocket</span>.
               </h1>
               <p className="text-gray-200 text-lg mb-6">

@@ -31,7 +31,7 @@ export default function EcommercePage() {
               <p className="text-sm font-semibold tracking-wide text-rose-300 uppercase mb-3">
                 E‑Commerce & Digital Products
               </p>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <h1 className="text-site-max font-bold mb-4">
                 Sell products and services <span className="text-rose-300">beyond borders</span>.
               </h1>
               <p className="text-gray-200 text-lg mb-6">

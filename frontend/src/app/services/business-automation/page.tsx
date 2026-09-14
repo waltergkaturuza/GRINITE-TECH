@@ -31,7 +31,7 @@ export default function BusinessAutomationPage() {
               <p className="text-sm font-semibold tracking-wide text-emerald-300 uppercase mb-3">
                 Business Process Automation
               </p>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <h1 className="text-site-max font-bold mb-4">
                 Take the manual work out of <span className="text-emerald-300">everyday operations</span>.
               </h1>
               <p className="text-gray-200 text-lg mb-6">

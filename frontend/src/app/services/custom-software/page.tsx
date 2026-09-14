@@ -33,7 +33,7 @@ export default function CustomSoftwarePage() {
               <p className="text-sm font-semibold tracking-wide text-amber-300 uppercase mb-3">
                 Custom Software Development
               </p>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <h1 className="text-site-max font-bold mb-4">
                 Systems engineered around <span className="text-amber-300">your business</span>.
               </h1>
               <p className="text-gray-200 text-lg mb-6">

@@ -938,7 +938,7 @@ export default function Portfolio() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-site-max font-bold text-white mb-4">
             Quantis Technologies Portfolio
           </h1>
           <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">

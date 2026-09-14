@@ -161,7 +161,7 @@ export default function ContactContent() {
       <div className="wide-container">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold text-granite-900 mb-6">
+          <h1 className="text-site-max font-bold text-granite-900 mb-6">
             Get In <span className="text-transparent bg-clip-text bg-gradient-to-r from-crimson-600 to-amber-500">Touch</span>
           </h1>
           <p className="text-xl text-granite-600 max-w-3xl mx-auto leading-relaxed">

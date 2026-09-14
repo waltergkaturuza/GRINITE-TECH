@@ -189,7 +189,7 @@ export default function TrackRequestPanel({ variant = 'page' }: TrackRequestPane
     <>
       {!embedded && (
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-granite-900 mb-4">
+          <h1 className="text-site-max font-bold text-granite-900 mb-4">
             Track Your{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-crimson-600 to-amber-500">
               Project Request

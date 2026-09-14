@@ -48,10 +48,10 @@ export default function HomePageClient() {
             {/* Hero text - below logo on mobile, right on desktop */}
             <div className="text-center lg:text-left order-2 min-w-0 w-full">
               <h1 className="font-bold mb-4 leading-[1.2] tracking-tight text-balance">
-                <span className="block text-white text-[clamp(1.375rem,calc(0.85rem+2vw),2.25rem)]">
+                <span className="block text-white text-site-max">
                   {t(lang, 'home.hero.title.part1')}
                 </span>
-                <span className="block mt-1 text-[clamp(1.375rem,calc(0.85rem+2vw),2.25rem)] text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">
+                <span className="block mt-1 text-site-max text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">
                   {t(lang, 'home.hero.title.part2')}
                 </span>
               </h1>

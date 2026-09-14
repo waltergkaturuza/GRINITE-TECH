@@ -219,7 +219,7 @@ export default function NewsArticle() {
             )}
             <span className="text-sm text-granite-200">{formatInsightDate(post.publishedAt)}</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-4">{post.title}</h1>
+          <h1 className="text-site-max font-bold leading-tight mb-4">{post.title}</h1>
           <div className="flex flex-wrap gap-4 text-sm text-granite-200">
             <span>{post.authorName}</span>
             <span className="inline-flex items-center gap-1">

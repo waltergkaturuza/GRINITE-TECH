@@ -118,7 +118,7 @@ export default function NewsHub() {
                   />
                 </div>
               </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-5">
+              <h1 className="text-site-max font-bold leading-tight mb-5">
                 News & Updates
               </h1>
               <p className="text-lg text-granite-200 max-w-2xl">
