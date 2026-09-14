@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
-import { COMPANY_CONTACT } from '@/constants/company'
+import { COMPANY_CONTACT, QUANTIS_LOGO_URL } from '@/constants/company'
 
 export default function SiteFooter() {
   const { lang } = useLanguage()
@@ -13,6 +13,13 @@ export default function SiteFooter() {
       <div className="wide-container px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
+            <Link href="/" className="mb-4 inline-flex rounded-xl bg-white px-3 py-2 shadow-md">
+              <img
+                src={QUANTIS_LOGO_URL}
+                alt="Quantis Technologies"
+                className="h-10 sm:h-12 w-auto max-w-[220px] object-contain object-left"
+              />
+            </Link>
             <h3 className="text-lg font-semibold mb-4 text-yellow-900">{t(lang, 'footer.title')}</h3>
             <p className="text-gray-300 mb-3">{t(lang, 'footer.tagline')}</p>
             <address className="text-gray-300 text-sm not-italic space-y-1">
@@ -93,7 +100,7 @@ export default function SiteFooter() {
         </div>
         <div className="border-t border-granite-700 mt-8 pt-8 text-center space-y-2">
           <p className="text-gray-400">
-            &copy; 2024 <span className="text-crimson-300">Quantis Technologies</span>.{' '}
+            &copy; 2026 <span className="text-crimson-300">Quantis Technologies</span>.{' '}
             {t(lang, 'footer.copyright')}
           </p>
           <p className="text-gray-800 text-xs">

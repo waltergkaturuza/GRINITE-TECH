@@ -3,12 +3,13 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { 
-  ArrowLeftIcon, 
   CodeBracketIcon, 
   GlobeAltIcon, 
   DevicePhoneMobileIcon,
   ChartBarIcon 
 } from '@heroicons/react/24/outline'
+import Navigation from '../components/Navigation'
+import SiteFooter from '@/components/SiteFooter'
 
 type PortfolioProject = {
   id: string
@@ -380,7 +381,7 @@ function svgThumbDataUri(title: string, subtitle?: string) {
       ${escapeXml(safeSub)}
     </text>
     <text x="120" y="500" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="20" font-weight="600" fill="rgba(255,255,255,0.85)">
-      Greenford Walter Katuruza • Full-stack Developer
+      Quantis Technologies
     </text>
   </g>
 </svg>`
@@ -884,10 +885,13 @@ export default function Portfolio() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-900 mx-auto mb-4"></div>
-          <p className="text-gray-200">Loading portfolio...</p>
+      <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-900 mx-auto mb-4"></div>
+            <p className="text-gray-200">Loading portfolio...</p>
+          </div>
         </div>
       </div>
     )
@@ -895,15 +899,18 @@ export default function Portfolio() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-red-200 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-crimson-900 text-white px-4 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
-          >
-            Retry
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-[60vh] px-4">
+          <div className="text-center">
+            <p className="text-red-200 mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-crimson-900 text-white px-4 py-2 rounded-lg hover:bg-crimson-800 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -911,49 +918,31 @@ export default function Portfolio() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
-      {/* Header */}
-      <div className="bg-emerald-950 shadow-lg border-b border-emerald-900/30 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link 
-                href="/"
-                className="flex items-center gap-2 text-emerald-50/90 hover:text-white transition-colors"
-              >
-                <ArrowLeftIcon className="h-5 w-5" />
-                Back to Home
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Greenford Walter Katuruza — Portfolio
+            Quantis Technologies Portfolio
           </h1>
           <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">
-            Full-stack software developer specializing in modern web technologies, 
-            mobile applications, and scalable backend systems. Passionate about creating 
-            innovative solutions that drive business growth.
+            Enterprise platforms, automation systems, and digital infrastructure delivered
+            for governments and forward-thinking organizations.
           </p>
-          <div className="flex justify-center gap-4">
-            <a 
-              href="https://github.com/waltergkaturuza" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="bg-white/15 backdrop-blur-sm border border-white/25 text-white px-6 py-3 rounded-lg hover:bg-white/20 transition-colors font-medium"
-            >
-              View GitHub
-            </a>
-            <a 
-              href="mailto:walter.katuruza@grinitetech.com"
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              href="/contact"
               className="bg-crimson-900 text-white px-6 py-3 rounded-lg hover:bg-crimson-800 transition-colors font-medium"
             >
-              Contact Me
-            </a>
+              Build With Quantis
+            </Link>
+            <Link
+              href="/services"
+              className="bg-white/15 backdrop-blur-sm border border-white/25 text-white px-6 py-3 rounded-lg hover:bg-white/20 transition-colors font-medium"
+            >
+              Explore Our Solutions
+            </Link>
           </div>
         </div>
 
@@ -1199,18 +1188,18 @@ export default function Portfolio() {
 
         {/* Contact Section */}
         <div className="text-center bg-white rounded-lg shadow-sm border p-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Let's Work Together</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Partner With Quantis</h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Ready to bring your project to life? Let's discuss how I can help you build 
-            something amazing with cutting-edge technology and best practices.
+            Ready to modernize your systems? Talk with our team about a secure, scalable
+            platform for your organization.
           </p>
-          <div className="flex justify-center gap-4">
-            <a 
-              href="mailto:walter.katuruza@grinitetech.com"
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              href="/contact"
+              className="bg-crimson-900 text-white px-8 py-3 rounded-lg hover:bg-crimson-800 transition-colors font-medium"
             >
               Start a Project
-            </a>
+            </Link>
             <Link 
               href="/services"
               className="border border-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
@@ -1220,6 +1209,8 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      <SiteFooter />
 
       {detailsOpen && selectedDetails && (
         <div
