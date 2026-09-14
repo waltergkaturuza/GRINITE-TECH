@@ -135,7 +135,7 @@ export default function NewsHub() {
               <button
                 type="button"
                 onClick={() => setAskOpen(true)}
-                className="inline-flex items-center justify-center w-full rounded-xl bg-yellow-900 text-granite-900 font-semibold px-4 py-3 hover:bg-yellow-800"
+                className="inline-flex items-center justify-center w-full rounded-xl bg-yellow-900 text-on-light font-semibold px-4 py-3 hover:bg-yellow-800"
               >
                 <QuestionMarkCircleIcon className="h-5 w-5 mr-2" />
                 Ask a question
@@ -309,7 +309,7 @@ export default function NewsHub() {
                   <button
                     type="button"
                     onClick={() => setAskOpen(true)}
-                    className="w-full rounded-xl bg-yellow-900 text-granite-900 font-semibold py-2.5"
+                    className="w-full rounded-xl bg-yellow-900 text-on-light font-semibold py-2.5"
                   >
                     Post a question
                   </button>

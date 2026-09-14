@@ -44,26 +44,28 @@ export default function PhoneSlideshow() {
 
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
-      {PHONE_SLIDES.map((slide, index) => (
-        <div
-          key={slide.src}
-          className={`absolute inset-0 transition-opacity ease-in-out ${
-            reduceMotion ? 'duration-0' : 'duration-[900ms]'
-          } ${index === active ? 'opacity-100' : 'opacity-0'}`}
-        >
-          <Image
-            src={slide.src}
-            alt=""
-            fill
-            sizes="100vw"
-            quality={95}
-            priority={index === 0}
-            className={`object-cover object-center ${
-              index === active && !reduceMotion ? 'quantis-kenburns' : ''
-            }`}
-          />
-        </div>
-      ))}
+      <div className="quantis-backdrop-frame absolute inset-x-0 top-0 h-full w-full">
+        {PHONE_SLIDES.map((slide, index) => (
+          <div
+            key={slide.src}
+            className={`absolute inset-0 transition-opacity ease-in-out ${
+              reduceMotion ? 'duration-0' : 'duration-[900ms]'
+            } ${index === active ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <Image
+              src={slide.src}
+              alt=""
+              fill
+              sizes="100vw"
+              quality={90}
+              priority={index === 0}
+              className={`quantis-backdrop-img ${
+                index === active && !reduceMotion ? 'quantis-kenburns' : ''
+              }`}
+            />
+          </div>
+        ))}
+      </div>
       <div className="absolute inset-0 bg-gradient-to-r from-granite-950/78 via-granite-950/50 to-granite-950/32" />
       <div className="absolute inset-0 bg-gradient-to-b from-granite-950/20 via-transparent to-granite-950/40" />
     </div>

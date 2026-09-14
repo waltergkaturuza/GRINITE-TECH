@@ -63,13 +63,13 @@ export function categoryTone(id?: string) {
     case 'news':
       return 'bg-crimson-900 text-white'
     case 'promotions':
-      return 'bg-yellow-900 text-granite-900'
+      return 'bg-yellow-900 text-on-light'
     case 'products':
       return 'bg-jungle-900 text-white'
     case 'technology':
-      return 'bg-olive-900 text-granite-900'
+      return 'bg-olive-900 text-on-light'
     case 'research':
-      return 'bg-peach-900 text-granite-900'
+      return 'bg-peach-900 text-on-light'
     case 'community':
       return 'bg-granite-700 text-white'
     default:

@@ -150,7 +150,7 @@ export default function Navigation() {
   const [isServicesOpen, setIsServicesOpen] = useState(false)
   const [isPortfolioOpen, setIsPortfolioOpen] = useState(false)
   const [mobileAccordion, setMobileAccordion] = useState<'services' | 'portfolio' | null>(null)
-  const { lang, setLang } = useLanguage()
+  const { lang } = useLanguage()
   const servicesMenuRef = useRef<HTMLDivElement>(null)
   const portfolioMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -515,7 +515,7 @@ export default function Navigation() {
                   {t(lang, 'nav.contact')}
                 </Link>
 
-                {isLoggedIn ? (
+                {isLoggedIn && (
                   <>
                     <Link
                       href="/dashboard"
@@ -535,41 +535,7 @@ export default function Navigation() {
                       Logout
                     </button>
                   </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={openSignupModal}
-                    className={`${grooveItemClass(false)} !bg-emerald-800 !text-white !border-emerald-700`}
-                  >
-                    Get Started
-                  </button>
                 )}
-
-                <div className="rounded-[1.15rem] border border-white bg-slate-100 px-4 py-3 shadow-[inset_0_2px_6px_rgba(15,23,42,0.07)]">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                    Language
-                  </p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {LANGUAGES.map((item) => (
-                      <button
-                        key={item.code}
-                        type="button"
-                        onClick={() => {
-                          setLang(item.code)
-                          setIsMenuOpen(false)
-                        }}
-                        className={`rounded-lg border px-2 py-1.5 text-left text-xs ${
-                          lang === item.code
-                            ? 'border-emerald-800 bg-emerald-800 text-white'
-                            : 'border-white bg-white text-slate-800'
-                        }`}
-                      >
-                        <span className="font-bold">{item.label}</span>
-                        <span className="ml-1.5 opacity-80">{item.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
           </div>
