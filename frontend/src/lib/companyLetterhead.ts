@@ -1,7 +1,9 @@
+import { QUANTIS_LOGO_URL } from '@/constants/company'
+
 export const QUANTIS_LETTERHEAD = {
   company_name: 'Quantis Technologies Private Limited',
   company_legal_name: 'QUANTIS TECHNOLOGIES (PRIVATE) LIMITED',
-  company_logo_url: '/quantis-letterhead.png',
+  company_logo_url: QUANTIS_LOGO_URL,
   company_address: 'Suite R8, Kuwirirana House\nCnr Angwa and George Silundika, Harare',
   company_email: 'waltergkaturuza@gmail.com',
   company_phone: '+263777937721',

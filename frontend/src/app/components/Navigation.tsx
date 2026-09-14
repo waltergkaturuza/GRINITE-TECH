@@ -10,6 +10,7 @@ import SignupModal from '@/components/SignupModal'
 import SearchCommand from '@/components/SearchCommand'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
+import { QUANTIS_LOGO_URL } from '@/constants/company'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -94,12 +95,13 @@ export default function Navigation() {
             <Link href="/" className="flex items-center space-x-3">
               <div className="relative h-14 w-14 sm:h-[4.5rem] sm:w-[4.5rem] flex-shrink-0">
                 <Image
-                  src="/logo.png"
+                  src={QUANTIS_LOGO_URL}
                   alt="Quantis Technologies logo"
                   fill
                   sizes="72px"
                   className="object-contain"
                   priority
+                  unoptimized
                 />
               </div>
               <span className="hidden sm:inline text-xl sm:text-2xl font-bold text-white">

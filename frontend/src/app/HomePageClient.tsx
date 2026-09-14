@@ -9,6 +9,7 @@ import { trackPageView } from '@/lib/analytics'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
 import SiteFooter from '@/components/SiteFooter'
+import { QUANTIS_LOGO_URL } from '@/constants/company'
 
 export default function HomePageClient() {
   useEffect(() => {
@@ -36,12 +37,13 @@ export default function HomePageClient() {
               <div className="relative w-full max-w-[min(75vw,300px)] aspect-square max-h-[min(40vh,300px)]">
                 <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-3xl p-5 sm:p-6 shadow-2xl flex items-center justify-center">
                   <Image
-                    src="/logo.png"
+                    src={QUANTIS_LOGO_URL}
                     alt="Quantis Technologies"
                     fill
                     sizes="(max-width: 640px) 200px, (max-width: 1024px) 260px, 300px"
                     className="object-contain p-4"
                     priority
+                    unoptimized
                   />
                 </div>
               </div>

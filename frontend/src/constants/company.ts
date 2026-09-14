@@ -1,3 +1,6 @@
+/** Brand logo in `frontend/public` */
+export const QUANTIS_LOGO_URL = '/QUANTIS-1.svg'
+
 export const COMPANY_CONTACT = {
   legalName: 'Quantis Technologies Private Limited',
   addressLine1: 'Suite R8, Kuwirirana House',

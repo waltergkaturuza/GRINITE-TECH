@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import ChatbotWrapper from './components/chatbot/ChatbotWrapper'
 import JsonLd from '@/components/seo/JsonLd'
 import { absoluteUrl, getSiteUrl } from '@/lib/site'
+import { QUANTIS_LOGO_URL } from '@/constants/company'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,7 +22,7 @@ const rootJsonLd = {
       url: siteUrl,
       logo: {
         '@type': 'ImageObject',
-        url: absoluteUrl('/logo.png'),
+        url: absoluteUrl(QUANTIS_LOGO_URL),
       },
       description:
         'Enterprise systems engineering partner for government, NGOs, and corporates in Zimbabwe and Africa.',

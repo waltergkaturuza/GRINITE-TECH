@@ -8,7 +8,7 @@ import { User } from '../users/entities/user.entity';
 
 const QUANTIS_COMPANY_DEFAULTS = {
   company_name: 'Quantis Technologies Private Limited',
-  company_logo_url: '/quantis-letterhead.png',
+  company_logo_url: '/QUANTIS-1.svg',
   company_address: 'Suite R8, Kuwirirana House\nCnr Angwa and George Silundika, Harare',
   company_email: 'waltergkaturuza@gmail.com',
   company_phone: '+263777937721',
