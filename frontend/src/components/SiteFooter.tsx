@@ -13,11 +13,11 @@ export default function SiteFooter() {
       <div className="wide-container px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            <Link href="/" className="mb-4 inline-flex rounded-xl bg-white px-3 py-2 shadow-md">
+            <Link href="/" className="mb-4 inline-flex">
               <img
                 src={QUANTIS_LOGO_URL}
                 alt="Quantis Technologies"
-                className="h-10 sm:h-12 w-auto max-w-[220px] object-contain object-left"
+                className="quantis-logo-on-dark h-10 sm:h-12 w-auto max-w-[220px] object-contain object-left"
               />
             </Link>
             <h3 className="text-lg font-semibold mb-4 text-yellow-900">{t(lang, 'footer.title')}</h3>

@@ -178,3 +178,8 @@
     animation: none;
   }
 }
+
+/* Navy wordmark on dark surfaces: lift fills to light without a white plate */
+.quantis-logo-on-dark {
+  filter: invert(1) hue-rotate(180deg) brightness(1.45) contrast(1.05);
+}

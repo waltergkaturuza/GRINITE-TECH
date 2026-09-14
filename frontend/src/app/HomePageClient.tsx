@@ -61,7 +61,7 @@ export default function HomePageClient() {
                   {t(lang, 'home.hero.primaryCta')}
                   <ArrowRightIcon className="ml-2 h-5 w-5 inline shrink-0" />
                 </Link>
-                <Link href="/portfolio" className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 font-medium text-base sm:text-lg px-6 py-3 rounded-lg transition-all duration-200">
+                <Link href="/portfolio#featured-work" className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 font-medium text-base sm:text-lg px-6 py-3 rounded-lg transition-all duration-200">
                   {t(lang, 'home.hero.secondaryCta')}
                 </Link>
               </div>

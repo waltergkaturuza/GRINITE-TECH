@@ -20,7 +20,9 @@ import {
   BriefcaseIcon,
   ClockIcon,
   ServerStackIcon,
-  BanknotesIcon
+  BanknotesIcon,
+  ArrowRightOnRectangleIcon,
+  GlobeAltIcon
 } from '@heroicons/react/24/outline'
 
 export default function DashboardLayout({
@@ -124,6 +126,7 @@ export default function DashboardLayout({
                   <Link
                     key={item.name}
                     href={item.href}
+                    onClick={() => setSidebarOpen(false)}
                     className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-300 hover:bg-granite-700 hover:text-white transition-colors duration-200"
                   >
                     <item.icon className="mr-4 h-6 w-6" />
@@ -132,16 +135,32 @@ export default function DashboardLayout({
                 ))}
               </nav>
             </div>
-            <div className="flex-shrink-0 flex border-t border-granite-700 p-4">
+            <div className="flex-shrink-0 border-t border-granite-700 p-4 space-y-3">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <UserCircleIcon className="h-8 w-8 text-gray-400" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white">{user?.firstName} {user?.lastName}</p>
-                  <p className="text-xs text-gray-400">{user?.email}</p>
+                <div className="ml-3 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{user?.firstName} {user?.lastName}</p>
+                  <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                 </div>
               </div>
+              <Link
+                href="/"
+                onClick={() => setSidebarOpen(false)}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-granite-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-granite-700"
+              >
+                <GlobeAltIcon className="h-5 w-5" />
+                Back to website
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-crimson-900 px-3 py-2.5 text-sm font-medium text-white hover:bg-crimson-800"
+              >
+                <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -169,25 +188,31 @@ export default function DashboardLayout({
               ))}
             </nav>
           </div>
-          <div className="flex-shrink-0 flex border-t border-granite-700 p-4">
+          <div className="flex-shrink-0 border-t border-granite-700 p-4 space-y-3">
             <div className="flex items-center w-full">
               <div className="flex-shrink-0">
                 <UserCircleIcon className="h-8 w-8 text-gray-400" />
               </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-white">{user?.firstName} {user?.lastName}</p>
-                <p className="text-xs text-gray-400">{user?.email}</p>
+              <div className="ml-3 flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{user?.firstName} {user?.lastName}</p>
+                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
               </div>
-              <button
-                onClick={handleLogout}
-                className="ml-3 text-gray-400 hover:text-white transition-colors duration-200"
-                title="Logout"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
             </div>
+            <Link
+              href="/"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-granite-600 px-3 py-2 text-sm font-medium text-white hover:bg-granite-700"
+            >
+              <GlobeAltIcon className="h-5 w-5" />
+              Back to website
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-crimson-900 px-3 py-2 text-sm font-medium text-white hover:bg-crimson-800"
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+              Logout
+            </button>
           </div>
         </div>
       </div>
@@ -195,13 +220,28 @@ export default function DashboardLayout({
       {/* Main content */}
       <div className="md:pl-64 flex flex-col flex-1">
         {/* Top header */}
-        <div className="sticky top-0 z-10 md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-granite-900">
+        <div className="sticky top-0 z-10 md:hidden flex items-center justify-between gap-2 px-3 py-2 bg-granite-800 border-b border-granite-700">
           <button
             type="button"
-            className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-yellow-900"
+            className="h-11 w-11 inline-flex items-center justify-center rounded-md text-gray-200 hover:text-white hover:bg-granite-700"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
           >
             <Bars3Icon className="h-6 w-6" />
+          </button>
+          <p className="flex-1 min-w-0 text-sm font-semibold text-white truncate">Dashboard</p>
+          <Link
+            href="/"
+            className="shrink-0 rounded-md px-2.5 py-2 text-xs font-semibold text-yellow-300 hover:bg-granite-700"
+          >
+            Website
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="shrink-0 rounded-md bg-crimson-900 px-3 py-2 text-xs font-semibold text-white hover:bg-crimson-800"
+          >
+            Logout
           </button>
         </div>
 

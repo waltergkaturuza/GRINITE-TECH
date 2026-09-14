@@ -360,7 +360,7 @@ export default function Navigation() {
                       handleLogout()
                       setIsMenuOpen(false)
                     }}
-                    className={`${mobileLinkClass} w-full text-left`}
+                    className="block w-full text-left mx-3 px-3 py-2.5 bg-crimson-900 text-white rounded-lg font-medium"
                   >
                     Logout
                   </button>

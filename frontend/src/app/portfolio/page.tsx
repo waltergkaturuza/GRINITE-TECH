@@ -752,6 +752,17 @@ export default function Portfolio() {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    if (loading) return
+    const scrollToFeatured = () => {
+      if (window.location.hash !== '#featured-work') return
+      document.getElementById('featured-work')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    scrollToFeatured()
+    window.addEventListener('hashchange', scrollToFeatured)
+    return () => window.removeEventListener('hashchange', scrollToFeatured)
+  }, [loading])
+
   // Sample skills data
   const skills = [
     {
@@ -938,7 +949,7 @@ export default function Portfolio() {
               Build With Quantis
             </Link>
             <Link
-              href="/services"
+              href="#featured-work"
               className="bg-white/15 backdrop-blur-sm border border-white/25 text-white px-6 py-3 rounded-lg hover:bg-white/20 transition-colors font-medium"
             >
               Explore Our Solutions
@@ -969,7 +980,7 @@ export default function Portfolio() {
         </div>
 
         {/* Projects Section */}
-        <div className="mb-16">
+        <div id="featured-work" className="mb-16 scroll-mt-24">
           <h2 className="text-3xl font-bold text-emerald-100 text-center mb-12 tracking-tight">
             Featured Work
           </h2>
