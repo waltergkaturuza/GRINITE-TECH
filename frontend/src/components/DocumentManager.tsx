@@ -9,7 +9,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import BlobFileUpload from '@/components/BlobFileUpload'
-import { documentsAPI, type CompanyDocument } from '@/lib/api'
+import { documentsAPI, projectsAPI, type CompanyDocument } from '@/lib/api'
 import {
   COMPANY_DOCUMENT_CATEGORIES,
   PROJECT_DOCUMENT_CATEGORIES,
@@ -18,24 +18,36 @@ import {
 } from '@/lib/documentCategories'
 import type { BlobUploadType } from '@/lib/blobStorage'
 
+type ViewScope = 'all' | 'company' | 'project'
+
 type DocumentManagerProps = {
-  scope: 'company' | 'project'
+  scope?: 'company' | 'project'
   projectId?: string
   projectName?: string
   tone?: 'dark' | 'light'
+  library?: boolean
 }
+
+type ProjectOption = { id: string; title: string }
 
 function titleFromFile(name: string) {
   return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim()
 }
 
+function categoriesFor(scope: 'company' | 'project') {
+  return scope === 'project' ? PROJECT_DOCUMENT_CATEGORIES : COMPANY_DOCUMENT_CATEGORIES
+}
+
 export default function DocumentManager({
-  scope,
-  projectId,
-  projectName = 'project',
+  scope: lockedScope,
+  projectId: lockedProjectId,
+  projectName: lockedProjectName = 'project',
   tone = 'dark',
+  library = false,
 }: DocumentManagerProps) {
-  const categories = scope === 'project' ? PROJECT_DOCUMENT_CATEGORIES : COMPANY_DOCUMENT_CATEGORIES
+  const [viewScope, setViewScope] = useState<ViewScope>(lockedScope || (library ? 'all' : 'company'))
+  const [filterProjectId, setFilterProjectId] = useState(lockedProjectId || '')
+  const [projects, setProjects] = useState<ProjectOption[]>([])
   const [docs, setDocs] = useState<CompanyDocument[]>([])
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [category, setCategory] = useState('all')
@@ -45,7 +57,12 @@ export default function DocumentManager({
   const [notice, setNotice] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [uploadCategory, setUploadCategory] = useState<string>(categories[0].id)
+  const [uploadTarget, setUploadTarget] = useState<'company' | string>(
+    lockedScope === 'project' && lockedProjectId ? lockedProjectId : 'company',
+  )
+  const [uploadCategory, setUploadCategory] = useState<string>(
+    categoriesFor(lockedScope === 'project' ? 'project' : 'company')[0].id,
+  )
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState<CompanyDocument | null>(null)
   const usedCustomTitle = useRef(false)
@@ -62,22 +79,81 @@ export default function DocumentManager({
   const divider = isDark ? 'divide-granite-700' : 'divide-granite-200'
   const errorText = isDark ? 'text-crimson-300' : 'text-crimson-700'
 
+  const listScope = lockedScope || (viewScope === 'all' ? undefined : viewScope)
+  const listProjectId = lockedProjectId || (viewScope === 'project' ? filterProjectId || undefined : undefined)
+  const uploadScope: 'company' | 'project' = uploadTarget === 'company' ? 'company' : 'project'
+  const uploadCategories = categoriesFor(uploadScope)
+  const uploadProject = projects.find((p) => p.id === uploadTarget)
+  const uploadProjectName = lockedProjectName || uploadProject?.title || 'project'
+
+  const sidebarGroups = useMemo(() => {
+    if (lockedScope === 'project' || viewScope === 'project') {
+      return [{ scope: 'project' as const, label: 'Project files', items: PROJECT_DOCUMENT_CATEGORIES }]
+    }
+    if (lockedScope === 'company' || viewScope === 'company') {
+      return [{ scope: 'company' as const, label: 'Company records', items: COMPANY_DOCUMENT_CATEGORIES }]
+    }
+    return [
+      { scope: 'company' as const, label: 'Company records', items: COMPANY_DOCUMENT_CATEGORIES },
+      { scope: 'project' as const, label: 'Project files', items: PROJECT_DOCUMENT_CATEGORIES },
+    ]
+  }, [lockedScope, viewScope])
+
+  const countFor = (scope: 'company' | 'project', id: string) =>
+    counts[`${scope}:${id}`] || counts[id] || 0
+
+  const groupTotal = (scope: 'company' | 'project') =>
+    categoriesFor(scope).reduce((sum, item) => sum + countFor(scope, item.id), 0)
+
+  const total = sidebarGroups.reduce((sum, group) => sum + groupTotal(group.scope), 0)
+
+  useEffect(() => {
+    if (!library) return
+    let cancelled = false
+    projectsAPI
+      .getProjects({ limit: 500 })
+      .then((res) => {
+        if (cancelled) return
+        const list = (res.projects || res.data || []) as ProjectOption[]
+        setProjects(Array.isArray(list) ? list.map((p) => ({ id: p.id, title: p.title })) : [])
+      })
+      .catch(() => {
+        if (!cancelled) setProjects([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [library])
+
   const load = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
+      let queryScope = listScope
+      let queryCategory = category === 'all' ? undefined : category
+      let queryProjectId = listProjectId
+      if (category.includes(':')) {
+        const [scopePart, categoryPart] = category.split(':') as ['company' | 'project', string]
+        queryScope = scopePart
+        queryCategory = categoryPart
+        if (scopePart === 'company') queryProjectId = undefined
+      }
       const [items, cat] = await Promise.all([
         documentsAPI.list({
-          scope,
-          projectId,
-          category: category === 'all' ? undefined : category,
+          scope: queryScope,
+          projectId: queryProjectId,
+          category: queryCategory,
           search: search.trim() || undefined,
         }),
-        documentsAPI.categories({ projectId, scope }),
+        documentsAPI.categories({ projectId: queryProjectId, scope: listScope }),
       ])
       setDocs(Array.isArray(items) ? items : [])
       const map: Record<string, number> = {}
-      for (const row of cat.counts || []) map[row.category] = row.count
+      for (const row of cat.counts || []) {
+        const scopedKey = row.scope ? `${row.scope}:${row.category}` : row.category
+        map[scopedKey] = row.count
+        map[row.category] = (map[row.category] || 0) + row.count
+      }
       setCounts(map)
     } catch (err) {
       console.error(err)
@@ -86,7 +162,7 @@ export default function DocumentManager({
     } finally {
       setLoading(false)
     }
-  }, [scope, projectId, category, search])
+  }, [listScope, listProjectId, category, search])
 
   useEffect(() => {
     const timer = setTimeout(load, search ? 250 : 0)
@@ -94,11 +170,11 @@ export default function DocumentManager({
   }, [load, search])
 
   const uploadType: BlobUploadType = useMemo(() => {
-    if (scope === 'project') {
-      return { type: 'project', projectName, subfolder: uploadCategory }
+    if (uploadScope === 'project') {
+      return { type: 'project', projectName: uploadProjectName, subfolder: uploadCategory }
     }
     return { type: 'company', category: uploadCategory }
-  }, [scope, projectName, uploadCategory])
+  }, [uploadScope, uploadProjectName, uploadCategory])
 
   const registerFile = async (url: string, pathname: string, file: File) => {
     const customTitle = title.trim()
@@ -110,8 +186,8 @@ export default function DocumentManager({
       title: docTitle,
       description: description.trim() || undefined,
       category: uploadCategory,
-      scope,
-      projectId,
+      scope: uploadScope,
+      projectId: uploadScope === 'project' ? uploadTarget : undefined,
       url,
       pathname,
       originalName: file.name,
@@ -121,6 +197,10 @@ export default function DocumentManager({
   }
 
   const onUploaded = async (url: string, pathname: string, file: File) => {
+    if (uploadScope === 'project' && !uploadTarget) {
+      setError('Choose a project before uploading.')
+      return
+    }
     try {
       setSaving(true)
       setError('')
@@ -175,161 +255,264 @@ export default function DocumentManager({
     }
   }
 
-  const total = Object.values(counts).reduce((sum, n) => sum + n, 0)
+  const changeViewScope = (next: ViewScope) => {
+    setViewScope(next)
+    setCategory('all')
+    if (next === 'company') setFilterProjectId('')
+    if (next === 'company') {
+      setUploadTarget('company')
+      setUploadCategory(COMPANY_DOCUMENT_CATEGORIES[0].id)
+    } else if (next === 'project') {
+      const project = filterProjectId || projects[0]?.id || ''
+      if (project) {
+        setUploadTarget(project)
+        setUploadCategory(PROJECT_DOCUMENT_CATEGORIES[0].id)
+      }
+    }
+  }
+
+  const changeUploadTarget = (value: string) => {
+    setUploadTarget(value)
+    const nextScope = value === 'company' ? 'company' : 'project'
+    const nextCats = categoriesFor(nextScope)
+    if (!nextCats.some((item) => item.id === uploadCategory)) {
+      setUploadCategory(nextCats[0].id)
+    }
+  }
+
+  const editCategories = editing ? categoriesFor(editing.scope) : uploadCategories
+  const filterChip = (id: ViewScope, label: string) => (
+    <button
+      type="button"
+      onClick={() => changeViewScope(id)}
+      className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+        viewScope === id ? 'bg-crimson-900 text-white' : `${hoverBtn} ${muted}`
+      }`}
+    >
+      {label}
+    </button>
+  )
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-      <aside className={`rounded-xl border p-3 ${panel}`}>
-        <p className={`px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${muted}`}>Categories</p>
-        <button
-          type="button"
-          onClick={() => setCategory('all')}
-          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${
-            category === 'all' ? 'bg-crimson-900 text-white' : hoverBtn
-          }`}
-        >
-          <span>All</span>
-          <span className="text-xs opacity-70">{total}</span>
-        </button>
-        {categories.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setCategory(item.id)}
-            className={`mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
-              category === item.id ? 'bg-crimson-900 text-white' : hoverBtn
-            }`}
-          >
-            <span>{item.label}</span>
-            <span className="text-xs opacity-70">{counts[item.id] || 0}</span>
-          </button>
-        ))}
-      </aside>
-
-      <div className="space-y-4">
-        <div className={`rounded-xl border p-4 ${panel}`}>
-          <h3 className="font-semibold mb-1">
-            Upload {scope === 'project' ? 'project' : 'company'} document
-          </h3>
-          <p className={`mb-3 text-xs ${muted}`}>
-            Files are stored by category. Add a title if you want a clearer name than the file name.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm">
-              <span className={muted}>Title (optional)</span>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className={`mt-1 w-full rounded-lg border px-3 py-2 ${input}`}
-                placeholder={
-                  scope === 'company' ? 'e.g. Tax clearance 2026' : 'e.g. Approved wireframes'
-                }
-              />
-            </label>
-            <label className="text-sm">
-              <span className={muted}>Category</span>
+    <div className="space-y-4">
+      {library && (
+        <div className={`flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center ${panel}`}>
+          <div className="flex flex-wrap gap-2">
+            {filterChip('all', 'All')}
+            {filterChip('company', 'Company')}
+            {filterChip('project', 'Projects')}
+          </div>
+          {viewScope === 'project' && (
+            <label className="sm:ml-auto text-sm sm:min-w-[240px]">
+              <span className={`sr-only`}>Project</span>
               <select
-                value={uploadCategory}
-                onChange={(e) => setUploadCategory(e.target.value)}
-                className={`mt-1 w-full rounded-lg border px-3 py-2 ${input}`}
+                value={filterProjectId}
+                onChange={(e) => {
+                  const id = e.target.value
+                  setFilterProjectId(id)
+                  setCategory('all')
+                  if (id) {
+                    setUploadTarget(id)
+                    setUploadCategory(PROJECT_DOCUMENT_CATEGORIES[0].id)
+                  }
+                }}
+                className={`w-full rounded-lg border px-3 py-2 ${input}`}
               >
-                {categories.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
+                <option value="">All projects</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.title}
                   </option>
                 ))}
               </select>
             </label>
-          </div>
-          <label className="mt-3 block text-sm">
-            <span className={muted}>Notes (optional)</span>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-              className={`mt-1 w-full rounded-lg border px-3 py-2 ${input}`}
-            />
-          </label>
-          <BlobFileUpload
-            className="mt-3"
-            inputId={`doc-upload-${scope}-${projectId || 'company'}`}
-            uploadType={uploadType}
-            tone={tone}
-            maxFiles={8}
-            label={saving ? 'Saving to library...' : 'Drop files or click to upload'}
-            onUploaded={onUploaded}
-            onUploadingChange={onUploadingChange}
-          />
-        </div>
-
-        <div className={`rounded-xl border p-4 ${panel}`}>
-          <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <MagnifyingGlassIcon className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${muted}`} />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search titles and file names..."
-                className={`w-full rounded-lg border py-2 pl-9 pr-3 ${input}`}
-              />
-            </div>
-          </div>
-
-          {notice && !error && <p className={`mb-3 text-sm ${muted}`}>{notice}</p>}
-          {error && <p className={`mb-3 text-sm ${errorText}`}>{error}</p>}
-
-          {loading ? (
-            <div className={`h-32 animate-pulse rounded-lg ${isDark ? 'bg-granite-700/40' : 'bg-granite-100'}`} />
-          ) : docs.length === 0 ? (
-            <div className={`py-10 text-center ${muted}`}>
-              <FolderIcon className="mx-auto mb-2 h-10 w-10" />
-              <p>No documents in this category yet.</p>
-            </div>
-          ) : (
-            <ul className={`divide-y ${divider}`}>
-              {docs.map((doc) => (
-                <li key={doc.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{doc.title}</p>
-                    <p className={`text-xs ${muted}`}>
-                      {documentCategoryLabel(doc.category, doc.scope)}
-                      {doc.project?.title ? ` · ${doc.project.title}` : ''}
-                      {` · ${formatFileSize(doc.fileSize)} · ${new Date(doc.createdAt).toLocaleDateString()}`}
-                    </p>
-                    <p className={`truncate text-xs ${muted}`}>{doc.originalName}</p>
-                    {doc.description && <p className={`mt-1 text-sm ${muted}`}>{doc.description}</p>}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`rounded-md p-2 ${hoverBtn}`}
-                      title="Open / download"
-                    >
-                      <ArrowDownTrayIcon className="h-4 w-4" />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => setEditing(doc)}
-                      className={`rounded-md p-2 ${hoverBtn}`}
-                      title="Edit details"
-                    >
-                      <PencilSquareIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeDoc(doc.id)}
-                      className={`rounded-md p-2 text-crimson-400 ${hoverBtn}`}
-                      title="Delete"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
           )}
+        </div>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <aside className={`rounded-xl border p-3 ${panel}`}>
+          <p className={`px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${muted}`}>Categories</p>
+          <button
+            type="button"
+            onClick={() => setCategory('all')}
+            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${
+              category === 'all' ? 'bg-crimson-900 text-white' : hoverBtn
+            }`}
+          >
+            <span>All</span>
+            <span className="text-xs opacity-70">{total}</span>
+          </button>
+          {sidebarGroups.map((group) => (
+            <div key={group.scope} className="mt-3">
+              {sidebarGroups.length > 1 && (
+                <p className={`px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide ${muted}`}>
+                  {group.label}
+                </p>
+              )}
+              {group.items.map((item) => {
+                const key = sidebarGroups.length > 1 ? `${group.scope}:${item.id}` : item.id
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setCategory(key)}
+                    className={`mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                      category === key ? 'bg-crimson-900 text-white' : hoverBtn
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    <span className="text-xs opacity-70">{countFor(group.scope, item.id)}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+        </aside>
+
+        <div className="space-y-4">
+          <div className={`rounded-xl border p-4 ${panel}`}>
+            <h3 className="font-semibold mb-1">
+              Upload {uploadScope === 'project' ? 'project' : 'company'} document
+            </h3>
+            <p className={`mb-3 text-xs ${muted}`}>
+              Files are stored by category. Add a title if you want a clearer name than the file name.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {library && (
+                <label className="text-sm sm:col-span-2">
+                  <span className={muted}>Save to</span>
+                  <select
+                    value={uploadTarget}
+                    onChange={(e) => changeUploadTarget(e.target.value)}
+                    className={`mt-1 w-full rounded-lg border px-3 py-2 ${input}`}
+                  >
+                    <option value="company">Company records</option>
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        Project: {project.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label className="text-sm">
+                <span className={muted}>Title (optional)</span>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className={`mt-1 w-full rounded-lg border px-3 py-2 ${input}`}
+                  placeholder={
+                    uploadScope === 'company' ? 'e.g. Tax clearance 2026' : 'e.g. Approved wireframes'
+                  }
+                />
+              </label>
+              <label className="text-sm">
+                <span className={muted}>Category</span>
+                <select
+                  value={uploadCategory}
+                  onChange={(e) => setUploadCategory(e.target.value)}
+                  className={`mt-1 w-full rounded-lg border px-3 py-2 ${input}`}
+                >
+                  {uploadCategories.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label className="mt-3 block text-sm">
+              <span className={muted}>Notes (optional)</span>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                className={`mt-1 w-full rounded-lg border px-3 py-2 ${input}`}
+              />
+            </label>
+            <BlobFileUpload
+              className="mt-3"
+              inputId={`doc-upload-${lockedScope || 'library'}-${lockedProjectId || uploadTarget || 'company'}`}
+              uploadType={uploadType}
+              tone={tone}
+              maxFiles={8}
+              label={saving ? 'Saving to library...' : 'Drop files or click to upload'}
+              onUploaded={onUploaded}
+              onUploadingChange={onUploadingChange}
+            />
+          </div>
+
+          <div className={`rounded-xl border p-4 ${panel}`}>
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${muted}`} />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search titles, file names, and projects..."
+                  className={`w-full rounded-lg border py-2 pl-9 pr-3 ${input}`}
+                />
+              </div>
+            </div>
+
+            {notice && !error && <p className={`mb-3 text-sm ${muted}`}>{notice}</p>}
+            {error && <p className={`mb-3 text-sm ${errorText}`}>{error}</p>}
+
+            {loading ? (
+              <div className={`h-32 animate-pulse rounded-lg ${isDark ? 'bg-granite-700/40' : 'bg-granite-100'}`} />
+            ) : docs.length === 0 ? (
+              <div className={`py-10 text-center ${muted}`}>
+                <FolderIcon className="mx-auto mb-2 h-10 w-10" />
+                <p>No documents in this filter yet.</p>
+              </div>
+            ) : (
+              <ul className={`divide-y ${divider}`}>
+                {docs.map((doc) => (
+                  <li key={doc.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{doc.title}</p>
+                      <p className={`text-xs ${muted}`}>
+                        {doc.scope === 'project' ? 'Project' : 'Company'}
+                        {` · ${documentCategoryLabel(doc.category, doc.scope)}`}
+                        {doc.project?.title ? ` · ${doc.project.title}` : ''}
+                        {` · ${formatFileSize(doc.fileSize)} · ${new Date(doc.createdAt).toLocaleDateString()}`}
+                      </p>
+                      <p className={`truncate text-xs ${muted}`}>{doc.originalName}</p>
+                      {doc.description && <p className={`mt-1 text-sm ${muted}`}>{doc.description}</p>}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`rounded-md p-2 ${hoverBtn}`}
+                        title="Open / download"
+                      >
+                        <ArrowDownTrayIcon className="h-4 w-4" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setEditing(doc)}
+                        className={`rounded-md p-2 ${hoverBtn}`}
+                        title="Edit details"
+                      >
+                        <PencilSquareIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeDoc(doc.id)}
+                        className={`rounded-md p-2 text-crimson-400 ${hoverBtn}`}
+                        title="Delete"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
@@ -352,7 +535,7 @@ export default function DocumentManager({
                 onChange={(e) => setEditing({ ...editing, category: e.target.value })}
                 className={`mt-1 w-full rounded-lg border px-3 py-2 ${input}`}
               >
-                {categories.map((item) => (
+                {editCategories.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.label}
                   </option>

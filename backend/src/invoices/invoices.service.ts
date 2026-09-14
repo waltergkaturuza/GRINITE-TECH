@@ -501,6 +501,13 @@ export class InvoicesService {
       billing_address: originalInvoice.billing_address,
       billing_email: originalInvoice.billing_email,
       billing_phone: originalInvoice.billing_phone,
+      billing_period_start: originalInvoice.billing_period_start
+        ? new Date(originalInvoice.billing_period_start).toISOString()
+        : undefined,
+      billing_period_end: originalInvoice.billing_period_end
+        ? new Date(originalInvoice.billing_period_end).toISOString()
+        : undefined,
+      purchase_order: originalInvoice.purchase_order,
       items: (originalInvoice.items || []).map((item: any) => ({
         description: item.description,
         quantity: toNumber(item.quantity, 1) || 1,

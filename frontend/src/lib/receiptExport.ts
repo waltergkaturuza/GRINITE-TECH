@@ -103,7 +103,7 @@ export function exportReceiptWord(receipt: ReceiptDocument) {
     </div>
   </div>
   <div style="margin-bottom:24px;">
-    <p><strong>To:</strong></p>
+    <p><strong>Bill to:</strong></p>
     <p>${clientName(receipt)}</p>
     ${receipt.billing_address ? `<p style="white-space:pre-line;">${receipt.billing_address}</p>` : ''}
     ${receipt.billing_email ? `<p>Email: ${receipt.billing_email}</p>` : ''}
@@ -144,7 +144,7 @@ export function exportReceiptExcel(receipt: ReceiptDocument) {
     ['Payment Date', formatDate(receipt.payment_date)],
     ...(receipt.payment_reference ? [['Invoice No', receipt.payment_reference]] : []),
     [],
-    ['To', clientName(receipt)],
+    ['Bill to', clientName(receipt)],
     ...(receipt.billing_address ? [['Address', receipt.billing_address]] : []),
     ...(receipt.notes ? [['Description', receipt.notes]] : []),
     [],

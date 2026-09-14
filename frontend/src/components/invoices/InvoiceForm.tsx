@@ -37,6 +37,9 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
     project_id: '',
     issue_date: new Date().toISOString().split('T')[0],
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    billing_period_start: '',
+    billing_period_end: '',
+    purchase_order: '',
     payment_terms: 'net_30' as const,
     tax_rate: 10,
     discount_amount: 0,
@@ -92,6 +95,9 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
         project_id: inv.project_id || '',
         issue_date: inv.issue_date ? new Date(inv.issue_date).toISOString().split('T')[0] : formData.issue_date,
         due_date: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : formData.due_date,
+        billing_period_start: inv.billing_period_start ? new Date(inv.billing_period_start).toISOString().split('T')[0] : '',
+        billing_period_end: inv.billing_period_end ? new Date(inv.billing_period_end).toISOString().split('T')[0] : '',
+        purchase_order: inv.purchase_order || '',
         payment_terms: inv.payment_terms || 'net_30',
         tax_rate: asMoney(inv.tax_rate) || 10,
         discount_amount: asMoney(inv.discount_amount),
@@ -211,6 +217,9 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
       ...formData,
       document_type: documentType,
       project_id: formData.project_id || undefined,
+      billing_period_start: formData.billing_period_start || null,
+      billing_period_end: formData.billing_period_end || null,
+      purchase_order: formData.purchase_order.trim() || undefined,
       items: items.filter(item => item.description.trim() !== ''),
       subtotal: parseFloat(totals.subtotal),
       tax_amount: parseFloat(totals.taxAmount),
@@ -241,7 +250,18 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
             </label>
             <select
               value={formData.client_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value, project_id: '' }))}
+              onChange={(e) => {
+                const clientId = e.target.value
+                const client = clients.find((c) => c.id === clientId)
+                setFormData((prev) => ({
+                  ...prev,
+                  client_id: clientId,
+                  project_id: '',
+                  billing_email: client?.email || prev.billing_email,
+                  billing_phone: client?.phone || prev.billing_phone,
+                  billing_address: client?.companyAddress || prev.billing_address,
+                }))
+              }}
               className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
               required
             >
@@ -320,6 +340,44 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
               required
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Billing period start
+            </label>
+            <input
+              type="date"
+              value={formData.billing_period_start}
+              onChange={(e) => setFormData(prev => ({ ...prev, billing_period_start: e.target.value }))}
+              className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">For hosting, retainers, or other period-based work</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Billing period end
+            </label>
+            <input
+              type="date"
+              value={formData.billing_period_end}
+              onChange={(e) => setFormData(prev => ({ ...prev, billing_period_end: e.target.value }))}
+              className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              PO / client reference
+            </label>
+            <input
+              type="text"
+              value={formData.purchase_order}
+              onChange={(e) => setFormData(prev => ({ ...prev, purchase_order: e.target.value }))}
+              className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              placeholder="Optional purchase order or reference"
+            />
+          </div>
         </div>
 
         {/* Billing Information */}
@@ -380,9 +438,9 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
           />
         </div>
 
-        {/* Seller bank details */}
+        {/* Payment / banking details */}
         <div className="border border-granite-600 rounded-lg p-4">
-          <h4 className="text-white font-medium mb-3">Seller Banking Details</h4>
+          <h4 className="text-white font-medium mb-3">Payment / Banking Details</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input placeholder="Bank" value={formData.company_bank_name} onChange={(e) => setFormData(p => ({ ...p, company_bank_name: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
             <input placeholder="Branch (incl. code)" value={formData.company_bank_branch} onChange={(e) => setFormData(p => ({ ...p, company_bank_branch: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
@@ -394,9 +452,9 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
           </div>
         </div>
 
-        {/* Buyer bank details */}
+        {/* Client tax details */}
         <div className="border border-granite-600 rounded-lg p-4">
-          <h4 className="text-white font-medium mb-3">Buyer Bank Details</h4>
+          <h4 className="text-white font-medium mb-3">Bill-to tax details (optional)</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input placeholder="Bank name" value={formData.buyer_bank_name} onChange={(e) => setFormData(p => ({ ...p, buyer_bank_name: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />
             <input placeholder="SWIFT" value={formData.buyer_swift} onChange={(e) => setFormData(p => ({ ...p, buyer_swift: e.target.value }))} className="px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white text-sm" />

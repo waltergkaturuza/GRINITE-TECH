@@ -31,13 +31,47 @@ export function normalizeInvoice(invoice: any) {
 export const formatCurrency = (amount: unknown, currency = QUANTIS_LETTERHEAD.currency) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(asMoney(amount))
 
-export const formatDate = (dateString?: string) => {
+export const formatDate = (dateString?: string | Date) => {
   if (!dateString) return '—'
-  return new Date(dateString).toLocaleDateString('en-US', {
+  const raw = typeof dateString === 'string' ? dateString : dateString.toISOString()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw.slice(0, 10)) && raw.length <= 10) {
+    const [year, month, day] = raw.split('-').map(Number)
+    return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
+}
+
+export function formatBillingPeriod(start?: string | Date, end?: string | Date) {
+  if (!start && !end) return ''
+  if (start && end) return `${formatDate(start)} – ${formatDate(end)}`
+  return formatDate(start || end)
+}
+
+export function formatPaymentTerms(terms?: string) {
+  switch ((terms || '').toLowerCase()) {
+    case 'due_on_receipt':
+      return 'Due on receipt'
+    case 'net_15':
+      return 'Net 15'
+    case 'net_30':
+      return 'Net 30'
+    case 'net_45':
+      return 'Net 45'
+    case 'net_60':
+      return 'Net 60'
+    default:
+      return terms?.replace(/_/g, ' ') || ''
+  }
 }
 
 export const getBalanceDue = (invoice: { total_amount?: number; amount_paid?: number; balance_due?: number }) => {

@@ -54,6 +54,18 @@ export class CreateInvoiceDto {
   due_date: string;
 
   @IsOptional()
+  @IsDateString()
+  billing_period_start?: string;
+
+  @IsOptional()
+  @IsDateString()
+  billing_period_end?: string;
+
+  @IsOptional()
+  @IsString()
+  purchase_order?: string;
+
+  @IsOptional()
   @IsEnum(PaymentTerms)
   payment_terms?: PaymentTerms;
 
@@ -209,6 +221,18 @@ export class UpdateInvoiceDto {
   @IsOptional()
   @IsDateString()
   due_date?: string;
+
+  @IsOptional()
+  @IsDateString()
+  billing_period_start?: string;
+
+  @IsOptional()
+  @IsDateString()
+  billing_period_end?: string;
+
+  @IsOptional()
+  @IsString()
+  purchase_order?: string;
 
   @IsOptional()
   @IsEnum(InvoiceStatus)

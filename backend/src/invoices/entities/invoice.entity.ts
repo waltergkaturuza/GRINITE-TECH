@@ -60,6 +60,15 @@ export class Invoice {
   @Column()
   due_date: Date;
 
+  @Column({ type: 'date', nullable: true })
+  billing_period_start: Date;
+
+  @Column({ type: 'date', nullable: true })
+  billing_period_end: Date;
+
+  @Column({ nullable: true })
+  purchase_order: string;
+
   @Column({ type: 'varchar', default: InvoiceStatus.DRAFT })
   status: InvoiceStatus;
 

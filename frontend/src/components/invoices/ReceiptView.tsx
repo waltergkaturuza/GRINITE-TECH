@@ -108,7 +108,7 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
             <div>
               <h1 className="text-3xl font-light text-gray-800 mb-4">Receipt</h1>
               <div>
-                <p className="text-sm font-semibold text-gray-600 mb-1">To:</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Bill to</p>
                 <p className="font-medium">{clientName(receipt)}</p>
                 {receipt.billing_address && (
                   <p className="text-sm text-gray-600 mt-1 whitespace-pre-line">{receipt.billing_address}</p>

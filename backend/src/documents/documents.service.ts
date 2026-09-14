@@ -91,7 +91,7 @@ export class DocumentsService {
     }
     if (filters.search?.trim()) {
       qb.andWhere(
-        '(LOWER(doc.title) LIKE :q OR LOWER(doc.originalName) LIKE :q OR LOWER(COALESCE(doc.description, \'\')) LIKE :q)',
+        '(LOWER(doc.title) LIKE :q OR LOWER(doc.originalName) LIKE :q OR LOWER(COALESCE(doc.description, \'\')) LIKE :q OR LOWER(COALESCE(project.title, \'\')) LIKE :q)',
         { q: `%${filters.search.trim().toLowerCase()}%` },
       );
     }
@@ -107,14 +107,17 @@ export class DocumentsService {
       .createQueryBuilder('doc')
       .leftJoin('doc.project', 'project')
       .leftJoin('project.client', 'client')
-      .select('doc.category', 'category')
+      .select('doc.scope', 'scope')
+      .addSelect('doc.category', 'category')
       .addSelect('COUNT(doc.id)', 'count')
-      .groupBy('doc.category');
+      .groupBy('doc.scope')
+      .addGroupBy('doc.category');
 
     await this.applyVisibility(qb, filters, user);
 
     const rows = await qb.getRawMany();
     return rows.map((row) => ({
+      scope: row.doc_scope || row.scope || null,
       category: row.category,
       count: parseInt(String(row.count), 10) || 0,
     }));

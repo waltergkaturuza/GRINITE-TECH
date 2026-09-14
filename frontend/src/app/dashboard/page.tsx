@@ -514,7 +514,7 @@ export default function DashboardPage() {
                             href="/dashboard/documents"
                             className="text-sm font-medium text-crimson-700 hover:text-crimson-800"
                           >
-                            Company documents →
+                            Documents library →
                           </Link>
                         )}
                       </div>

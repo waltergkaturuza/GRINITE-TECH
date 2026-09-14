@@ -25,11 +25,11 @@ export default function DocumentsPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Documents</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Company records library — certificates, bids, contracts, licenses, insurance, policies, and other
-          files that are not tied to a single project. Project files still live on each project’s Files tab.
+          Company records and project files in one library. Filter by company, all projects, or a single
+          project. Each project’s Files tab still shows files for that project only.
         </p>
       </div>
-      <DocumentManager scope="company" tone="dark" />
+      <DocumentManager library tone="dark" />
     </div>
   )
 }

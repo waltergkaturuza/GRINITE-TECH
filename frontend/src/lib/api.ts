@@ -1016,7 +1016,7 @@ export const documentsAPI = {
     return response.data as {
       company: string[]
       project: string[]
-      counts: { category: string; count: number }[]
+      counts: { scope?: string; category: string; count: number }[]
     }
   },
   create: async (data: {

@@ -37,33 +37,9 @@ export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
       return;
     }
 
-    const amountPaidExists = await this.dataSource.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'invoices' AND column_name = 'amount_paid'
-      ) AS exists
-    `);
-
     await this.fixEnumColumns();
-
-    if (amountPaidExists[0]?.exists) {
-      this.logger.log('Invoices schema looks current');
-      return;
-    }
-
-    const countResult = await this.dataSource.query('SELECT COUNT(*)::int AS count FROM invoices');
-    const rowCount = countResult[0]?.count ?? 0;
-
-    if (rowCount > 0) {
-      this.logger.warn(`Invoices table has old schema and ${rowCount} rows — adding columns`);
-      await this.addMissingColumns();
-      return;
-    }
-
-    this.logger.log('Recreating empty invoices tables with current schema...');
-    await this.dataSource.query('DROP TABLE IF EXISTS invoice_items CASCADE');
-    await this.dataSource.query('DROP TABLE IF EXISTS invoices CASCADE');
-    await this.createTables();
+    await this.addMissingColumns();
+    this.logger.log('Invoices schema looks current');
   }
 
   private async fixEnumColumns() {
@@ -90,6 +66,9 @@ export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_account_name VARCHAR`,
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_usd_account VARCHAR`,
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_zig_account VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_period_start DATE`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_period_end DATE`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS purchase_order VARCHAR`,
       `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS unit VARCHAR DEFAULT 'ea'`,
       `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS discount_percent DECIMAL(5,2) DEFAULT 0`,
     ];
@@ -111,6 +90,9 @@ export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
         document_type VARCHAR DEFAULT 'invoice',
         issue_date TIMESTAMP NOT NULL,
         due_date TIMESTAMP NOT NULL,
+        billing_period_start DATE,
+        billing_period_end DATE,
+        purchase_order VARCHAR,
         status VARCHAR DEFAULT 'draft',
         payment_terms VARCHAR DEFAULT 'net_30',
         subtotal DECIMAL(10,2) NOT NULL,
