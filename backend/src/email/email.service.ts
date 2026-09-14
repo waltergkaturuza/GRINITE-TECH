@@ -14,12 +14,16 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
+        user: this.mailUser(),
+        pass: this.mailPass(),
       },
     });
 
-    // Verify connection configuration
+    if (!this.canSend()) {
+      this.logger.warn('Email service is not configured. Set GMAIL_USER and GMAIL_APP_PASSWORD to send news briefs.');
+      return;
+    }
+
     this.transporter.verify((error, success) => {
       if (error) {
         this.logger.error('Email service configuration error:', error);
@@ -42,7 +46,7 @@ export class EmailService {
       const htmlContent = this.generateReplyEmailTemplate(options);
 
       const mailOptions = {
-        from: `"${options.senderName} - Quantis Technologies" <${process.env.GMAIL_USER}>`,
+        from: `"${options.senderName} - Quantis Technologies" <${this.mailUser()}>`,
         to: options.to,
         subject: options.subject,
         html: htmlContent,
@@ -67,7 +71,7 @@ export class EmailService {
       const htmlContent = this.generateRequestNotificationTemplate(options.requestData);
 
       const mailOptions = {
-        from: `"Quantis Technologies System" <${process.env.GMAIL_USER}>`,
+        from: `"Quantis Technologies System" <${this.mailUser()}>`,
         to: options.to,
         subject: options.subject,
         html: htmlContent,
@@ -80,6 +84,132 @@ export class EmailService {
       this.logger.error('Failed to send request notification:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  async sendSubscribeConfirmation(options: {
+    to: string;
+    name?: string;
+    unsubscribeToken: string;
+  }) {
+    if (!this.canSend()) {
+      return { success: false, error: 'Email is not configured' };
+    }
+    try {
+      const site = this.siteUrl();
+      const greeting = options.name ? `Hi ${this.escape(options.name)},` : 'Hello,';
+      const unsubscribeUrl = `${site}/news/unsubscribe?token=${encodeURIComponent(options.unsubscribeToken)}`;
+      const info = await this.transporter.sendMail({
+        from: `"Quantis Technologies" <${this.mailUser()}>`,
+        to: options.to,
+        subject: 'You are subscribed to Quantis news briefs',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #1f2937, #7f1d1d); color: white; padding: 28px; border-radius: 10px 10px 0 0;">
+              <h1 style="margin: 0; font-size: 24px;">Quantis Technologies</h1>
+              <p style="margin: 6px 0 0; opacity: 0.9;">News briefs</p>
+            </div>
+            <div style="background: #f9fafb; padding: 28px; border-radius: 0 0 10px 10px;">
+              <p>${greeting}</p>
+              <p>You will receive a short email whenever we publish a news item or update on the Quantis blog.</p>
+              <p style="text-align: center; margin: 28px 0;">
+                <a href="${site}/news" style="background: #A4193D; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Read News &amp; Updates</a>
+              </p>
+              <p style="color: #6b7280; font-size: 13px;">
+                Unsubscribe anytime: <a href="${unsubscribeUrl}">${unsubscribeUrl}</a>
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+      });
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      this.logger.error('Failed to send subscribe confirmation:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendNewsBrief(options: {
+    to: string;
+    name?: string;
+    title: string;
+    excerpt: string;
+    category: string;
+    slug: string;
+    unsubscribeToken: string;
+  }) {
+    if (!this.canSend()) {
+      return { success: false, error: 'Email is not configured' };
+    }
+    try {
+      const site = this.siteUrl();
+      const articleUrl = `${site}/news/${encodeURIComponent(options.slug)}`;
+      const unsubscribeUrl = `${site}/news/unsubscribe?token=${encodeURIComponent(options.unsubscribeToken)}`;
+      const greeting = options.name ? `Hi ${this.escape(options.name)},` : 'Hello,';
+      const info = await this.transporter.sendMail({
+        from: `"Quantis Technologies" <${this.mailUser()}>`,
+        to: options.to,
+        subject: `Quantis brief: ${options.title}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #1f2937, #7f1d1d); color: white; padding: 28px; border-radius: 10px 10px 0 0;">
+              <h1 style="margin: 0; font-size: 24px;">Quantis news brief</h1>
+              <p style="margin: 6px 0 0; opacity: 0.9; text-transform: capitalize;">${this.escape(options.category || 'update')}</p>
+            </div>
+            <div style="background: #f9fafb; padding: 28px; border-radius: 0 0 10px 10px;">
+              <p>${greeting}</p>
+              <p>A new update was just published on the Quantis blog.</p>
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #A4193D; margin: 20px 0;">
+                <h2 style="margin: 0 0 10px; color: #111827; font-size: 20px;">${this.escape(options.title)}</h2>
+                <p style="margin: 0; color: #4b5563;">${this.escape(options.excerpt)}</p>
+              </div>
+              <p style="text-align: center; margin: 28px 0;">
+                <a href="${articleUrl}" style="background: #A4193D; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Read the full update</a>
+              </p>
+              <p style="color: #6b7280; font-size: 13px;">
+                You received this because you subscribed to Quantis news briefs.
+                <a href="${unsubscribeUrl}">Unsubscribe</a>
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+      });
+      this.logger.log(`News brief sent to ${options.to}: ${info.messageId}`);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      this.logger.error(`Failed to send news brief to ${options.to}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  private canSend() {
+    return Boolean(this.mailUser() && this.mailPass());
+  }
+
+  private mailUser() {
+    return process.env.GMAIL_USER || process.env.EMAIL_USER || '';
+  }
+
+  private mailPass() {
+    return process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASSWORD || '';
+  }
+
+  private siteUrl() {
+    return (process.env.FRONTEND_URL || 'https://www.quantistechnologies.co.zw').replace(/\/$/, '');
+  }
+
+  private escape(value: string) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   private generateReplyEmailTemplate(options: {

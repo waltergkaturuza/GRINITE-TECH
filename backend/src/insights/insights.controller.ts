@@ -16,6 +16,7 @@ import {
   CreateInsightDto,
   CreateQuestionDto,
   InsightFilterDto,
+  SubscribeInsightDto,
   UpdateCommentDto,
   UpdateInsightDto,
   VoteCommentDto,
@@ -61,6 +62,23 @@ export class InsightsController {
   @UseGuards(OptionalJwtAuthGuard)
   askQuestion(@Body() dto: CreateQuestionDto, @CurrentUser() user: any) {
     return this.insightsService.createQuestion(dto, user);
+  }
+
+  @Post('subscribe')
+  subscribe(@Body() dto: SubscribeInsightDto) {
+    return this.insightsService.subscribe(dto);
+  }
+
+  @Get('unsubscribe')
+  unsubscribe(@Query('token') token: string) {
+    return this.insightsService.unsubscribe(token);
+  }
+
+  @Get('admin/subscribers')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.DEVELOPER, UserRole.STAFF)
+  listSubscribers() {
+    return this.insightsService.listSubscribers();
   }
 
   @Post('comments/:id/vote')

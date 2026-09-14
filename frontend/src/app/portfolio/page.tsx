@@ -754,13 +754,17 @@ export default function Portfolio() {
 
   useEffect(() => {
     if (loading) return
-    const scrollToFeatured = () => {
-      if (window.location.hash !== '#featured-work') return
-      document.getElementById('featured-work')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const scrollToHash = () => {
+      const id = window.location.hash.replace('#', '')
+      if (!id) return
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-    scrollToFeatured()
-    window.addEventListener('hashchange', scrollToFeatured)
-    return () => window.removeEventListener('hashchange', scrollToFeatured)
+    const timer = window.setTimeout(scrollToHash, 50)
+    window.addEventListener('hashchange', scrollToHash)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('hashchange', scrollToHash)
+    }
   }, [loading])
 
   // Sample skills data
@@ -958,7 +962,7 @@ export default function Portfolio() {
         </div>
 
         {/* Skills Section */}
-        <div className="mb-16">
+        <div id="technical-skills" className="mb-16 scroll-mt-24">
           <h2 className="text-3xl font-bold text-white text-center mb-12">Technical Skills</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {skills.map((skillGroup, index) => (
@@ -1155,7 +1159,7 @@ export default function Portfolio() {
         </div>
 
         {/* Experience Section */}
-        <div className="mb-16">
+        <div id="experience-approach" className="mb-16 scroll-mt-24">
           <h2 className="text-3xl font-bold text-white text-center mb-12">Experience & Approach</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -1198,7 +1202,7 @@ export default function Portfolio() {
         </div>
 
         {/* Contact Section */}
-        <div className="text-center bg-white rounded-lg shadow-sm border p-12">
+        <div id="partner-with-quantis" className="text-center bg-white rounded-lg shadow-sm border p-12 scroll-mt-24">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Partner With Quantis</h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Ready to modernize your systems? Talk with our team about a secure, scalable

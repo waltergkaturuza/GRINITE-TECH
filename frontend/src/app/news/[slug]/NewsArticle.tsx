@@ -12,6 +12,7 @@ import {
   EyeIcon,
 } from '@heroicons/react/24/outline'
 import { insightsAPI } from '@/lib/api'
+import NewsSubscribeForm from '@/components/NewsSubscribeForm'
 import {
   InsightComment,
   InsightPost,
@@ -301,6 +302,10 @@ export default function NewsArticle() {
               {saving ? 'Publishing...' : 'Publish contribution'}
             </button>
           </form>
+        </section>
+
+        <section className="mt-10">
+          <NewsSubscribeForm variant="compact" />
         </section>
       </div>
     </article>

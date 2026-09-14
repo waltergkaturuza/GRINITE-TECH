@@ -98,5 +98,21 @@ export class InsightsSchemaBootstrap implements OnApplicationBootstrap {
         )
       `);
     }
+
+    if (!(await this.tableExists('insight_subscribers'))) {
+      this.logger.log('Creating insight_subscribers table');
+      await this.dataSource.query(`
+        CREATE TABLE insight_subscribers (
+          id uuid PRIMARY KEY,
+          email varchar(255) NOT NULL UNIQUE,
+          name varchar(80),
+          status varchar(32) NOT NULL DEFAULT 'active',
+          "unsubscribeToken" varchar(80) NOT NULL UNIQUE,
+          "unsubscribedAt" timestamp,
+          "createdAt" timestamp NOT NULL DEFAULT now(),
+          "updatedAt" timestamp NOT NULL DEFAULT now()
+        )
+      `);
+    }
   }
 }

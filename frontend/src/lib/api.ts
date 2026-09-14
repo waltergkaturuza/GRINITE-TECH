@@ -29,7 +29,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       const url = String(error.config?.url || '')
-      const skipLoginRedirect = /\/insights\/(questions|[^/]+\/comments|comments\/)/.test(url)
+      const skipLoginRedirect = /\/insights\/(questions|subscribe|unsubscribe|[^/]+\/comments|comments\/)/.test(url)
       if (!skipLoginRedirect) {
         localStorage.removeItem('token')
         window.location.href = '/login'
@@ -936,6 +936,18 @@ export const insightsAPI = {
     authorEmail?: string
   }) => {
     const response = await api.post('/insights/questions', data)
+    return response.data
+  },
+  subscribe: async (email: string, name?: string) => {
+    const response = await api.post('/insights/subscribe', { email, name })
+    return response.data
+  },
+  unsubscribe: async (token: string) => {
+    const response = await api.get('/insights/unsubscribe', { params: { token } })
+    return response.data
+  },
+  adminSubscribers: async () => {
+    const response = await api.get('/insights/admin/subscribers')
     return response.data
   },
   voteComment: async (id: string, value: 1 | -1, voterKey: string) => {

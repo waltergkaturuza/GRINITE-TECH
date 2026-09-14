@@ -11,6 +11,7 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline'
 import { insightsAPI } from '@/lib/api'
+import NewsSubscribeForm from '@/components/NewsSubscribeForm'
 import {
   INSIGHT_CATEGORIES,
   InsightPost,
@@ -125,6 +126,7 @@ export default function NewsHub() {
                 <QuestionMarkCircleIcon className="h-5 w-5 mr-2" />
                 Ask a question
               </button>
+              <NewsSubscribeForm />
             </div>
           </div>
         </div>
@@ -264,6 +266,7 @@ export default function NewsHub() {
               </div>
 
               <aside className="space-y-6">
+                <NewsSubscribeForm variant="compact" />
                 <div className="rounded-2xl border border-granite-200 bg-granite-50 p-5">
                   <h3 className="font-semibold text-granite-900 mb-3">Open questions</h3>
                   {questions.length === 0 ? (

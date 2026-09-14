@@ -2,10 +2,12 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomUUID } from 'crypto';
 import {
   InsightCategory,
   InsightKind,
@@ -15,13 +17,19 @@ import {
 import { InsightComment, InsightCommentStatus } from './entities/insight-comment.entity';
 import { InsightVote } from './entities/insight-vote.entity';
 import {
+  InsightSubscriber,
+  InsightSubscriberStatus,
+} from './entities/insight-subscriber.entity';
+import {
   CreateCommentDto,
   CreateInsightDto,
   CreateQuestionDto,
   InsightFilterDto,
+  SubscribeInsightDto,
   UpdateCommentDto,
   UpdateInsightDto,
 } from './dto/insight.dto';
+import { EmailService } from '../email/email.service';
 
 type AuthUser = {
   userId?: string;
@@ -71,6 +79,8 @@ function isStaff(user?: AuthUser) {
 
 @Injectable()
 export class InsightsService {
+  private readonly logger = new Logger(InsightsService.name);
+
   constructor(
     @InjectRepository(InsightPost)
     private readonly posts: Repository<InsightPost>,
@@ -78,7 +88,10 @@ export class InsightsService {
     private readonly comments: Repository<InsightComment>,
     @InjectRepository(InsightVote)
     private readonly votes: Repository<InsightVote>,
-  ) {  }
+    @InjectRepository(InsightSubscriber)
+    private readonly subscribers: Repository<InsightSubscriber>,
+    private readonly emailService: EmailService,
+  ) {}
 
   async seedIfEmpty() {
     const count = await this.posts.count();
@@ -327,7 +340,9 @@ Share a research note, a failure, or a pattern. High-signal answers will be cura
       authorUserId: user?.userId,
       publishedAt: (dto.status || InsightStatus.DRAFT) === InsightStatus.PUBLISHED ? new Date() : null,
     });
-    return this.posts.save(post);
+    const saved = await this.posts.save(post);
+    this.queueNewsBrief(saved);
+    return saved;
   }
 
   async createQuestion(dto: CreateQuestionDto, user?: AuthUser) {
@@ -362,7 +377,11 @@ Share a research note, a failure, or a pattern. High-signal answers will be cura
     if (dto.status === InsightStatus.PUBLISHED && !wasPublished) {
       post.publishedAt = new Date();
     }
-    return this.posts.save(post);
+    const saved = await this.posts.save(post);
+    if (!wasPublished && saved.status === InsightStatus.PUBLISHED) {
+      this.queueNewsBrief(saved);
+    }
+    return saved;
   }
 
   async remove(id: string) {
@@ -518,6 +537,98 @@ Share a research note, a failure, or a pattern. High-signal answers will be cura
       .orderBy('post.publishedAt', 'DESC')
       .take(8)
       .getMany();
+  }
+
+  async subscribe(dto: SubscribeInsightDto) {
+    const email = dto.email.trim().toLowerCase();
+    const name = dto.name?.trim() || null;
+    let subscriber = await this.subscribers.findOne({ where: { email } });
+
+    if (subscriber?.status === InsightSubscriberStatus.ACTIVE) {
+      return { success: true, alreadySubscribed: true };
+    }
+
+    if (subscriber) {
+      subscriber.status = InsightSubscriberStatus.ACTIVE;
+      subscriber.unsubscribedAt = null;
+      subscriber.unsubscribeToken = randomUUID();
+      if (name) subscriber.name = name;
+    } else {
+      subscriber = this.subscribers.create({
+        email,
+        name,
+        status: InsightSubscriberStatus.ACTIVE,
+        unsubscribeToken: randomUUID(),
+      });
+    }
+
+    const saved = await this.subscribers.save(subscriber);
+    void this.emailService
+      .sendSubscribeConfirmation({
+        to: saved.email,
+        name: saved.name,
+        unsubscribeToken: saved.unsubscribeToken,
+      })
+      .catch((error) =>
+        this.logger.error(
+          `Subscribe confirmation failed for ${saved.email}`,
+          error instanceof Error ? error.stack : error,
+        ),
+      );
+
+    return { success: true, alreadySubscribed: false };
+  }
+
+  async unsubscribe(token?: string) {
+    const value = String(token || '').trim();
+    if (!value) throw new BadRequestException('Unsubscribe token is required');
+    const subscriber = await this.subscribers.findOne({ where: { unsubscribeToken: value } });
+    if (!subscriber) throw new NotFoundException('Subscription was not found');
+    subscriber.status = InsightSubscriberStatus.UNSUBSCRIBED;
+    subscriber.unsubscribedAt = new Date();
+    await this.subscribers.save(subscriber);
+    return { success: true };
+  }
+
+  async listSubscribers() {
+    const items = await this.subscribers.find({
+      order: { createdAt: 'DESC' },
+    });
+    return items.map(({ unsubscribeToken, ...rest }) => rest);
+  }
+
+  private queueNewsBrief(post: InsightPost) {
+    if (post.status !== InsightStatus.PUBLISHED) return;
+    if (post.kind === InsightKind.QUESTION) return;
+    void this.sendNewsBriefs(post).catch((error) =>
+      this.logger.error(
+        `News brief send failed for ${post.slug}`,
+        error instanceof Error ? error.stack : error,
+      ),
+    );
+  }
+
+  private async sendNewsBriefs(post: InsightPost) {
+    const recipients = await this.subscribers.find({
+      where: { status: InsightSubscriberStatus.ACTIVE },
+    });
+    if (!recipients.length) return;
+
+    const excerpt = (post.excerpt || post.body || '').replace(/\s+/g, ' ').trim().slice(0, 280);
+    for (const subscriber of recipients) {
+      const result = await this.emailService.sendNewsBrief({
+        to: subscriber.email,
+        name: subscriber.name,
+        title: post.title,
+        excerpt,
+        category: post.category,
+        slug: post.slug,
+        unsubscribeToken: subscriber.unsubscribeToken,
+      });
+      if (!result.success) {
+        this.logger.warn(`News brief was not delivered to ${subscriber.email}: ${result.error}`);
+      }
+    }
   }
 
   private nestComments(comments: InsightComment[]): ThreadedComment[] {

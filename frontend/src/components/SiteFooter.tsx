@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
 import { COMPANY_CONTACT, QUANTIS_LOGO_URL } from '@/constants/company'
+import NewsSubscribeForm from '@/components/NewsSubscribeForm'
 
 const SERVICE_LINKS = [
   { href: '/services/custom-software', key: 'footer.services.web' },
@@ -38,7 +39,7 @@ export default function SiteFooter() {
   return (
     <footer className="bg-granite-800 text-white py-12 border-t border-granite-700">
       <div className="wide-container px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8">
           <div>
             <Link href="/" className="mb-4 inline-flex">
               <img
@@ -55,9 +56,9 @@ export default function SiteFooter() {
               <p>{COMPANY_CONTACT.addressLine2}</p>
             </address>
           </div>
-          <div>
+          <div className="lg:col-span-2">
             <h4 className="font-semibold mb-4 text-peach-300">{t(lang, 'footer.sitemap')}</h4>
-            <ul className="space-y-2 text-gray-300">
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-gray-300">
               {SITEMAP_LINKS.map((item) => (
                 <li key={item.href}>
                   <Link
@@ -70,43 +71,45 @@ export default function SiteFooter() {
               ))}
             </ul>
           </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-crimson-300">
-              <Link href="/services" className="hover:text-crimson-200 transition-colors duration-200">
-                {t(lang, 'footer.services')}
-              </Link>
-            </h4>
-            <ul className="space-y-2 text-gray-300">
-              {SERVICE_LINKS.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block py-1 hover:text-crimson-300 transition-colors duration-200"
-                  >
-                    {t(lang, item.key)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-jungle-300">
-              <Link href="/products" className="hover:text-jungle-200 transition-colors duration-200">
-                {t(lang, 'footer.products')}
-              </Link>
-            </h4>
-            <ul className="space-y-2 text-gray-300">
-              {PRODUCT_LINKS.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block py-1 hover:text-jungle-300 transition-colors duration-200"
-                  >
-                    {t(lang, item.key)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className="grid grid-cols-2 gap-6 sm:contents">
+            <div>
+              <h4 className="font-semibold mb-4 text-crimson-300">
+                <Link href="/services" className="hover:text-crimson-200 transition-colors duration-200">
+                  {t(lang, 'footer.services')}
+                </Link>
+              </h4>
+              <ul className="space-y-2 text-gray-300">
+                {SERVICE_LINKS.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="block py-1 hover:text-crimson-300 transition-colors duration-200"
+                    >
+                      {t(lang, item.key)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-jungle-300">
+                <Link href="/products" className="hover:text-jungle-200 transition-colors duration-200">
+                  {t(lang, 'footer.products')}
+                </Link>
+              </h4>
+              <ul className="space-y-2 text-gray-300">
+                {PRODUCT_LINKS.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="block py-1 hover:text-jungle-300 transition-colors duration-200"
+                    >
+                      {t(lang, item.key)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
           <div>
             <h4 className="font-semibold mb-4 text-olive-300">
@@ -147,6 +150,9 @@ export default function SiteFooter() {
               </li>
             </ul>
           </div>
+        </div>
+        <div className="border-t border-granite-700 mt-8 pt-8">
+          <NewsSubscribeForm variant="footer" />
         </div>
         <div className="border-t border-granite-700 mt-8 pt-8 text-center space-y-2">
           <p className="text-gray-400">

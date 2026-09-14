@@ -12,7 +12,7 @@ import { insightsAPI } from '@/lib/api'
 import { INSIGHT_CATEGORIES, InsightPost, categoryLabel, formatInsightDate } from '@/lib/insights'
 import { isStaffRole } from '@/lib/dashboardRoles'
 
-type Tab = 'posts' | 'comments'
+type Tab = 'posts' | 'comments' | 'subscribers'
 
 const emptyForm = {
   title: '',
@@ -31,6 +31,7 @@ export default function InsightsAdminPage() {
   const [tab, setTab] = useState<Tab>('posts')
   const [posts, setPosts] = useState<InsightPost[]>([])
   const [comments, setComments] = useState<any[]>([])
+  const [subscribers, setSubscribers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
@@ -42,9 +43,14 @@ export default function InsightsAdminPage() {
   const load = async () => {
     try {
       setLoading(true)
-      const [items, thread] = await Promise.all([insightsAPI.adminList(), insightsAPI.adminComments()])
+      const [items, thread, subs] = await Promise.all([
+        insightsAPI.adminList(),
+        insightsAPI.adminComments(),
+        insightsAPI.adminSubscribers(),
+      ])
       setPosts(Array.isArray(items) ? items : [])
       setComments(Array.isArray(thread) ? thread : [])
+      setSubscribers(Array.isArray(subs) ? subs : [])
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Could not load insights.')
     } finally {
@@ -123,7 +129,10 @@ export default function InsightsAdminPage() {
             <NewspaperIcon className="h-7 w-7 text-yellow-900" />
             News & Updates
           </h1>
-          <p className="text-granite-300 mt-1">Publish articles, promotions, and moderate community contributions.</p>
+          <p className="text-granite-300 mt-1">
+            Publish articles, promotions, and moderate community contributions. Publishing an article emails active
+            news-brief subscribers.
+          </p>
         </div>
         <button onClick={openCreate} className="inline-flex items-center btn-primary">
           <PlusIcon className="h-5 w-5 mr-2" />
@@ -132,13 +141,14 @@ export default function InsightsAdminPage() {
       </div>
 
       <div className="flex gap-2 mb-6">
-        {(['posts', 'comments'] as Tab[]).map((item) => (
+        {(['posts', 'comments', 'subscribers'] as Tab[]).map((item) => (
           <button
             key={item}
             onClick={() => setTab(item)}
             className={`px-4 py-2 rounded-lg capitalize ${tab === item ? 'bg-crimson-900' : 'bg-granite-800 text-granite-200'}`}
           >
             {item}
+            {item === 'subscribers' ? ` (${subscribers.length})` : ''}
           </button>
         ))}
       </div>
@@ -185,6 +195,30 @@ export default function InsightsAdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      ) : tab === 'subscribers' ? (
+        <div className="overflow-x-auto rounded-xl border border-granite-700">
+          <table className="min-w-full text-sm">
+            <thead className="bg-granite-800 text-granite-300">
+              <tr>
+                <th className="text-left px-4 py-3">Email</th>
+                <th className="text-left px-4 py-3">Name</th>
+                <th className="text-left px-4 py-3">Status</th>
+                <th className="text-left px-4 py-3">Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subscribers.map((sub) => (
+                <tr key={sub.id} className="border-t border-granite-700">
+                  <td className="px-4 py-3">{sub.email}</td>
+                  <td className="px-4 py-3 text-granite-300">{sub.name || '—'}</td>
+                  <td className="px-4 py-3 capitalize">{sub.status}</td>
+                  <td className="px-4 py-3 text-granite-300">{formatInsightDate(sub.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {subscribers.length === 0 && <p className="text-granite-400 px-4 py-6">No subscribers yet.</p>}
         </div>
       ) : (
         <div className="space-y-3">

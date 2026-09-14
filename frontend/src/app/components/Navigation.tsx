@@ -140,8 +140,10 @@ export default function Navigation() {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isServicesOpen, setIsServicesOpen] = useState(false)
+  const [isPortfolioOpen, setIsPortfolioOpen] = useState(false)
   const { lang, setLang } = useLanguage()
   const servicesMenuRef = useRef<HTMLDivElement>(null)
+  const portfolioMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -164,17 +166,20 @@ export default function Navigation() {
   }, [])
 
   useEffect(() => {
-    if (!isServicesOpen) return
+    if (!isServicesOpen && !isPortfolioOpen) return
     const onMouseDown = (e: MouseEvent) => {
-      const el = servicesMenuRef.current
-      if (!el) return
-      if (e.target instanceof Node && !el.contains(e.target)) {
+      const target = e.target
+      if (!(target instanceof Node)) return
+      if (isServicesOpen && servicesMenuRef.current && !servicesMenuRef.current.contains(target)) {
         setIsServicesOpen(false)
+      }
+      if (isPortfolioOpen && portfolioMenuRef.current && !portfolioMenuRef.current.contains(target)) {
+        setIsPortfolioOpen(false)
       }
     }
     document.addEventListener('mousedown', onMouseDown)
     return () => document.removeEventListener('mousedown', onMouseDown)
-  }, [isServicesOpen])
+  }, [isServicesOpen, isPortfolioOpen])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -204,6 +209,21 @@ export default function Navigation() {
     'text-sm font-medium text-emerald-800 hover:text-emerald-950 transition-colors duration-200'
   const mobileLinkClass =
     'block px-3 py-2 text-emerald-800 hover:text-emerald-950'
+  const dropdownItemClass = 'block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50'
+  const portfolioSections = [
+    { href: '/portfolio#technical-skills', id: 'technical-skills', key: 'nav.portfolio.skills' },
+    { href: '/portfolio#featured-work', id: 'featured-work', key: 'nav.portfolio.featured' },
+    { href: '/portfolio#experience-approach', id: 'experience-approach', key: 'nav.portfolio.experience' },
+    { href: '/portfolio#partner-with-quantis', id: 'partner-with-quantis', key: 'nav.portfolio.partner' },
+  ] as const
+
+  const goToPortfolioSection = (id: string) => {
+    setIsPortfolioOpen(false)
+    setIsMenuOpen(false)
+    window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+  }
 
   return (
     <nav className="bg-white shadow-sm border-b border-granite-200 sticky top-0 z-50 overflow-visible">
@@ -225,7 +245,10 @@ export default function Navigation() {
             </Link>
             <div className="relative" ref={servicesMenuRef}>
               <button
-                onClick={() => setIsServicesOpen((v) => !v)}
+                onClick={() => {
+                  setIsServicesOpen((v) => !v)
+                  setIsPortfolioOpen(false)
+                }}
                 className={`inline-flex items-center ${linkClass}`}
                 aria-haspopup="menu"
                 aria-expanded={isServicesOpen}
@@ -289,9 +312,36 @@ export default function Navigation() {
             <Link href="/news" className={linkClass}>
               {t(lang, 'nav.news')}
             </Link>
-            <Link href="/portfolio" className={linkClass}>
-              {t(lang, 'nav.portfolio')}
-            </Link>
+            <div className="relative" ref={portfolioMenuRef}>
+              <button
+                onClick={() => {
+                  setIsPortfolioOpen((v) => !v)
+                  setIsServicesOpen(false)
+                }}
+                className={`inline-flex items-center ${linkClass}`}
+                aria-haspopup="menu"
+                aria-expanded={isPortfolioOpen}
+              >
+                <span>{t(lang, 'nav.portfolio')}</span>
+                <svg className="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="none">
+                  <path d="M5.5 7.5L10 12L14.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+              {isPortfolioOpen && (
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl shadow-lg bg-white border border-granite-200 py-2 z-50">
+                  {portfolioSections.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={dropdownItemClass}
+                      onClick={() => goToPortfolioSection(item.id)}
+                    >
+                      {t(lang, item.key)}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link href="/about" className={linkClass}>
               {t(lang, 'nav.about')}
             </Link>
@@ -347,9 +397,23 @@ export default function Navigation() {
               <Link href="/news" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
                 {t(lang, 'nav.news')}
               </Link>
-              <Link href="/portfolio" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
-                {t(lang, 'nav.portfolio')}
-              </Link>
+              <div className="pt-1">
+                <Link href="/portfolio" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
+                  {t(lang, 'nav.portfolio')}
+                </Link>
+                <div className="ml-3 border-l border-granite-200">
+                  {portfolioSections.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={mobileLinkClass}
+                      onClick={() => goToPortfolioSection(item.id)}
+                    >
+                      {t(lang, item.key)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
               <Link href="/about" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
                 {t(lang, 'nav.about')}
               </Link>

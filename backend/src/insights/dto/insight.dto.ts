@@ -215,3 +215,13 @@ export class UpdateCommentDto {
   @MaxLength(4000)
   body?: string;
 }
+
+export class SubscribeInsightDto {
+  @IsEmail()
+  email: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  name?: string;
+}

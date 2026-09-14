@@ -30,7 +30,12 @@ const LOCAL_PAGES: Array<{ label: string; path: string; keywords: string[] }> = 
   { label: 'E-commerce', path: '/services/ecommerce', keywords: ['ecommerce', 'shop'] },
   { label: 'Products', path: '/products', keywords: ['products', 'store'] },
   { label: 'News & Updates', path: '/news', keywords: ['news', 'updates', 'blog', 'insights', 'research'] },
+  { label: 'Subscribe to news briefs', path: '/news', keywords: ['subscribe', 'newsletter', 'email', 'brief'] },
   { label: 'Portfolio', path: '/portfolio', keywords: ['portfolio', 'work', 'projects'] },
+  { label: 'Technical Skills', path: '/portfolio#technical-skills', keywords: ['skills', 'technical'] },
+  { label: 'Featured Work', path: '/portfolio#featured-work', keywords: ['featured', 'projects'] },
+  { label: 'Experience & Approach', path: '/portfolio#experience-approach', keywords: ['experience', 'approach'] },
+  { label: 'Partner With Quantis', path: '/portfolio#partner-with-quantis', keywords: ['partner', 'hire'] },
   { label: 'Track request', path: '/track-request', keywords: ['track', 'status', 'request'] },
   { label: 'Login', path: '/login', keywords: ['login', 'signin', 'admin'] },
 ]

@@ -26,6 +26,7 @@ import { Invoice, InvoiceItem } from '../invoices/entities/invoice.entity';
 import { InsightPost } from '../insights/entities/insight-post.entity';
 import { InsightComment } from '../insights/entities/insight-comment.entity';
 import { InsightVote } from '../insights/entities/insight-vote.entity';
+import { InsightSubscriber } from '../insights/entities/insight-subscriber.entity';
 
 export {
   User,
@@ -51,6 +52,7 @@ export {
   InsightPost,
   InsightComment,
   InsightVote,
+  InsightSubscriber,
 };
 
 export const ALL_ENTITIES: Function[] = [
@@ -77,4 +79,5 @@ export const ALL_ENTITIES: Function[] = [
   InsightPost,
   InsightComment,
   InsightVote,
+  InsightSubscriber,
 ];
