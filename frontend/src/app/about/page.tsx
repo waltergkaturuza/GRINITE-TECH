@@ -1,32 +1,20 @@
 import Navigation from '../components/Navigation'
 import Link from 'next/link'
-import { 
-  UserGroupIcon,
-  LightBulbIcon,
-  RocketLaunchIcon,
-  ShieldCheckIcon,
-  AcademicCapIcon,
-  TrophyIcon
-} from '@heroicons/react/24/outline'
 
 const values = [
   {
-    icon: LightBulbIcon,
     title: 'Innovation',
     description: 'We embrace cutting-edge technologies and creative solutions to solve complex problems.'
   },
   {
-    icon: ShieldCheckIcon,
     title: 'Quality',
     description: 'Every project undergoes rigorous testing and quality assurance to exceed expectations.'
   },
   {
-    icon: UserGroupIcon,
     title: 'Collaboration',
     description: 'We work closely with our clients as partners in their digital transformation journey.'
   },
   {
-    icon: RocketLaunchIcon,
     title: 'Growth',
     description: 'We focus on scalable solutions that grow with your business and adapt to changing needs.'
   }
@@ -34,25 +22,21 @@ const values = [
 
 const achievements = [
   {
-    icon: TrophyIcon,
     number: '100+',
     label: 'Projects Completed',
     description: 'Successfully delivered projects across various industries'
   },
   {
-    icon: UserGroupIcon,
     number: '50+',
     label: 'Happy Clients',
     description: 'Building long-term partnerships with satisfied customers'
   },
   {
-    icon: AcademicCapIcon,
     number: '5+',
     label: 'Years Experience',
     description: 'Proven track record in software development and consulting'
   },
   {
-    icon: RocketLaunchIcon,
     number: '99%',
     label: 'Project Success Rate',
     description: 'Delivering on time and within budget consistently'
@@ -135,9 +119,6 @@ export default function AboutPage() {
                 key={index}
                 className="text-center bg-gradient-to-br from-granite-50 to-white p-8 rounded-2xl border border-granite-200 hover:shadow-lg transition-all duration-300"
               >
-                <div className="bg-gradient-to-br from-crimson-500 to-crimson-600 p-4 rounded-xl inline-block mb-6">
-                  <value.icon className="h-8 w-8 text-white" />
-                </div>
                 <h3 className="text-xl font-bold text-granite-800 mb-4">{value.title}</h3>
                 <p className="text-granite-600">{value.description}</p>
               </div>
@@ -159,66 +140,11 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {achievements.map((achievement, index) => (
               <div key={index} className="text-center">
-                <div className="bg-gradient-to-br from-yellow-400 to-peach-400 p-4 rounded-xl inline-block mb-6">
-                  <achievement.icon className="h-8 w-8 text-granite-800" />
-                </div>
                 <div className="text-4xl font-bold mb-2">{achievement.number}</div>
                 <div className="text-xl font-semibold mb-3">{achievement.label}</div>
                 <p className="text-granite-200">{achievement.description}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Directors Section */}
-      <section className="py-12 md:py-20 bg-white">
-        <div className="wide-container px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-granite-800 mb-4">Company Directors</h2>
-            <p className="text-lg md:text-xl text-granite-600 max-w-3xl mx-auto px-4">
-              Leadership team committed to excellence and innovation
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
-            {/* Director 1 */}
-            <div className="bg-gradient-to-br from-granite-50 to-white rounded-xl md:rounded-2xl shadow-lg border border-granite-200 p-4 md:p-6 hover:shadow-xl transition-all duration-300">
-              <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
-                <div className="bg-gradient-to-br from-crimson-500 to-crimson-600 p-3 md:p-4 rounded-xl flex-shrink-0">
-                  <UserGroupIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg md:text-xl font-bold text-granite-800 mb-2 break-words">Greenford Walter Katuruza</h3>
-                  <p className="text-crimson-600 font-semibold mb-3 text-sm md:text-base">Director</p>
-                  <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-granite-600">
-                    <p className="break-words"><span className="font-semibold">ID:</span> 47-175650E47</p>
-                    <p><span className="font-semibold">Nationality:</span> Zimbabwe</p>
-                    <p className="break-words"><span className="font-semibold">Address:</span> 6240 Westlea Harare</p>
-                    <p><span className="font-semibold">Appointed:</span> 26/11/2025</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Director 2 */}
-            <div className="bg-gradient-to-br from-granite-50 to-white rounded-xl md:rounded-2xl shadow-lg border border-granite-200 p-4 md:p-6 hover:shadow-xl transition-all duration-300">
-              <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
-                <div className="bg-gradient-to-br from-crimson-500 to-crimson-600 p-3 md:p-4 rounded-xl flex-shrink-0">
-                  <UserGroupIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg md:text-xl font-bold text-granite-800 mb-2 break-words">Pardon Mhembere</h3>
-                  <p className="text-crimson-600 font-semibold mb-3 text-sm md:text-base">Director & Secretary</p>
-                  <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-granite-600">
-                    <p className="break-words"><span className="font-semibold">ID:</span> 68-2000402J68</p>
-                    <p><span className="font-semibold">Nationality:</span> Zimbabwe</p>
-                    <p className="break-words"><span className="font-semibold">Address:</span> 5799 Clusters Chipadze Bindura</p>
-                    <p><span className="font-semibold">Appointed:</span> 26/11/2025</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
