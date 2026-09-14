@@ -22,7 +22,7 @@ export default function HomePageClient() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="py-16 sm:py-20 relative overflow-hidden">
+      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('/wp4004960-engineer-wallpapers.jpg')" }}
@@ -31,39 +31,37 @@ export default function HomePageClient() {
         <div className="absolute inset-0 bg-gradient-to-br from-granite-900/85 via-granite-800/75 to-crimson-950/80" aria-hidden />
 
         <div className="wide-container px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,520px)_1fr] gap-10 lg:gap-14 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)] gap-6 lg:gap-8 xl:gap-10 items-center">
             {/* Full wordmark on a light plate so navy artwork reads on the photo */}
-            <div className="flex justify-center lg:justify-start order-1">
-              <div className="rounded-3xl bg-white px-8 py-6 sm:px-10 sm:py-8 shadow-2xl">
+            <div className="flex justify-center lg:justify-start order-1 min-w-0">
+              <div className="rounded-3xl bg-white px-4 py-3 sm:px-6 sm:py-5 shadow-2xl [perspective:1100px] overflow-visible w-full max-w-[320px] lg:max-w-none">
                 <img
                   src={QUANTIS_LOGO_URL}
                   alt="Quantis Technologies"
-                  className="h-28 sm:h-36 md:h-44 w-auto max-w-[min(88vw,500px)] object-contain"
+                  className="quantis-logo-hinge h-20 sm:h-24 lg:h-28 w-auto max-w-full object-contain"
                 />
               </div>
             </div>
 
             {/* Hero text - below logo on mobile, right on desktop */}
             <div className="text-center lg:text-left order-2 min-w-0 w-full">
-              <div className="w-full max-w-3xl lg:max-w-none mx-auto lg:mx-0">
-                <h1 className="font-bold mb-6 leading-[1.1] tracking-tight">
-                  <span className="block w-full text-white text-[clamp(1.35rem,3.6vw,3.25rem)] lg:whitespace-nowrap">
-                    {t(lang, 'home.hero.title.part1')}
-                  </span>
-                  <span className="block w-full mt-1 text-[clamp(1.35rem,3.6vw,3.25rem)] text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">
-                    {t(lang, 'home.hero.title.part2')}
-                  </span>
-                </h1>
-                <p className="text-xl text-gray-200 mb-8 w-full">
-                  {t(lang, 'home.hero.subtitle')}
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/contact" className="bg-crimson-900 hover:bg-crimson-800 text-white font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
+              <h1 className="font-bold mb-4 leading-[1.2] tracking-tight text-balance">
+                <span className="block text-white text-[clamp(1.375rem,calc(0.85rem+2vw),2.25rem)]">
+                  {t(lang, 'home.hero.title.part1')}
+                </span>
+                <span className="block mt-1 text-[clamp(1.375rem,calc(0.85rem+2vw),2.25rem)] text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">
+                  {t(lang, 'home.hero.title.part2')}
+                </span>
+              </h1>
+              <p className="text-sm sm:text-base lg:text-lg text-gray-200 mb-6 max-w-2xl mx-auto lg:mx-0">
+                {t(lang, 'home.hero.subtitle')}
+              </p>
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center lg:justify-start">
+                <Link href="/contact" className="inline-flex items-center justify-center bg-crimson-900 hover:bg-crimson-800 text-white font-medium text-base sm:text-lg px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
                   {t(lang, 'home.hero.primaryCta')}
-                  <ArrowRightIcon className="ml-2 h-5 w-5 inline" />
+                  <ArrowRightIcon className="ml-2 h-5 w-5 inline shrink-0" />
                 </Link>
-                <Link href="/portfolio" className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 font-medium text-lg px-8 py-3 rounded-lg transition-all duration-200">
+                <Link href="/portfolio" className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 font-medium text-base sm:text-lg px-6 py-3 rounded-lg transition-all duration-200">
                   {t(lang, 'home.hero.secondaryCta')}
                 </Link>
               </div>
@@ -73,14 +71,14 @@ export default function HomePageClient() {
       </section>
 
       {/* Core Capabilities - 6 Strategic Pillars */}
-      <section className="py-20 bg-white relative">
+      <section className="py-20 bg-white dark:bg-granite-900 relative">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-crimson-900 to-transparent"></div>
         <div className="wide-container px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-granite-800 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-granite-800 dark:text-granite-100 mb-4">
               {t(lang, 'home.pillars.heading')}
             </h2>
-            <p className="text-xl text-granite-600 max-w-2xl mx-auto">
+            <p className="text-xl text-granite-600 dark:text-granite-300 max-w-2xl mx-auto">
               {t(lang, 'home.pillars.subheading')}
             </p>
           </div>
@@ -91,10 +89,10 @@ export default function HomePageClient() {
                 <Image src="/pillar-enterprise-systems.png" alt="Enterprise Systems Engineering" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
                   {t(lang, 'home.pillars.enterprise')}
                 </h3>
-                <p className="text-granite-600 text-sm leading-relaxed">
+                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
                   {t(lang, 'home.pillars.enterprise.desc')}
                 </p>
               </div>
@@ -105,10 +103,10 @@ export default function HomePageClient() {
                 <Image src="/pillar-cloud-devops.png" alt="Cloud Infrastructure & DevOps" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
                   {t(lang, 'home.pillars.cloud')}
                 </h3>
-                <p className="text-granite-600 text-sm leading-relaxed">
+                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
                   {t(lang, 'home.pillars.cloud.desc')}
                 </p>
               </div>
@@ -119,10 +117,10 @@ export default function HomePageClient() {
                 <Image src="/pillar-data-intelligence.png" alt="Data Intelligence & Analytics" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
                   {t(lang, 'home.pillars.data')}
                 </h3>
-                <p className="text-granite-600 text-sm leading-relaxed">
+                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
                   {t(lang, 'home.pillars.data.desc')}
                 </p>
               </div>
@@ -133,10 +131,10 @@ export default function HomePageClient() {
                 <Image src="/pillar-automation-integration.png" alt="Process Automation & Integration" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
                   {t(lang, 'home.pillars.automation')}
                 </h3>
-                <p className="text-granite-600 text-sm leading-relaxed">
+                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
                   {t(lang, 'home.pillars.automation.desc')}
                 </p>
               </div>
@@ -147,10 +145,10 @@ export default function HomePageClient() {
                 <ShieldCheckIcon className="h-20 w-20 text-white/90" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
                   {t(lang, 'home.pillars.security')}
                 </h3>
-                <p className="text-granite-600 text-sm leading-relaxed">
+                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
                   {t(lang, 'home.pillars.security.desc')}
                 </p>
               </div>
@@ -161,10 +159,10 @@ export default function HomePageClient() {
                 <Image src="/pillar-digital-platforms.png" alt="Digital Platform Development" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 mb-2">
+                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
                   {t(lang, 'home.pillars.platforms')}
                 </h3>
-                <p className="text-granite-600 text-sm leading-relaxed">
+                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
                   {t(lang, 'home.pillars.platforms.desc')}
                 </p>
               </div>

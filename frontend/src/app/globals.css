@@ -42,7 +42,7 @@
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-lg border border-granite-200 p-6 hover:shadow-xl transition-shadow duration-300;
+    @apply bg-white rounded-lg shadow-lg border border-granite-200 p-6 hover:shadow-xl transition-shadow duration-300 dark:bg-granite-800 dark:border-granite-700 dark:text-granite-100;
   }
   
   .card-dark {
@@ -54,11 +54,11 @@
   }
   
   .page-header {
-    @apply text-3xl font-bold text-granite-800 mb-6;
+    @apply text-3xl font-bold text-granite-800 mb-6 dark:text-granite-100;
   }
   
   .section-header {
-    @apply text-2xl font-semibold text-granite-800 mb-4;
+    @apply text-2xl font-semibold text-granite-800 mb-4 dark:text-granite-100;
   }
   
   .accent-text {
@@ -153,4 +153,28 @@
 
 .animate-shake {
   animation: shake 0.5s ease-in-out;
+}
+
+/* Hero wordmark: hinged on the A in QUANTIS, rotating about a horizontal axis */
+.quantis-logo-hinge {
+  transform-origin: 66% 40%;
+  transform-style: preserve-3d;
+  animation: quantis-hinge-a 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes quantis-hinge-a {
+  0%,
+  100% {
+    transform: rotateX(-32deg);
+  }
+  50% {
+    transform: rotateX(32deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quantis-logo-hinge {
+    animation: none;
+  }
 }

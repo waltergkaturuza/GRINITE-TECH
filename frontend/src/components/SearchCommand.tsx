@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CommandLineIcon, MagnifyingGlassIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { getApiBaseUrl } from '@/lib/apiBase'
 
 interface SearchResult {
   query: string
@@ -16,33 +17,89 @@ interface SearchCommandProps {
   onClose: () => void
 }
 
+const LOCAL_PAGES: Array<{ label: string; path: string; keywords: string[] }> = [
+  { label: 'Home', path: '/', keywords: ['home', 'quantis'] },
+  { label: 'About', path: '/about', keywords: ['about', 'company'] },
+  { label: 'Contact', path: '/contact', keywords: ['contact', 'help', 'support', 'sales'] },
+  { label: 'Services', path: '/services', keywords: ['services', 'offerings'] },
+  { label: 'Custom software', path: '/services/custom-software', keywords: ['custom', 'software'] },
+  { label: 'Fuel management systems', path: '/services/fuel-management-system-africa', keywords: ['fuel', 'coupon'] },
+  { label: 'Mobile apps', path: '/services/mobile-apps', keywords: ['mobile', 'app'] },
+  { label: 'Business automation', path: '/services/business-automation', keywords: ['automation'] },
+  { label: 'E-commerce', path: '/services/ecommerce', keywords: ['ecommerce', 'shop'] },
+  { label: 'Products', path: '/products', keywords: ['products', 'store'] },
+  { label: 'Portfolio', path: '/portfolio', keywords: ['portfolio', 'work', 'projects'] },
+  { label: 'Track request', path: '/track-request', keywords: ['track', 'status', 'request'] },
+  { label: 'Login', path: '/login', keywords: ['login', 'signin', 'admin'] },
+]
+
+function localSearch(query: string): SearchResult {
+  const q = query.trim().toLowerCase()
+  const actions = q
+    ? LOCAL_PAGES.filter(
+        (p) =>
+          p.label.toLowerCase().includes(q) || p.keywords.some((k) => k.includes(q) || q.includes(k)),
+      )
+    : LOCAL_PAGES
+  return {
+    query,
+    products: [],
+    services: [],
+    actions: actions.map(({ label, path }) => ({ label, path })),
+  }
+}
+
+function mergeResults(api: SearchResult | null, local: SearchResult): SearchResult {
+  if (!api) return local
+  const seen = new Set(api.actions.map((a) => a.path))
+  const extra = local.actions.filter((a) => !seen.has(a.path))
+  return {
+    query: api.query || local.query,
+    products: api.products || [],
+    services: api.services || [],
+    actions: [...(api.actions || []), ...extra],
+  }
+}
+
 export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<SearchResult | null>(null)
+  const [apiResults, setApiResults] = useState<SearchResult | null>(null)
 
   useEffect(() => {
     if (!isOpen) {
       setQuery('')
-      setResults(null)
+      setApiResults(null)
     }
   }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
+  useEffect(() => {
+    if (!isOpen) return
     const handler = setTimeout(async () => {
       if (!query.trim()) {
-        setResults(null)
+        setApiResults(null)
         return
       }
       try {
         setLoading(true)
-        const base = process.env.NEXT_PUBLIC_API_URL
-        if (!base) return
-        const res = await fetch(`${base}/search?q=${encodeURIComponent(query)}`)
-        if (!res.ok) return
+        const res = await fetch(`${getApiBaseUrl()}/search?q=${encodeURIComponent(query)}`)
+        if (!res.ok) {
+          setApiResults(null)
+          return
+        }
         const json = await res.json()
-        setResults(json.data)
+        setApiResults(json.data || json)
+      } catch {
+        setApiResults(null)
       } finally {
         setLoading(false)
       }
@@ -50,46 +107,55 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
     return () => clearTimeout(handler)
   }, [query, isOpen])
 
+  const results = useMemo(() => {
+    const local = localSearch(query)
+    if (!query.trim()) {
+      return { ...local, actions: LOCAL_PAGES.slice(0, 8).map(({ label, path }) => ({ label, path })) }
+    }
+    return mergeResults(apiResults, local)
+  }, [query, apiResults])
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/40 backdrop-blur-sm px-4 pt-24 sm:pt-32">
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
+    <div
+      className="fixed inset-0 z-[80] flex items-start justify-center bg-black/40 backdrop-blur-sm px-4 pt-24 sm:pt-32"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center px-4 py-3 border-b border-gray-200 bg-gray-50">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-2" />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search services, products, or actions…"
+            placeholder="Search services, products, or pages…"
             className="flex-1 bg-transparent outline-none text-sm text-gray-900 placeholder-gray-400"
           />
-          <button
-            onClick={onClose}
-            className="ml-2 text-xs text-gray-500 hover:text-gray-800"
-          >
+          <button onClick={onClose} className="ml-2 text-xs text-gray-500 hover:text-gray-800">
             Esc
           </button>
         </div>
 
         <div className="max-h-96 overflow-y-auto">
           {!query && (
-            <div className="px-4 py-6 text-sm text-gray-500 flex items-center space-x-2">
+            <div className="px-4 pt-3 pb-1 text-xs text-gray-500 flex items-center space-x-2">
               <CommandLineIcon className="h-4 w-4" />
-              <span>Type to search services, products, or jump to key pages.</span>
+              <span>Search pages, services, and products. Ctrl+K to open anytime.</span>
             </div>
           )}
 
-          {loading && (
-            <div className="px-4 py-4 text-sm text-gray-500">Searching…</div>
-          )}
+          {loading && <div className="px-4 py-4 text-sm text-gray-500">Searching…</div>}
 
-          {results && !loading && (
+          {results && (
             <div className="divide-y divide-gray-100">
               {results.actions?.length > 0 && (
                 <div className="px-4 py-3">
                   <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                    Quick actions
+                    Pages
                   </p>
                   <ul className="space-y-1">
                     {results.actions.map((a) => (
@@ -122,16 +188,10 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                           className="block px-3 py-2 rounded-lg hover:bg-gray-100"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-900">
-                              {s.title}
-                            </span>
-                            <span className="ml-2 text-xs text-gray-500">
-                              {s.category}
-                            </span>
+                            <span className="text-sm font-medium text-gray-900">{s.title}</span>
+                            <span className="ml-2 text-xs text-gray-500">{s.category}</span>
                           </div>
-                          <p className="mt-1 text-xs text-gray-500 line-clamp-2">
-                            {s.description}
-                          </p>
+                          <p className="mt-1 text-xs text-gray-500 line-clamp-2">{s.description}</p>
                         </Link>
                       </li>
                     ))}
@@ -152,13 +212,9 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                           onClick={onClose}
                           className="block px-3 py-2 rounded-lg hover:bg-gray-100"
                         >
-                          <p className="text-sm font-medium text-gray-900">
-                            {p.name}
-                          </p>
+                          <p className="text-sm font-medium text-gray-900">{p.name}</p>
                           {p.description && (
-                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">
-                              {p.description}
-                            </p>
+                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">{p.description}</p>
                           )}
                         </Link>
                       </li>
@@ -167,12 +223,10 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                 </div>
               )}
 
-              {results.products.length === 0 &&
-                results.services.length === 0 &&
-                results.actions.length === 0 && (
-                  <div className="px-4 py-4 text-sm text-gray-500">
-                    No results for “{results.query}”.
-                  </div>
+              {(results.products?.length || 0) === 0 &&
+                (results.services?.length || 0) === 0 &&
+                (results.actions?.length || 0) === 0 && (
+                  <div className="px-4 py-4 text-sm text-gray-500">No results for “{results.query}”.</div>
                 )}
             </div>
           )}
@@ -181,4 +235,3 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
     </div>
   )
 }
-

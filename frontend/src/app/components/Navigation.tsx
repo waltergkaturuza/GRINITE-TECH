@@ -32,11 +32,16 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="inline-flex items-center gap-1.5 rounded-md border border-emerald-800/30 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-800 hover:bg-emerald-50"
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide ${
+        isDark
+          ? 'border-emerald-900 bg-emerald-800 text-white hover:bg-emerald-900'
+          : 'border-emerald-800/30 bg-white text-emerald-800 hover:bg-emerald-50'
+      }`}
       aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      aria-pressed={isDark}
     >
       {isDark ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
-      <span>{isDark ? 'Dark' : 'Light'}</span>
+      <span className="hidden sm:inline">{isDark ? 'Dark' : 'Light'}</span>
     </button>
   )
 }
@@ -74,23 +79,35 @@ function LanguageMenu() {
     </button>
   )
 
+  const current = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0]
+
   return (
-    <div className="relative flex items-stretch overflow-hidden rounded-md border border-emerald-800/30" ref={langMenuRef}>
-      {pill('en', 'EN')}
-      {pill('fr', 'FR')}
-      <button
-        type="button"
-        onClick={() => setIsLangOpen((v) => !v)}
-        className="border-l border-emerald-800/30 bg-white px-2 text-emerald-800 hover:bg-emerald-50"
-        aria-label="More languages"
-        aria-expanded={isLangOpen}
-      >
-        <svg className="h-3 w-3" viewBox="0 0 20 20" fill="none">
-          <path d="M5.5 7.5L10 12L14.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </button>
+    <div className="relative overflow-visible" ref={langMenuRef}>
+      <div className="flex items-stretch overflow-hidden rounded-md border border-emerald-800/30">
+        {pill('en', 'EN')}
+        {pill('fr', 'FR')}
+        {lang !== 'en' && lang !== 'fr' && (
+          <span className="bg-emerald-800 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white">
+            {current.label}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsLangOpen((v) => !v)}
+          className="border-l border-emerald-800/30 bg-white px-2 text-emerald-800 hover:bg-emerald-50"
+          aria-label="All languages"
+          aria-expanded={isLangOpen}
+        >
+          <svg className={`h-3 w-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="none">
+            <path d="M5.5 7.5L10 12L14.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
       {isLangOpen && (
-        <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-granite-200 bg-white py-2 shadow-xl z-50">
+        <div className="absolute right-0 top-full mt-2 w-60 rounded-xl border border-granite-200 bg-white py-2 shadow-xl z-[70]">
+          <p className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+            Languages
+          </p>
           {LANGUAGES.map((item) => (
             <button
               key={item.code}
@@ -99,10 +116,12 @@ function LanguageMenu() {
                 setLang(item.code)
                 setIsLangOpen(false)
               }}
-              className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-900 hover:bg-emerald-50"
+              className={`flex w-full items-center justify-between px-4 py-2 text-xs hover:bg-emerald-50 ${
+                lang === item.code ? 'bg-emerald-50 text-emerald-950 font-semibold' : 'text-emerald-900'
+              }`}
             >
               <span className="flex items-center gap-2">
-                <span className="font-semibold">{item.label}</span>
+                <span className="w-6 font-bold">{item.label}</span>
                 <span>{item.name}</span>
               </span>
               {lang === item.code && <span className="h-1.5 w-1.5 rounded-full bg-emerald-700" />}
@@ -121,14 +140,27 @@ export default function Navigation() {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isServicesOpen, setIsServicesOpen] = useState(false)
-  const { lang } = useLanguage()
+  const { lang, setLang } = useLanguage()
   const servicesMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('token')
     setIsLoggedIn(!!token)
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setIsSearchOpen(true)
+      }
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
   useEffect(() => {
@@ -174,15 +206,15 @@ export default function Navigation() {
     'block px-3 py-2 text-emerald-800 hover:text-emerald-950'
 
   return (
-    <nav className="bg-white shadow-sm border-b border-granite-200 sticky top-0 z-50">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-[5.5rem] gap-4">
-          {/* Far left: logo */}
-          <Link href="/" className="flex items-center shrink-0">
+    <nav className="bg-white shadow-sm border-b border-granite-200 sticky top-0 z-50 overflow-visible">
+      <div className="w-full px-4 sm:px-6 lg:px-8 overflow-visible">
+        <div className="flex items-center h-16 gap-3 overflow-visible">
+          {/* Far left: cropped wordmark at bar height, not a taller bar */}
+          <Link href="/" className="flex items-center shrink-0 h-16 py-1.5">
             <img
               src={QUANTIS_LOGO_URL}
               alt="Quantis Technologies logo"
-              className="h-12 sm:h-16 w-auto max-w-[min(55vw,260px)] object-contain object-left"
+              className="h-full w-auto object-contain object-left"
             />
           </Link>
 
@@ -280,7 +312,7 @@ export default function Navigation() {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="hidden sm:inline-flex items-center justify-center h-9 w-9 rounded-md text-emerald-800 hover:bg-emerald-50"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md text-emerald-800 hover:bg-emerald-50"
               aria-label="Search"
             >
               <MagnifyingGlassIcon className="h-5 w-5" />
@@ -341,6 +373,31 @@ export default function Navigation() {
                   Get Started
                 </button>
               )}
+              <div className="px-3 pt-3 pb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 mb-2">
+                  Language
+                </p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {LANGUAGES.map((item) => (
+                    <button
+                      key={item.code}
+                      type="button"
+                      onClick={() => {
+                        setLang(item.code)
+                        setIsMenuOpen(false)
+                      }}
+                      className={`rounded-md border px-2 py-1.5 text-left text-xs ${
+                        lang === item.code
+                          ? 'border-emerald-800 bg-emerald-800 text-white'
+                          : 'border-emerald-800/20 bg-white text-emerald-900'
+                      }`}
+                    >
+                      <span className="font-bold">{item.label}</span>
+                      <span className="ml-1.5 opacity-80">{item.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}

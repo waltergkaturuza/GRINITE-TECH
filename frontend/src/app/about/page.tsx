@@ -45,7 +45,7 @@ const achievements = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
+    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100 dark:from-granite-900 dark:via-granite-800 dark:to-granite-900">
       <Navigation />
 
       {/* Hero Section */}
@@ -65,12 +65,12 @@ export default function AboutPage() {
         <div className="wide-container px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-granite-800 mb-6">Our Mission</h2>
-              <p className="text-lg text-granite-600 mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-granite-800 dark:text-granite-100 mb-6">Our Mission</h2>
+              <p className="text-lg text-granite-600 dark:text-granite-300 mb-6">
                 At Quantis Technologies, we believe technology should empower businesses to reach their full potential. 
                 Our mission is to bridge the gap between complex technical challenges and elegant, user-friendly solutions.
               </p>
-              <p className="text-lg text-granite-600 mb-8">
+              <p className="text-lg text-granite-600 dark:text-granite-300 mb-8">
                 We don't just build software – we craft digital experiences that drive growth, enhance productivity, 
                 and create lasting value for our clients and their customers.
               </p>
@@ -83,18 +83,18 @@ export default function AboutPage() {
             </div>
             <div className="bg-gradient-to-br from-granite-100 to-granite-200 rounded-2xl p-8">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-granite-800 mb-4">Founded in 2019</h3>
-                <p className="text-granite-600 mb-6">
+                <h3 className="text-2xl font-bold text-granite-800 dark:text-granite-100 mb-4">Founded in 2019</h3>
+                <p className="text-granite-600 dark:text-granite-300 mb-6">
                   Started with a vision to make enterprise-grade technology accessible to businesses of all sizes.
                 </p>
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
                     <div className="text-3xl font-bold text-crimson-900">100+</div>
-                    <div className="text-granite-600">Projects</div>
+                    <div className="text-granite-600 dark:text-granite-300">Projects</div>
                   </div>
                   <div>
                     <div className="text-3xl font-bold text-crimson-900">50+</div>
-                    <div className="text-granite-600">Clients</div>
+                    <div className="text-granite-600 dark:text-granite-300">Clients</div>
                   </div>
                 </div>
               </div>
@@ -107,8 +107,8 @@ export default function AboutPage() {
       <section className="py-20 bg-white">
         <div className="wide-container px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-granite-800 mb-4">Our Values</h2>
-            <p className="text-xl text-granite-600 max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-granite-800 dark:text-granite-100 mb-4">Our Values</h2>
+            <p className="text-xl text-granite-600 dark:text-granite-300 max-w-3xl mx-auto">
               The principles that guide everything we do
             </p>
           </div>
@@ -119,8 +119,8 @@ export default function AboutPage() {
                 key={index}
                 className="text-center bg-gradient-to-br from-granite-50 to-white p-8 rounded-2xl border border-granite-200 hover:shadow-lg transition-all duration-300"
               >
-                <h3 className="text-xl font-bold text-granite-800 mb-4">{value.title}</h3>
-                <p className="text-granite-600">{value.description}</p>
+                <h3 className="text-xl font-bold text-granite-800 dark:text-granite-100 mb-4">{value.title}</h3>
+                <p className="text-granite-600 dark:text-granite-300">{value.description}</p>
               </div>
             ))}
           </div>
@@ -152,10 +152,10 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="py-20">
         <div className="wide-container px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-granite-800 mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-granite-800 dark:text-granite-100 mb-6">
             Ready to Work Together?
           </h2>
-          <p className="text-xl text-granite-600 mb-8">
+          <p className="text-xl text-granite-600 dark:text-granite-300 mb-8">
             Let's discuss how we can help bring your vision to life with innovative technology solutions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -167,7 +167,7 @@ export default function AboutPage() {
             </Link>
             <Link 
               href="/services" 
-              className="border-2 border-granite-800 text-granite-800 hover:bg-granite-800 hover:text-white px-8 py-3 rounded-lg font-medium transition-all duration-200"
+              className="border-2 border-granite-800 text-granite-800 dark:text-granite-100 hover:bg-granite-800 hover:text-white px-8 py-3 rounded-lg font-medium transition-all duration-200"
             >
               View Our Services
             </Link>
