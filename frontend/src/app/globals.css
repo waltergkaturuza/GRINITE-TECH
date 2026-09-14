@@ -259,3 +259,7 @@ html.dark .public-page select {
 .quantis-logo-on-dark {
   filter: invert(1) hue-rotate(180deg) brightness(1.45) contrast(1.05);
 }
+
+html.dark .public-page .quantis-logo-on-light {
+  filter: invert(1) hue-rotate(180deg) brightness(1.45) contrast(1.05);
+}

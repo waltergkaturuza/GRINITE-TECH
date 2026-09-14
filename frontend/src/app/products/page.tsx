@@ -179,12 +179,12 @@ function ProductsPageContent() {
     <PublicPage>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 text-white py-20">
+      <section className="bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 text-white py-8 sm:py-10">
         <div className="wide-container px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-site-max font-bold mb-6">
+          <h1 className="text-site-max font-bold mb-3">
             Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">Products</span>
           </h1>
-          <p className="text-xl md:text-2xl text-granite-200 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-granite-200 mb-5 max-w-3xl mx-auto">
             Ready-to-deploy solutions and packages to accelerate your digital transformation
           </p>
           <Link 
@@ -358,12 +358,12 @@ function ProductsPageContent() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-br from-granite-800 to-crimson-900 text-white py-16">
+      <section className="bg-gradient-to-br from-granite-800 to-crimson-900 text-white py-8 sm:py-10">
         <div className="wide-container px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3">
             Need Something Custom?
           </h2>
-          <p className="text-xl text-granite-200 mb-8">
+          <p className="text-xl text-granite-200 mb-5">
             Don't see exactly what you're looking for? We create custom solutions tailored to your specific needs.
           </p>
           <Link 

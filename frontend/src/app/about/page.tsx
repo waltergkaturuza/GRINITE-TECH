@@ -1,5 +1,6 @@
 import PublicPage from '@/components/PublicPage'
 import Link from 'next/link'
+import { QUANTIS_LOGO_URL } from '@/constants/company'
 
 const values = [
   {
@@ -48,12 +49,12 @@ export default function AboutPage() {
     <PublicPage>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 text-white py-20">
+      <section className="bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 text-white py-8 sm:py-10">
         <div className="wide-container px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-site-max font-bold mb-6">
+          <h1 className="text-site-max font-bold mb-3">
             About <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">Quantis Technologies</span>
           </h1>
-          <p className="text-xl md:text-2xl text-granite-200 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-granite-200 max-w-3xl mx-auto">
             We're a passionate team of developers, designers, and strategists dedicated to building exceptional digital experiences.
           </p>
         </div>
@@ -80,22 +81,13 @@ export default function AboutPage() {
                 Start Your Project
               </Link>
             </div>
-            <div className="bg-gradient-to-br from-granite-100 to-granite-200 rounded-2xl p-8">
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-granite-800 dark:text-granite-100 mb-4">Founded in 2019</h3>
-                <p className="text-granite-600 dark:text-granite-300 mb-6">
-                  Started with a vision to make enterprise-grade technology accessible to businesses of all sizes.
-                </p>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <div className="text-3xl font-bold text-crimson-900">100+</div>
-                    <div className="text-granite-600 dark:text-granite-300">Projects</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-crimson-900">50+</div>
-                    <div className="text-granite-600 dark:text-granite-300">Clients</div>
-                  </div>
-                </div>
+            <div className="flex justify-center lg:justify-end items-center overflow-visible min-w-0 py-4">
+              <div className="quantis-logo-hinge">
+                <img
+                  src={QUANTIS_LOGO_URL}
+                  alt="Quantis Technologies"
+                  className="quantis-logo-on-light h-36 sm:h-44 lg:h-52 w-auto max-w-full object-contain"
+                />
               </div>
             </div>
           </div>

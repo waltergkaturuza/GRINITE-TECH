@@ -90,13 +90,13 @@ export default function HomePageClient() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-granite-800 to-crimson-900 relative overflow-hidden">
+      <section className="py-8 sm:py-10 bg-gradient-to-r from-granite-800 to-crimson-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-granite-800/95 to-crimson-900/95"></div>
         <div className="wide-container px-4 sm:px-6 lg:px-8 text-center relative">
-          <h2 className="text-3xl font-bold text-white mb-4">
+          <h2 className="text-3xl font-bold text-white mb-3">
             {t(lang, 'home.cta.heading')}
           </h2>
-          <p className="text-xl text-gray-200 mb-8">
+          <p className="text-xl text-gray-200 mb-5">
             {t(lang, 'home.cta.text')}
           </p>
           <Link href="/contact" className="bg-white text-granite-800 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
