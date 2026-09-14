@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { useState } from 'react'
 import { LanguageProvider } from '@/i18n/LanguageProvider'
+import { ThemeProvider } from '@/theme/ThemeProvider'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -16,7 +17,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>{children}</LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>{children}</LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   )
 }

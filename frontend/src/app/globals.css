@@ -10,15 +10,13 @@
   body {
     @apply bg-white text-granite-800;
   }
-}
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
+  html.dark {
+    color-scheme: dark;
   }
-  
-  body {
-    @apply bg-white text-granite-800;
+
+  html.dark body {
+    @apply bg-granite-900 text-granite-100;
   }
 }
 

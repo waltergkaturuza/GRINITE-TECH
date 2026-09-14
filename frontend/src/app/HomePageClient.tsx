@@ -32,20 +32,18 @@ export default function HomePageClient() {
 
         <div className="wide-container px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,300px)_1fr] gap-8 lg:gap-12 items-center">
-            {/* Logo - top on mobile, left on desktop; slightly smaller; pushed left */}
+            {/* Logo — no box, wordmark only */}
             <div className="flex justify-center lg:justify-start order-1 lg:-ml-4">
-              <div className="relative w-full max-w-[min(75vw,300px)] aspect-square max-h-[min(40vh,300px)]">
-                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-3xl p-5 sm:p-6 shadow-2xl flex items-center justify-center">
-                  <Image
-                    src={QUANTIS_LOGO_URL}
-                    alt="Quantis Technologies"
-                    fill
-                    sizes="(max-width: 640px) 200px, (max-width: 1024px) 260px, 300px"
-                    className="object-contain p-4"
-                    priority
-                    unoptimized
-                  />
-                </div>
+              <div className="relative w-[min(90vw,440px)] h-[min(32vw,210px)]">
+                <Image
+                  src={QUANTIS_LOGO_URL}
+                  alt="Quantis Technologies"
+                  fill
+                  sizes="(max-width: 640px) 280px, 440px"
+                  className="object-contain drop-shadow-[0_6px_28px_rgba(255,255,255,0.55)]"
+                  priority
+                  unoptimized
+                />
               </div>
             </div>
 

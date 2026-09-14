@@ -4,13 +4,132 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bars3Icon, XMarkIcon, UserIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, UserIcon, MagnifyingGlassIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 import LoginModal from '@/components/LoginModal'
 import SignupModal from '@/components/SignupModal'
 import SearchCommand from '@/components/SearchCommand'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
 import { QUANTIS_LOGO_URL } from '@/constants/company'
+import { useTheme } from '@/theme/ThemeProvider'
+import type { Lang } from '@/i18n/config'
+
+const LANGUAGES: { code: Lang; region: string; label: string; name: string }[] = [
+  { code: 'en', region: 'GB', label: 'EN', name: 'English' },
+  { code: 'fr', region: 'FR', label: 'FR', name: 'Français' },
+  { code: 'sn', region: 'ZW', label: 'SN', name: 'ChiShona' },
+  { code: 'zh', region: 'CN', label: 'ZH', name: '中文' },
+  { code: 'pt', region: 'PT', label: 'PT', name: 'Português' },
+  { code: 'ja', region: 'JP', label: 'JA', name: '日本語' },
+  { code: 'ru', region: 'RU', label: 'RU', name: 'Русский' },
+  { code: 'el', region: 'GR', label: 'EL', name: 'Ελληνικά' },
+]
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
+  const iconBtn =
+    'inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
+
+  return (
+    <div
+      className="flex items-center rounded-full border border-emerald-500/40 bg-emerald-900/60 p-0.5"
+      role="group"
+      aria-label="Theme"
+    >
+      <button
+        type="button"
+        onClick={() => setTheme('light')}
+        className={`${iconBtn} ${theme === 'light' ? 'bg-emerald-700 text-amber-300' : 'text-emerald-100/70 hover:text-white'}`}
+        aria-label="Light theme"
+        aria-pressed={theme === 'light'}
+      >
+        <SunIcon className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setTheme('dark')}
+        className={`${iconBtn} ${theme === 'dark' ? 'bg-emerald-700 text-amber-300' : 'text-emerald-100/70 hover:text-white'}`}
+        aria-label="Dark theme"
+        aria-pressed={theme === 'dark'}
+      >
+        <MoonIcon className="h-4 w-4" />
+      </button>
+    </div>
+  )
+}
+
+function LanguageMenu({
+  align = 'right',
+}: {
+  align?: 'left' | 'right'
+}) {
+  const { lang, setLang } = useLanguage()
+  const [isLangOpen, setIsLangOpen] = useState(false)
+  const langMenuRef = useRef<HTMLDivElement>(null)
+  const current = LANGUAGES.find((item) => item.code === lang) ?? LANGUAGES[0]
+
+  useEffect(() => {
+    if (!isLangOpen) return
+    const onMouseDown = (e: MouseEvent) => {
+      const el = langMenuRef.current
+      if (!el) return
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setIsLangOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [isLangOpen])
+
+  return (
+    <div className="relative" ref={langMenuRef}>
+      <button
+        type="button"
+        onClick={() => setIsLangOpen((v) => !v)}
+        className="inline-flex items-center gap-1 rounded-full border border-emerald-500/50 bg-emerald-900/70 px-3 py-1.5 text-xs text-emerald-50/90 hover:bg-emerald-800 hover:border-emerald-400 transition-colors"
+        aria-haspopup="listbox"
+        aria-expanded={isLangOpen}
+      >
+        <span className="font-semibold uppercase">{current.region}</span>
+        <span className="uppercase">{current.label}</span>
+        <svg className="ml-1 h-3 w-3" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M5.5 7.5L10 12L14.5 7.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {isLangOpen && (
+        <div
+          className={`absolute mt-2 w-56 rounded-xl bg-emerald-950 border border-emerald-900/60 shadow-xl py-2 z-50 ${
+            align === 'right' ? 'right-0' : 'left-0'
+          }`}
+        >
+          {LANGUAGES.map((item) => (
+            <button
+              key={item.code}
+              type="button"
+              onClick={() => {
+                setLang(item.code)
+                setIsLangOpen(false)
+              }}
+              className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+            >
+              <span className="flex items-center gap-2">
+                <span className="font-semibold">{item.region}</span>
+                <span>{item.name}</span>
+              </span>
+              {lang === item.code && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -19,10 +138,8 @@ export default function Navigation() {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isServicesOpen, setIsServicesOpen] = useState(false)
-  const [isLangOpen, setIsLangOpen] = useState(false)
-  const { lang, setLang } = useLanguage()
+  const { lang } = useLanguage()
   const servicesMenuRef = useRef<HTMLDivElement>(null)
-  const langMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -43,19 +160,6 @@ export default function Navigation() {
     document.addEventListener('mousedown', onMouseDown)
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [isServicesOpen])
-
-  useEffect(() => {
-    if (!isLangOpen) return
-    const onMouseDown = (e: MouseEvent) => {
-      const el = langMenuRef.current
-      if (!el) return
-      if (e.target instanceof Node && !el.contains(e.target)) {
-        setIsLangOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onMouseDown)
-    return () => document.removeEventListener('mousedown', onMouseDown)
-  }, [isLangOpen])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -81,37 +185,29 @@ export default function Navigation() {
     setIsSignupModalOpen(false)
   }
 
-  const handleLanguageSelect = (code: 'en' | 'fr' | 'sn' | 'zh' | 'pt' | 'ja' | 'ru' | 'el') => {
-    setLang(code)
-    setIsLangOpen(false)
-  }
-
   return (
     <nav className="bg-emerald-950 shadow-lg border-b border-emerald-900/30 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
+        <div className="flex items-center justify-between h-24 gap-3">
           {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="relative h-14 w-14 sm:h-[4.5rem] sm:w-[4.5rem] flex-shrink-0">
+          <div className="flex items-center min-w-0">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="relative h-12 w-28 sm:h-16 sm:w-40 flex-shrink-0 rounded-xl bg-white px-2 py-1 shadow-sm">
                 <Image
                   src={QUANTIS_LOGO_URL}
                   alt="Quantis Technologies logo"
                   fill
-                  sizes="72px"
+                  sizes="160px"
                   className="object-contain"
                   priority
                   unoptimized
                 />
               </div>
-              <span className="hidden sm:inline text-xl sm:text-2xl font-bold text-white">
-                {t(lang, 'nav.brand')}
-              </span>
             </Link>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6 flex-1 justify-end min-w-0">
             {/* Search chip */}
             <button
               onClick={() => setIsSearchOpen(true)}
@@ -125,141 +221,6 @@ export default function Navigation() {
               </span>
             </button>
 
-            {/* Language selector */}
-            <div className="relative" ref={langMenuRef}>
-              <button
-                type="button"
-                onClick={() => setIsLangOpen((v) => !v)}
-                className="inline-flex items-center gap-1 rounded-full border border-emerald-500/50 bg-emerald-900/70 px-3 py-1.5 text-xs text-emerald-50/90 hover:bg-emerald-800 hover:border-emerald-400 transition-colors"
-              >
-                <span className="font-semibold uppercase">
-                  {lang === 'en' && 'GB'}
-                  {lang === 'fr' && 'FR'}
-                  {lang === 'pt' && 'PT'}
-                  {lang === 'sn' && 'ZW'}
-                  {lang === 'zh' && 'CN'}
-                  {lang === 'ja' && 'JP'}
-                  {lang === 'ru' && 'RU'}
-                  {lang === 'el' && 'GR'}
-                </span>
-                <span className="uppercase">
-                  {lang === 'en' && 'EN'}
-                  {lang === 'fr' && 'FR'}
-                  {lang === 'pt' && 'PT'}
-                  {lang === 'sn' && 'SN'}
-                  {lang === 'zh' && 'ZH'}
-                  {lang === 'ja' && 'JA'}
-                  {lang === 'ru' && 'RU'}
-                  {lang === 'el' && 'EL'}
-                </span>
-                <svg
-                  className="ml-1 h-3 w-3"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M5.5 7.5L10 12L14.5 7.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              {isLangOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-emerald-950 border border-emerald-900/60 shadow-xl py-2 z-50">
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSelect('en')}
-                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">GB</span>
-                      <span>English</span>
-                    </span>
-                    {lang === 'en' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSelect('fr')}
-                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">FR</span>
-                      <span>Français</span>
-                    </span>
-                    {lang === 'fr' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSelect('sn')}
-                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">ZW</span>
-                      <span>ChiShona</span>
-                    </span>
-                    {lang === 'sn' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSelect('zh')}
-                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">CN</span>
-                      <span>中文</span>
-                    </span>
-                    {lang === 'zh' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSelect('pt')}
-                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">PT</span>
-                      <span>Português</span>
-                    </span>
-                    {lang === 'pt' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSelect('ja')}
-                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">JP</span>
-                      <span>日本語</span>
-                    </span>
-                    {lang === 'ja' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSelect('ru')}
-                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">RU</span>
-                      <span>Русский</span>
-                    </span>
-                    {lang === 'ru' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSelect('el')}
-                    className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">GR</span>
-                      <span>Ελληνικά</span>
-                    </span>
-                    {lang === 'el' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                </div>
-              )}
-            </div>
             <div className="relative" ref={servicesMenuRef}>
               <button
                 onClick={() => setIsServicesOpen((v) => !v)}
@@ -360,11 +321,14 @@ export default function Navigation() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
+          {/* Top-right: theme + language */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <ThemeToggle />
+            <LanguageMenu />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-emerald-50/90 hover:text-white transition-colors duration-200"
+              className="md:hidden text-emerald-50/90 hover:text-white transition-colors duration-200 p-1"
+              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {isMenuOpen ? (
                 <XMarkIcon className="h-6 w-6" />
