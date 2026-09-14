@@ -9,6 +9,7 @@ interface SearchResult {
   query: string
   products: Array<{ id: string; name: string; description?: string }>
   services: Array<{ id: string; title: string; description: string; category: string }>
+  insights?: Array<{ id: string; name: string; description?: string; path: string; category?: string }>
   actions: Array<{ label: string; path: string }>
 }
 
@@ -28,6 +29,7 @@ const LOCAL_PAGES: Array<{ label: string; path: string; keywords: string[] }> = 
   { label: 'Business automation', path: '/services/business-automation', keywords: ['automation'] },
   { label: 'E-commerce', path: '/services/ecommerce', keywords: ['ecommerce', 'shop'] },
   { label: 'Products', path: '/products', keywords: ['products', 'store'] },
+  { label: 'News & Updates', path: '/news', keywords: ['news', 'updates', 'blog', 'insights', 'research'] },
   { label: 'Portfolio', path: '/portfolio', keywords: ['portfolio', 'work', 'projects'] },
   { label: 'Track request', path: '/track-request', keywords: ['track', 'status', 'request'] },
   { label: 'Login', path: '/login', keywords: ['login', 'signin', 'admin'] },
@@ -57,6 +59,7 @@ function mergeResults(api: SearchResult | null, local: SearchResult): SearchResu
     query: api.query || local.query,
     products: api.products || [],
     services: api.services || [],
+    insights: api.insights || [],
     actions: [...(api.actions || []), ...extra],
   }
 }
@@ -199,6 +202,29 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                 </div>
               )}
 
+              {results.insights && results.insights.length > 0 && (
+                <div className="px-4 py-3">
+                  <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                    News & Updates
+                  </p>
+                  <ul className="space-y-1">
+                    {results.insights.map((item) => (
+                      <li key={`insight-${item.id}`}>
+                        <Link
+                          href={item.path}
+                          onClick={onClose}
+                          className="block px-3 py-2 rounded-lg hover:bg-gray-100"
+                        >
+                          <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                          {item.description && (
+                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">{item.description}</p>
+                          )}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {results.products?.length > 0 && (
                 <div className="px-4 py-3">
                   <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">

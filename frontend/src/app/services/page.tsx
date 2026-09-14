@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Navigation from '../components/Navigation'
+import PublicPage from '@/components/PublicPage'
 import { 
   ArrowRightIcon,
   CheckIcon,
@@ -112,19 +112,17 @@ export default function ServicesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-        <Navigation />
+      <PublicPage>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crimson-600"></div>
         </div>
-      </div>
+      </PublicPage>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-        <Navigation />
+      <PublicPage>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-granite-800 mb-4">Failed to Load Services</h2>
@@ -137,13 +135,12 @@ export default function ServicesPage() {
             </button>
           </div>
         </div>
-      </div>
+      </PublicPage>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-      <Navigation />
+    <PublicPage>
 
       {/* Header Section */}
       <section className="pt-32 pb-16">
@@ -426,6 +423,6 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
-    </div>
+    </PublicPage>
   )
 }

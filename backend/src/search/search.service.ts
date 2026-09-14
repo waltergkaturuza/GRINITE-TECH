@@ -1,20 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { ProductsService } from '../products/products.service';
 import { ServicesService } from '../services/services.service';
+import { InsightsService } from '../insights/insights.service';
 
 @Injectable()
 export class SearchService {
   constructor(
     private readonly productsService: ProductsService,
     private readonly servicesService: ServicesService,
+    private readonly insightsService: InsightsService,
   ) {}
 
   async search(query: string) {
     const q = (query || '').trim();
 
-    const [products, services] = await Promise.all([
+    const [products, services, insights] = await Promise.all([
       q ? this.productsService.searchProducts(q) : this.productsService.getActiveProducts(),
       this.servicesService.findAll(undefined, 'active'),
+      this.insightsService.searchPublished(q).catch(() => []),
     ]);
 
     // Basic fuzzy filter on in-memory services list
@@ -29,6 +32,7 @@ export class SearchService {
       : services;
 
     const actions = [
+      { label: 'News & Updates', path: '/news', keywords: ['news', 'updates', 'blog', 'insights'] },
       { label: 'Contact sales', path: '/contact', keywords: ['contact', 'help', 'support', 'sales'] },
       { label: 'View services', path: '/services', keywords: ['services', 'offerings'] },
       { label: 'View products', path: '/products', keywords: ['products', 'store'] },
@@ -50,6 +54,14 @@ export class SearchService {
       query: q,
       products,
       services: filteredServices,
+      insights: (insights || []).map((post) => ({
+        id: post.id,
+        name: post.title,
+        description: post.excerpt,
+        slug: post.slug,
+        category: post.category,
+        path: `/news/${post.slug}`,
+      })),
       actions: filteredActions,
     };
   }

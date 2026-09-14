@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navigation from '../../components/Navigation'
+import SiteFooter from '@/components/SiteFooter'
 import JsonLd from '@/components/seo/JsonLd'
 import { absoluteUrl, getSiteUrl } from '@/lib/site'
 import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline'
@@ -215,6 +216,7 @@ export default function FuelCouponCaseStudyPage() {
           </section>
         </div>
       </main>
+      <SiteFooter />
     </div>
   )
 }

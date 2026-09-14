@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Navigation from '../../components/Navigation'
+import SiteFooter from '@/components/SiteFooter'
 import { CheckIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 
 export default function CustomSoftwarePage() {
@@ -121,6 +122,7 @@ export default function CustomSoftwarePage() {
           </section>
         </div>
       </main>
+      <SiteFooter />
     </div>
   )
 }

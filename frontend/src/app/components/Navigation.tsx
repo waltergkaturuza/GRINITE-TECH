@@ -286,6 +286,9 @@ export default function Navigation() {
             <Link href="/products" className={linkClass}>
               {t(lang, 'nav.products')}
             </Link>
+            <Link href="/news" className={linkClass}>
+              {t(lang, 'nav.news')}
+            </Link>
             <Link href="/portfolio" className={linkClass}>
               {t(lang, 'nav.portfolio')}
             </Link>
@@ -340,6 +343,9 @@ export default function Navigation() {
               </Link>
               <Link href="/products" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
                 {t(lang, 'nav.products')}
+              </Link>
+              <Link href="/news" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
+                {t(lang, 'nav.news')}
               </Link>
               <Link href="/portfolio" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
                 {t(lang, 'nav.portfolio')}

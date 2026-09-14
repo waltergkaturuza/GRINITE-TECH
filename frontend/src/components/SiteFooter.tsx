@@ -5,13 +5,40 @@ import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
 import { COMPANY_CONTACT, QUANTIS_LOGO_URL } from '@/constants/company'
 
+const SERVICE_LINKS = [
+  { href: '/services/custom-software', key: 'footer.services.web' },
+  { href: '/services/mobile-apps', key: 'footer.services.mobile' },
+  { href: '/services/ecommerce', key: 'footer.services.digital' },
+  { href: '/services/business-automation', key: 'footer.services.automation' },
+  { href: '/services/fuel-management-system-africa', key: 'footer.services.fuel' },
+] as const
+
+const PRODUCT_LINKS = [
+  { href: '/products?category=website', key: 'footer.products.templates' },
+  { href: '/products?category=cloud', key: 'footer.products.tools' },
+  { href: '/products?category=api', key: 'footer.products.apis' },
+  { href: '/products?category=analytics', key: 'footer.products.plugins' },
+] as const
+
+const SITEMAP_LINKS = [
+  { href: '/', key: 'nav.home' },
+  { href: '/about', key: 'nav.about' },
+  { href: '/services', key: 'nav.services' },
+  { href: '/products', key: 'nav.products' },
+  { href: '/news', key: 'nav.news' },
+  { href: '/portfolio', key: 'nav.portfolio' },
+  { href: '/case-studies', key: 'footer.sitemap.caseStudies' },
+  { href: '/contact', key: 'nav.contact' },
+  { href: '/track-request', key: 'nav.trackRequest' },
+] as const
+
 export default function SiteFooter() {
   const { lang } = useLanguage()
 
   return (
     <footer className="bg-granite-800 text-white py-12 border-t border-granite-700">
       <div className="wide-container px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
             <Link href="/" className="mb-4 inline-flex">
               <img
@@ -29,41 +56,64 @@ export default function SiteFooter() {
             </address>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-crimson-300">{t(lang, 'footer.services')}</h4>
+            <h4 className="font-semibold mb-4 text-peach-300">{t(lang, 'footer.sitemap')}</h4>
             <ul className="space-y-2 text-gray-300">
-              <li className="hover:text-crimson-300 transition-colors duration-200">
-                {t(lang, 'footer.services.web')}
-              </li>
-              <li className="hover:text-crimson-300 transition-colors duration-200">
-                {t(lang, 'footer.services.mobile')}
-              </li>
-              <li className="hover:text-crimson-300 transition-colors duration-200">
-                {t(lang, 'footer.services.digital')}
-              </li>
-              <li className="hover:text-crimson-300 transition-colors duration-200">
-                {t(lang, 'footer.services.automation')}
-              </li>
+              {SITEMAP_LINKS.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="block py-1 hover:text-peach-300 transition-colors duration-200"
+                  >
+                    {t(lang, item.key)}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-jungle-300">{t(lang, 'footer.products')}</h4>
+            <h4 className="font-semibold mb-4 text-crimson-300">
+              <Link href="/services" className="hover:text-crimson-200 transition-colors duration-200">
+                {t(lang, 'footer.services')}
+              </Link>
+            </h4>
             <ul className="space-y-2 text-gray-300">
-              <li className="hover:text-jungle-300 transition-colors duration-200">
-                {t(lang, 'footer.products.templates')}
-              </li>
-              <li className="hover:text-jungle-300 transition-colors duration-200">
-                {t(lang, 'footer.products.tools')}
-              </li>
-              <li className="hover:text-jungle-300 transition-colors duration-200">
-                {t(lang, 'footer.products.apis')}
-              </li>
-              <li className="hover:text-jungle-300 transition-colors duration-200">
-                {t(lang, 'footer.products.plugins')}
-              </li>
+              {SERVICE_LINKS.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="block py-1 hover:text-crimson-300 transition-colors duration-200"
+                  >
+                    {t(lang, item.key)}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-olive-300">{t(lang, 'footer.contact')}</h4>
+            <h4 className="font-semibold mb-4 text-jungle-300">
+              <Link href="/products" className="hover:text-jungle-200 transition-colors duration-200">
+                {t(lang, 'footer.products')}
+              </Link>
+            </h4>
+            <ul className="space-y-2 text-gray-300">
+              {PRODUCT_LINKS.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="block py-1 hover:text-jungle-300 transition-colors duration-200"
+                  >
+                    {t(lang, item.key)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-4 text-olive-300">
+              <Link href="/contact" className="hover:text-olive-200 transition-colors duration-200">
+                {t(lang, 'footer.contact')}
+              </Link>
+            </h4>
             <ul className="space-y-2 text-gray-300 text-sm sm:text-base">
               <li className="hover:text-olive-300 transition-colors duration-200 break-words">
                 <a href={`mailto:${COMPANY_CONTACT.primaryEmail}`} className="block py-1">

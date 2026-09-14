@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Navigation from '../../components/Navigation'
+import SiteFooter from '@/components/SiteFooter'
 import { CheckIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 
 export default function EcommercePage() {
@@ -111,6 +112,7 @@ export default function EcommercePage() {
           </section>
         </div>
       </main>
+      <SiteFooter />
     </div>
   )
 }

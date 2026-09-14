@@ -1,14 +1,12 @@
 ﻿'use client'
 
 import { Suspense } from 'react'
-import Navigation from '../components/Navigation'
-import SiteFooter from '@/components/SiteFooter'
+import PublicPage from '@/components/PublicPage'
 import ContactContent from './ContactContent'
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-      <Navigation />
+    <PublicPage>
       <Suspense fallback={
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crimson-600"></div>
@@ -16,7 +14,6 @@ export default function ContactPage() {
       }>
         <ContactContent />
       </Suspense>
-      <SiteFooter />
-    </div>
+    </PublicPage>
   )
 }

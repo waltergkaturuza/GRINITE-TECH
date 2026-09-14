@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Navigation from '../components/Navigation'
+import { Suspense, useState, useEffect } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import PublicPage from '@/components/PublicPage'
 import Link from 'next/link'
 import { productsAPI } from '../../lib/api'
 import { 
@@ -57,15 +58,40 @@ const categories = [
   { id: 'analytics', name: 'Analytics' }
 ]
 
-export default function ProductsPage() {
+function ProductsPageContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const categoryFromUrl = searchParams.get('category')
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedCategory, setSelectedCategory] = useState(
+    categoryFromUrl && categories.some((c) => c.id === categoryFromUrl) ? categoryFromUrl : 'all'
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('name')
   const [cart, setCart] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (categoryFromUrl && categories.some((c) => c.id === categoryFromUrl)) {
+      setSelectedCategory(categoryFromUrl)
+      return
+    }
+    if (!categoryFromUrl) {
+      setSelectedCategory('all')
+    }
+  }, [categoryFromUrl])
+
+  const selectCategory = (id: string) => {
+    setSelectedCategory(id)
+    const params = new URLSearchParams(searchParams.toString())
+    if (id === 'all') params.delete('category')
+    else params.set('category', id)
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
 
   // Load products from API
   useEffect(() => {
@@ -150,8 +176,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-      <Navigation />
+    <PublicPage>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 text-white py-20">
@@ -193,7 +218,7 @@ export default function ProductsPage() {
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  onClick={() => selectCategory(category.id)}
                   className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                     selectedCategory === category.id
                       ? 'bg-crimson-900 text-white'
@@ -349,6 +374,22 @@ export default function ProductsPage() {
           </Link>
         </div>
       </section>
-    </div>
+    </PublicPage>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <PublicPage>
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crimson-600" />
+          </div>
+        </PublicPage>
+      }
+    >
+      <ProductsPageContent />
+    </Suspense>
   )
 }

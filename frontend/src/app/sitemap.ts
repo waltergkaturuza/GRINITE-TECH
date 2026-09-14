@@ -15,6 +15,7 @@ const staticPaths = [
   '/case-studies',
   '/case-studies/fuel-coupon-management-system',
   '/products',
+  '/news',
   '/track-request',
 ]
 

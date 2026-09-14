@@ -7,6 +7,7 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
 import { isStaffRole } from '@/lib/dashboardRoles'
 import { trackEvent, trackPageView } from '@/lib/analytics'
+import SiteFooter from '@/components/SiteFooter'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -58,6 +59,7 @@ export default function LoginPage() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-granite-800 via-jungle-900 to-crimson-900 flex items-center justify-center p-4 overflow-hidden relative">
       <div className="absolute inset-0 flex items-center justify-center z-0">
         <div className="relative">
@@ -164,5 +166,7 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    <SiteFooter />
+    </>
   )
 }

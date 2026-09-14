@@ -1,4 +1,4 @@
-import Navigation from '../components/Navigation'
+import PublicPage from '@/components/PublicPage'
 import Link from 'next/link'
 
 const values = [
@@ -45,8 +45,7 @@ const achievements = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100 dark:from-granite-900 dark:via-granite-800 dark:to-granite-900">
-      <Navigation />
+    <PublicPage>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900 text-white py-20">
@@ -174,6 +173,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-    </div>
+    </PublicPage>
   )
 }

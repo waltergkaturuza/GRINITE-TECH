@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Navigation from '../components/Navigation'
+import PublicPage from '@/components/PublicPage'
 import Link from 'next/link'
 import { 
   CreditCardIcon,
@@ -177,22 +177,20 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-        <Navigation />
+      <PublicPage>
         <div className="wide-container px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crimson-900 mx-auto"></div>
             <p className="mt-4 text-granite-600">Loading checkout...</p>
           </div>
         </div>
-      </div>
+      </PublicPage>
     )
   }
 
   if (isCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-        <Navigation />
+      <PublicPage>
         <div className="wide-container px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <CheckCircleIcon className="h-24 w-24 text-green-500 mx-auto mb-8" />
@@ -243,13 +241,12 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
-      </div>
+      </PublicPage>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-      <Navigation />
+    <PublicPage>
 
       <div className="wide-container px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
@@ -562,6 +559,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-    </div>
+    </PublicPage>
   )
 }

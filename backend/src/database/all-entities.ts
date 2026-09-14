@@ -23,6 +23,9 @@ import { HostingExpense } from '../hosting-expenses/entities/hosting-expense.ent
 import { LedgerAccount } from '../ledger/entities/ledger-account.entity';
 import { LedgerEntry } from '../ledger/entities/ledger-entry.entity';
 import { Invoice, InvoiceItem } from '../invoices/entities/invoice.entity';
+import { InsightPost } from '../insights/entities/insight-post.entity';
+import { InsightComment } from '../insights/entities/insight-comment.entity';
+import { InsightVote } from '../insights/entities/insight-vote.entity';
 
 export {
   User,
@@ -45,6 +48,9 @@ export {
   LedgerEntry,
   Invoice,
   InvoiceItem,
+  InsightPost,
+  InsightComment,
+  InsightVote,
 };
 
 export const ALL_ENTITIES: Function[] = [
@@ -68,4 +74,7 @@ export const ALL_ENTITIES: Function[] = [
   LedgerEntry,
   Invoice,
   InvoiceItem,
+  InsightPost,
+  InsightComment,
+  InsightVote,
 ];

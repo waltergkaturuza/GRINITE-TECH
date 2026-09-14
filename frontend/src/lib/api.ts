@@ -27,8 +27,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      const url = String(error.config?.url || '')
+      const skipLoginRedirect = /\/insights\/(questions|[^/]+\/comments|comments\/)/.test(url)
+      if (!skipLoginRedirect) {
         localStorage.removeItem('token')
         window.location.href = '/login'
       }
@@ -903,6 +905,75 @@ export const projectTypesAPI = {
     const response = await api.post('/project-types/seed')
     return response.data
   }
+}
+
+export const insightsAPI = {
+  getPublished: async (params?: { category?: string; kind?: string; search?: string; featured?: boolean }) => {
+    const response = await api.get('/insights', { params })
+    return response.data
+  },
+  getBySlug: async (slug: string) => {
+    const response = await api.get(`/insights/${slug}`)
+    return response.data
+  },
+  getComments: async (slug: string) => {
+    const response = await api.get(`/insights/${slug}/comments`)
+    return response.data
+  },
+  addComment: async (
+    slug: string,
+    data: { body: string; parentId?: string; authorName?: string; authorEmail?: string },
+  ) => {
+    const response = await api.post(`/insights/${slug}/comments`, data)
+    return response.data
+  },
+  askQuestion: async (data: {
+    title: string
+    body: string
+    category?: string
+    tags?: string
+    authorName?: string
+    authorEmail?: string
+  }) => {
+    const response = await api.post('/insights/questions', data)
+    return response.data
+  },
+  voteComment: async (id: string, value: 1 | -1, voterKey: string) => {
+    const response = await api.post(`/insights/comments/${id}/vote`, { value, voterKey })
+    return response.data
+  },
+  acceptComment: async (id: string) => {
+    const response = await api.post(`/insights/comments/${id}/accept`)
+    return response.data
+  },
+  adminList: async (params?: { category?: string; kind?: string; status?: string; search?: string }) => {
+    const response = await api.get('/insights/admin', { params })
+    return response.data
+  },
+  adminComments: async () => {
+    const response = await api.get('/insights/admin/comments')
+    return response.data
+  },
+  create: async (data: Record<string, unknown>) => {
+    const response = await api.post('/insights', data)
+    return response.data
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const response = await api.patch(`/insights/${id}`, data)
+    return response.data
+  },
+  remove: async (id: string) => {
+    const response = await api.delete(`/insights/${id}`)
+    return response.data
+  },
+  updateComment: async (id: string, data: { status?: string; body?: string }) => {
+    const response = await api.patch(`/insights/comments/${id}`, data)
+    return response.data
+  },
+  removeComment: async (id: string) => {
+    const response = await api.delete(`/insights/comments/${id}`)
+    return response.data
+  },
 }
 
 export default api

@@ -10,6 +10,7 @@ export function isStaffRole(role: string | undefined): boolean {
 export const STAFF_ALLOWED_PATH_PREFIXES = [
   '/dashboard/requests',
   '/dashboard/products',
+  '/dashboard/insights',
   '/dashboard/chat',
   '/dashboard/settings',
 ] as const

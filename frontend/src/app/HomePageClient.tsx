@@ -1,14 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowRightIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon } from '@heroicons/react/24/outline'
 import Navigation from './components/Navigation'
 import { useEffect } from 'react'
 import { trackPageView } from '@/lib/analytics'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
 import SiteFooter from '@/components/SiteFooter'
+import CapabilitiesSlider from '@/components/CapabilitiesSlider'
 import { QUANTIS_LOGO_URL } from '@/constants/company'
 
 export default function HomePageClient() {
@@ -17,7 +17,7 @@ export default function HomePageClient() {
   }, [])
   const { lang } = useLanguage()
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
+    <div className="public-page min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">
       {/* Navigation */}
       <Navigation />
 
@@ -33,13 +33,15 @@ export default function HomePageClient() {
         <div className="wide-container px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)] gap-6 lg:gap-8 xl:gap-10 items-center">
             {/* Full wordmark on a light plate so navy artwork reads on the photo */}
-            <div className="flex justify-center lg:justify-start order-1 min-w-0">
-              <div className="[perspective:1100px] overflow-visible w-full max-w-[320px] lg:max-w-none">
-                <img
-                  src={QUANTIS_LOGO_URL}
-                  alt="Quantis Technologies"
-                  className="quantis-logo-hinge quantis-logo-on-dark h-20 sm:h-24 lg:h-28 w-auto max-w-full object-contain"
-                />
+            <div className="flex justify-center lg:justify-start order-1 min-w-0 py-4 sm:py-6">
+              <div className="overflow-visible w-full max-w-[360px] lg:max-w-none flex justify-center lg:justify-start">
+                <div className="quantis-logo-hinge">
+                  <img
+                    src={QUANTIS_LOGO_URL}
+                    alt="Quantis Technologies"
+                    className="quantis-logo-on-dark h-24 sm:h-28 lg:h-28 w-auto max-w-full object-contain"
+                  />
+                </div>
               </div>
             </div>
 
@@ -83,91 +85,7 @@ export default function HomePageClient() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
-              <div className="relative h-40 bg-gradient-to-br from-granite-100 to-granite-50 rounded-t-lg overflow-hidden">
-                <Image src="/pillar-enterprise-systems.png" alt="Enterprise Systems Engineering" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
-                  {t(lang, 'home.pillars.enterprise')}
-                </h3>
-                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
-                  {t(lang, 'home.pillars.enterprise.desc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
-              <div className="relative h-40 bg-gradient-to-br from-sky-50 to-blue-50 rounded-t-lg overflow-hidden">
-                <Image src="/pillar-cloud-devops.png" alt="Cloud Infrastructure & DevOps" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
-                  {t(lang, 'home.pillars.cloud')}
-                </h3>
-                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
-                  {t(lang, 'home.pillars.cloud.desc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
-              <div className="relative h-40 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-t-lg overflow-hidden">
-                <Image src="/pillar-data-intelligence.png" alt="Data Intelligence & Analytics" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
-                  {t(lang, 'home.pillars.data')}
-                </h3>
-                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
-                  {t(lang, 'home.pillars.data.desc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
-              <div className="relative h-40 bg-gradient-to-br from-emerald-50 to-green-50 rounded-t-lg overflow-hidden">
-                <Image src="/pillar-automation-integration.png" alt="Process Automation & Integration" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
-                  {t(lang, 'home.pillars.automation')}
-                </h3>
-                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
-                  {t(lang, 'home.pillars.automation.desc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
-              <div className="relative h-40 bg-gradient-to-br from-crimson-900 to-crimson-800 rounded-t-lg flex items-center justify-center">
-                <ShieldCheckIcon className="h-20 w-20 text-white/90" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
-                  {t(lang, 'home.pillars.security')}
-                </h3>
-                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
-                  {t(lang, 'home.pillars.security.desc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="card group hover:border-crimson-200 transition-all duration-300 overflow-hidden">
-              <div className="relative h-40 bg-gradient-to-br from-violet-50 to-purple-50 rounded-t-lg overflow-hidden">
-                <Image src="/pillar-digital-platforms.png" alt="Digital Platform Development" fill className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-granite-800 dark:text-granite-100 mb-2">
-                  {t(lang, 'home.pillars.platforms')}
-                </h3>
-                <p className="text-granite-600 dark:text-granite-300 text-sm leading-relaxed">
-                  {t(lang, 'home.pillars.platforms.desc')}
-                </p>
-              </div>
-            </div>
-          </div>
+          <CapabilitiesSlider lang={lang} />
         </div>
       </section>
 

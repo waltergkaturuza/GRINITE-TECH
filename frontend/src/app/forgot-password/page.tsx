@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
 import { trackEvent, trackPageView } from '@/lib/analytics'
+import SiteFooter from '@/components/SiteFooter'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -36,6 +37,7 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
+      <>
       <div className="min-h-screen bg-gradient-to-br from-granite-800 via-jungle-900 to-crimson-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full">
           {/* Logo and Header */}
@@ -96,10 +98,13 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
       </div>
+      <SiteFooter />
+      </>
     )
   }
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-granite-800 via-jungle-900 to-crimson-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Logo and Header */}
@@ -168,5 +173,7 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </div>
+    <SiteFooter />
+    </>
   )
 }

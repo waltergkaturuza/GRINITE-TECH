@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navigation from '../components/Navigation'
+import SiteFooter from '@/components/SiteFooter'
 import JsonLd from '@/components/seo/JsonLd'
 import { absoluteUrl, getSiteUrl } from '@/lib/site'
 import { ArrowRightIcon } from '@heroicons/react/24/outline'
@@ -82,6 +83,7 @@ export default function CaseStudiesIndexPage() {
           </ul>
         </div>
       </main>
+      <SiteFooter />
     </div>
   )
 }

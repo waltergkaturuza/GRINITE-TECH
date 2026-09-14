@@ -20,6 +20,7 @@ import { HealthModule } from './health/health.module';
 import { EmailModule } from './email/email.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SearchModule } from './search/search.module';
+import { InsightsModule } from './insights/insights.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { SearchModule } from './search/search.module';
     EmailModule,
     AnalyticsModule,
     SearchModule,
+    InsightsModule,
   ],
 })
 export class AppModule {}

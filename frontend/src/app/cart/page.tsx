@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Navigation from '../components/Navigation'
+import PublicPage from '@/components/PublicPage'
 import Link from 'next/link'
 import { cartAPI, productsAPI } from '../../lib/api'
 import { 
@@ -145,21 +145,19 @@ export default function CartPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-        <Navigation />
+      <PublicPage>
         <div className="wide-container px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crimson-900 mx-auto"></div>
             <p className="mt-4 text-granite-600">Loading cart...</p>
           </div>
         </div>
-      </div>
+      </PublicPage>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-granite-50 via-white to-granite-100">
-      <Navigation />
+    <PublicPage>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-8">
@@ -304,6 +302,6 @@ export default function CartPage() {
           </div>
         )}
       </div>
-    </div>
+    </PublicPage>
   )
 }

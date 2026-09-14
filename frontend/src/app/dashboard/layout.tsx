@@ -21,6 +21,7 @@ import {
   ClockIcon,
   ServerStackIcon,
   BanknotesIcon,
+  NewspaperIcon,
   ArrowRightOnRectangleIcon,
   GlobeAltIcon
 } from '@heroicons/react/24/outline'
@@ -72,6 +73,7 @@ export default function DashboardLayout({
     { name: 'Clients', href: '/dashboard/clients', icon: UsersIcon, current: false },
     { name: 'Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, current: false },
     { name: 'Products', href: '/dashboard/products', icon: ShoppingCartIcon, current: false },
+    { name: 'News & Updates', href: '/dashboard/insights', icon: NewspaperIcon, current: false },
     { name: 'Analytics', href: '/dashboard/analytics', icon: ChartBarIcon, current: false },
     { name: 'Chat', href: '/dashboard/chat', icon: ChatBubbleLeftRightIcon, current: false },
     { name: 'Invoices', href: '/dashboard/invoices', icon: DocumentTextIcon, current: false },
@@ -85,6 +87,7 @@ export default function DashboardLayout({
     const staffHrefs = new Set([
       '/dashboard/requests',
       '/dashboard/products',
+      '/dashboard/insights',
       '/dashboard/chat',
       '/dashboard/settings',
     ])
