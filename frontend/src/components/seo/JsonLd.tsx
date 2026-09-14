@@ -1,6 +1,6 @@
 type JsonLdProps = {
   /** Full JSON-LD document (include @context yourself). */
-  data: Record<string, unknown>
+  data: object
 }
 
 export default function JsonLd({ data }: JsonLdProps) {

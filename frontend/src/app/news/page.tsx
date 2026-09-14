@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import PublicPage from '@/components/PublicPage'
 import JsonLd from '@/components/seo/JsonLd'
 import { absoluteUrl, getSiteUrl } from '@/lib/site'
+import { defaultSocialImage } from '@/lib/seo'
 import NewsHub from './NewsHub'
 
 const pageUrl = absoluteUrl('/news')
@@ -18,6 +19,12 @@ export const metadata: Metadata = {
     title: 'News & Updates | Quantis Technologies',
     description:
       'Read launches and research, then add a question, a view, or a field-tested contribution.',
+    images: [defaultSocialImage],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'News & Updates | Quantis Technologies',
+    images: [defaultSocialImage.url],
   },
 }
 

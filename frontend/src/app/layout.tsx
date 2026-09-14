@@ -5,72 +5,79 @@ import { Providers } from './providers'
 import { Toaster } from 'react-hot-toast'
 import ChatbotWrapper from './components/chatbot/ChatbotWrapper'
 import JsonLd from '@/components/seo/JsonLd'
-import { absoluteUrl, getSiteUrl } from '@/lib/site'
-import { QUANTIS_LOGO_URL } from '@/constants/company'
+import { getSiteUrl } from '@/lib/site'
+import { defaultSocialImage, getRootJsonLd } from '@/lib/seo'
+import {
+  QUANTIS_APPLE_ICON_URL,
+  QUANTIS_DESCRIPTION,
+  QUANTIS_ICON_192_URL,
+  QUANTIS_KEYWORDS,
+  QUANTIS_MARK_PNG_URL,
+} from '@/constants/company'
 
 const inter = Inter({ subsets: ['latin'] })
 
 const siteUrl = getSiteUrl()
-
-const rootJsonLd = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'Organization',
-      '@id': `${siteUrl}/#organization`,
-      name: 'Quantis Technologies',
-      url: siteUrl,
-      logo: {
-        '@type': 'ImageObject',
-        url: absoluteUrl(QUANTIS_LOGO_URL),
-      },
-      description:
-        'Enterprise systems engineering partner for government, NGOs, and corporates in Zimbabwe and Africa.',
-      address: {
-        '@type': 'PostalAddress',
-        addressCountry: 'ZW',
-      },
-    },
-    {
-      '@type': 'WebSite',
-      '@id': `${siteUrl}/#website`,
-      url: siteUrl,
-      name: 'Quantis Technologies',
-      publisher: { '@id': `${siteUrl}/#organization` },
-      inLanguage: 'en-ZW',
-    },
-  ],
-}
+const rootJsonLd = getRootJsonLd()
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: 'Quantis Technologies',
   title: {
     default: 'Enterprise Systems Engineering Zimbabwe | Quantis Technologies',
     template: '%s | Quantis Technologies',
   },
-  description:
-    'Systems engineering company delivering enterprise platforms, automation, data intelligence, and secure cloud infrastructure for governments and forward-thinking organizations.',
-  keywords: [
-    'systems engineering',
-    'enterprise platforms',
-    'government digital transformation',
-    'cloud infrastructure',
-    'Quantis Technologies',
-  ],
-  authors: [{ name: 'Quantis Technologies Team' }],
+  description: QUANTIS_DESCRIPTION,
+  keywords: [...QUANTIS_KEYWORDS],
+  authors: [{ name: 'Quantis Technologies', url: siteUrl }],
+  creator: 'Quantis Technologies',
+  publisher: 'Quantis Technologies',
+  category: 'technology',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: [
+      { url: QUANTIS_ICON_192_URL, sizes: '192x192', type: 'image/png' },
+      { url: QUANTIS_MARK_PNG_URL, sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: QUANTIS_APPLE_ICON_URL, sizes: '180x180', type: 'image/png' }],
+    shortcut: QUANTIS_MARK_PNG_URL,
+  },
   openGraph: {
     type: 'website',
     locale: 'en_ZW',
+    url: siteUrl,
     siteName: 'Quantis Technologies',
+    title: 'Quantis Technologies | Enterprise Systems Engineering Zimbabwe',
+    description: QUANTIS_DESCRIPTION,
+    images: [defaultSocialImage],
   },
   twitter: {
     card: 'summary_large_image',
+    title: 'Quantis Technologies | Enterprise Systems Engineering Zimbabwe',
+    description: QUANTIS_DESCRIPTION,
+    images: [defaultSocialImage.url],
+  },
+  alternates: {
+    canonical: siteUrl,
   },
 }
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#111827' },
+  ],
 }
 
 export default function RootLayout({

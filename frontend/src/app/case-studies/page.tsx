@@ -4,6 +4,7 @@ import Navigation from '../components/Navigation'
 import SiteFooter from '@/components/SiteFooter'
 import JsonLd from '@/components/seo/JsonLd'
 import { absoluteUrl, getSiteUrl } from '@/lib/site'
+import { defaultSocialImage } from '@/lib/seo'
 import { ArrowRightIcon } from '@heroicons/react/24/outline'
 
 const pageUrl = absoluteUrl('/case-studies')
@@ -44,6 +45,12 @@ export const metadata: Metadata = {
     title: 'Case Studies | Quantis Technologies',
     description:
       'How we deliver secure, scalable digital systems for mission-critical institutional operations.',
+    images: [defaultSocialImage],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Case Studies | Quantis Technologies',
+    images: [defaultSocialImage.url],
   },
 }
 

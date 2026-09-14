@@ -4,6 +4,7 @@ import Navigation from '../../components/Navigation'
 import SiteFooter from '@/components/SiteFooter'
 import JsonLd from '@/components/seo/JsonLd'
 import { absoluteUrl, getSiteUrl } from '@/lib/site'
+import { defaultSocialImage } from '@/lib/seo'
 import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline'
 
 const siteUrl = getSiteUrl()
@@ -29,12 +30,14 @@ export const metadata: Metadata = {
     title: 'Fuel Management System Solutions Africa | Quantis Technologies',
     description:
       'Digitize fuel allocation, approvals, redemption, and reporting with role-based controls and full audit trails.',
+    images: [defaultSocialImage],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Fuel Management System Solutions Africa | Quantis Technologies',
     description:
       'Digitize fuel allocation, approvals, redemption, and reporting with role-based controls and full audit trails.',
+    images: [defaultSocialImage.url],
   },
 }
 
@@ -55,6 +58,7 @@ const serviceJsonLd = {
         audienceType: 'Government agencies, NGOs, corporates',
       },
       url: pageUrl,
+      image: defaultSocialImage.url,
     },
     {
       '@type': 'BreadcrumbList',

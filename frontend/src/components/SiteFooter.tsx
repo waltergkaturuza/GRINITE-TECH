@@ -71,44 +71,49 @@ export default function SiteFooter() {
               ))}
             </ul>
           </div>
-          <div className="grid grid-cols-2 gap-6 sm:contents">
-            <div>
-              <h4 className="font-semibold mb-4 text-crimson-300">
-                <Link href="/services" className="hover:text-crimson-200 transition-colors duration-200">
-                  {t(lang, 'footer.services')}
-                </Link>
-              </h4>
-              <ul className="space-y-2 text-gray-300">
-                {SERVICE_LINKS.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="block py-1 hover:text-crimson-300 transition-colors duration-200"
-                    >
-                      {t(lang, item.key)}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+          <div className="sm:col-span-2 lg:col-span-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-4 text-crimson-300">
+                  <Link href="/services" className="hover:text-crimson-200 transition-colors duration-200">
+                    {t(lang, 'footer.services')}
+                  </Link>
+                </h4>
+                <ul className="space-y-2 text-gray-300">
+                  {SERVICE_LINKS.map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className="block py-1 hover:text-crimson-300 transition-colors duration-200"
+                      >
+                        {t(lang, item.key)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-4 text-jungle-300">
+                  <Link href="/products" className="hover:text-jungle-200 transition-colors duration-200">
+                    {t(lang, 'footer.products')}
+                  </Link>
+                </h4>
+                <ul className="space-y-2 text-gray-300">
+                  {PRODUCT_LINKS.map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className="block py-1 hover:text-jungle-300 transition-colors duration-200"
+                      >
+                        {t(lang, item.key)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-jungle-300">
-                <Link href="/products" className="hover:text-jungle-200 transition-colors duration-200">
-                  {t(lang, 'footer.products')}
-                </Link>
-              </h4>
-              <ul className="space-y-2 text-gray-300">
-                {PRODUCT_LINKS.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="block py-1 hover:text-jungle-300 transition-colors duration-200"
-                    >
-                      {t(lang, item.key)}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <div className="mt-8">
+              <NewsSubscribeForm variant="footer" />
             </div>
           </div>
           <div>
@@ -150,9 +155,6 @@ export default function SiteFooter() {
               </li>
             </ul>
           </div>
-        </div>
-        <div className="border-t border-granite-700 mt-8 pt-8">
-          <NewsSubscribeForm variant="footer" />
         </div>
         <div className="border-t border-granite-700 mt-8 pt-8 text-center space-y-2">
           <p className="text-gray-400">

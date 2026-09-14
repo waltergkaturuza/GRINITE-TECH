@@ -29,7 +29,7 @@ export default function NewsSubscribeForm({ variant = 'card' }: { variant?: Vari
 
   if (variant === 'footer') {
     return (
-      <form onSubmit={submit} className="max-w-xl mx-auto">
+      <form onSubmit={submit} className="max-w-xl lg:mt-2">
         <p className="text-sm font-semibold text-yellow-900 mb-2">Subscribe to news briefs</p>
         <p className="text-gray-300 text-sm mb-3">
           Get an email automatically when we publish a news item or update.

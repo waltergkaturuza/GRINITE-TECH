@@ -1,37 +1,32 @@
 import type { Metadata } from 'next'
 import HomePageClient from './HomePageClient'
-import { absoluteUrl, getSiteUrl } from '@/lib/site'
+import { absoluteUrl } from '@/lib/site'
+import { defaultSocialImage } from '@/lib/seo'
+import { QUANTIS_DESCRIPTION, QUANTIS_KEYWORDS } from '@/constants/company'
 
-const siteUrl = getSiteUrl()
+const pageUrl = absoluteUrl('/')
 
 export const metadata: Metadata = {
   title: 'Enterprise Systems Engineering Zimbabwe',
-  description:
-    'Quantis Technologies designs secure, scalable enterprise systems for government, NGOs, and corporates in Zimbabwe and Africa. Request a proposal or book a consultation.',
-  keywords: [
-    'enterprise systems engineering Zimbabwe',
-    'government digital transformation',
-    'NGO software Africa',
-    'custom ERP Zimbabwe',
-    'Quantis Technologies',
-  ],
+  description: QUANTIS_DESCRIPTION,
+  keywords: [...QUANTIS_KEYWORDS],
   alternates: {
-    canonical: absoluteUrl('/'),
+    canonical: pageUrl,
   },
   openGraph: {
     type: 'website',
-    url: absoluteUrl('/'),
+    url: pageUrl,
     title: 'Enterprise Systems Engineering Zimbabwe | Quantis Technologies',
-    description:
-      'Secure, scalable digital systems for government, NGOs, and corporates across Zimbabwe and Africa.',
+    description: QUANTIS_DESCRIPTION,
     locale: 'en_ZW',
     siteName: 'Quantis Technologies',
+    images: [defaultSocialImage],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Enterprise Systems Engineering Zimbabwe | Quantis Technologies',
-    description:
-      'Secure, scalable digital systems for government, NGOs, and corporates across Zimbabwe and Africa.',
+    description: QUANTIS_DESCRIPTION,
+    images: [defaultSocialImage.url],
   },
 }
 

@@ -4,6 +4,7 @@ import Navigation from '../../components/Navigation'
 import SiteFooter from '@/components/SiteFooter'
 import JsonLd from '@/components/seo/JsonLd'
 import { absoluteUrl, getSiteUrl } from '@/lib/site'
+import { defaultSocialImage } from '@/lib/seo'
 import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline'
 
 const siteUrl = getSiteUrl()
@@ -31,12 +32,14 @@ export const metadata: Metadata = {
     description:
       'Institutional fuel allocation digitized with governance, controls, and audit-ready operations.',
     publishedTime: published,
+    images: [defaultSocialImage],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Fuel Coupon Management System Case Study | Quantis Technologies',
     description:
       'Institutional fuel allocation digitized with governance, controls, and audit-ready operations.',
+    images: [defaultSocialImage.url],
   },
 }
 
