@@ -31,6 +31,7 @@ interface ReceiptFormProps {
 export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel, isLoading = false }: ReceiptFormProps) {
   const [clients, setClients] = useState<any[]>([])
   const [openInvoices, setOpenInvoices] = useState<any[]>([])
+  const [invoiceLoadError, setInvoiceLoadError] = useState('')
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | ''>('')
   const [paymentAmount, setPaymentAmount] = useState(0)
   const [useSimplePayment, setUseSimplePayment] = useState(true)
@@ -106,10 +107,36 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
 
   const loadOpenInvoices = async () => {
     try {
-      const data = await invoicesAPI.getOpenInvoices()
-      setOpenInvoices(Array.isArray(data) ? data : [])
+      setInvoiceLoadError('')
+      let data: any = await invoicesAPI.getOpenInvoices()
+      let list = Array.isArray(data) ? data : data?.invoices || data?.data || []
+      if (!list.length) {
+        const fallback = await invoicesAPI.getInvoices({ documentType: 'invoice', limit: 200 })
+        const all = fallback?.invoices || fallback?.data || []
+        list = (Array.isArray(all) ? all : []).filter((inv: any) => {
+          const status = String(inv.status || '').toLowerCase()
+          if (status === 'paid' || status === 'cancelled') return false
+          return getBalanceDue(inv) > 0.01
+        })
+      }
+      setOpenInvoices(list)
     } catch (error) {
       console.error('Failed to load open invoices:', error)
+      try {
+        const fallback = await invoicesAPI.getInvoices({ documentType: 'invoice', limit: 200 })
+        const all = fallback?.invoices || fallback?.data || []
+        const list = (Array.isArray(all) ? all : []).filter((inv: any) => {
+          const status = String(inv.status || '').toLowerCase()
+          if (status === 'paid' || status === 'cancelled') return false
+          return getBalanceDue(inv) > 0.01
+        })
+        setOpenInvoices(list)
+        if (!list.length) setInvoiceLoadError('No invoices with a remaining balance were found.')
+      } catch (fallbackError) {
+        console.error('Fallback invoice load failed:', fallbackError)
+        setOpenInvoices([])
+        setInvoiceLoadError('Could not load invoices to link. Refresh and try again.')
+      }
     }
   }
 
@@ -276,9 +303,16 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
               {openInvoices.map((inv) => (
                 <option key={inv.id} value={inv.id}>
                   {inv.invoice_number} – {formatCurrency(Number(inv.total_amount))} (balance: {formatCurrency(getBalanceDue(inv))})
+                  {inv.status ? ` · ${String(inv.status).replace(/_/g, ' ')}` : ''}
                 </option>
               ))}
             </select>
+            {invoiceLoadError && <p className="mt-2 text-sm text-amber-400">{invoiceLoadError}</p>}
+            {!invoiceLoadError && openInvoices.length === 0 && (
+              <p className="mt-2 text-sm text-gray-400">
+                No invoices with a remaining balance. Draft, sent, and overdue invoices appear here.
+              </p>
+            )}
             {selectedInvoice && balanceDue != null && (
               <div className="mt-2 p-3 bg-granite-700/50 rounded-md text-sm text-gray-300 grid grid-cols-3 gap-2">
                 <div><span className="text-gray-400">Invoice total:</span> {formatCurrency(Number(selectedInvoice.total_amount))}</div>

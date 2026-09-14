@@ -198,19 +198,17 @@ export class InvoicesService {
   }
 
   async getOpenInvoices(): Promise<any[]> {
-    const invoices = await this.invoiceRepository.find({
-      where: [
-        { document_type: 'invoice', status: InvoiceStatus.SENT },
-        { document_type: 'invoice', status: InvoiceStatus.PARTIALLY_PAID },
-        { document_type: 'invoice', status: InvoiceStatus.OVERDUE },
-      ],
-      relations: ['client'],
-      order: { created_at: 'DESC' },
-    });
-    return invoices.map(inv => ({
-      ...inv,
-      balance_due: this.getBalanceDue(inv),
-    }));
+    const invoices = await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.client', 'client')
+      .where('invoice.document_type = :type', { type: 'invoice' })
+      .andWhere('LOWER(invoice.status) NOT IN (:...closed)', { closed: ['paid', 'cancelled'] })
+      .orderBy('invoice.created_at', 'DESC')
+      .getMany();
+
+    return invoices
+      .map((inv) => ({ ...inv, balance_due: this.getBalanceDue(inv) }))
+      .filter((inv) => Number(inv.balance_due) > 0.01);
   }
 
   async getInvoiceReceipts(id: number): Promise<Invoice[]> {
