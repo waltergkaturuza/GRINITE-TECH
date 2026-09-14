@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { insightsAPI } from '@/lib/api'
 import NewsSubscribeForm from '@/components/NewsSubscribeForm'
+import { warmupBackend } from '@/lib/warmupBackend'
 import {
   INSIGHT_CATEGORIES,
   InsightPost,
@@ -54,6 +55,7 @@ export default function NewsHub() {
       try {
         setLoading(true)
         setError('')
+        await warmupBackend(20000)
         const data = await insightsAPI.getPublished({
           category: category === 'all' ? undefined : category,
           search: search.trim() || undefined,
@@ -62,7 +64,7 @@ export default function NewsHub() {
         setCounts(data.counts || {})
       } catch (err) {
         console.error(err)
-        setError('Could not load updates right now. Please try again shortly.')
+        setError('Could not load updates right now. Please wait a moment and try again.')
         setPosts([])
       } finally {
         setLoading(false)
@@ -84,6 +86,7 @@ export default function NewsHub() {
     e.preventDefault()
     try {
       setAskSaving(true)
+      await warmupBackend(20000)
       const created = await insightsAPI.askQuestion(askForm)
       setAskOpen(false)
       setAskForm((prev) => ({ ...prev, title: '', body: '' }))

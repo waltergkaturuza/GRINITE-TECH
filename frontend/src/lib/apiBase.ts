@@ -3,15 +3,18 @@
  * On quantistechnologies.co.zw we use same-origin /api/v1 (Next.js rewrite → backend).
  */
 export function getApiBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
-  }
-
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
-    if (host === 'quantistechnologies.co.zw' || host === 'www.quantistechnologies.co.zw') {
+    if (
+      host === 'quantistechnologies.co.zw' ||
+      host === 'www.quantistechnologies.co.zw'
+    ) {
       return '/api/v1'
     }
+  }
+
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
   }
 
   return 'https://grinite-tech-backend.vercel.app/api/v1'

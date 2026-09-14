@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { Invoice, ALL_ENTITIES } from '../src/database/all-entities';
+import { Invoice, InsightPost, ALL_ENTITIES } from '../src/database/all-entities';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
 import helmet from 'helmet';
@@ -16,6 +16,9 @@ async function bootstrap(): Promise<express.Express> {
   // Touch entity registry so Vercel bundle retains every @Entity class
   if (!ALL_ENTITIES.some((entity) => entity.name === 'Invoice')) {
     throw new Error('Invoice entity missing from ALL_ENTITIES registry');
+  }
+  if (!ALL_ENTITIES.some((entity) => entity.name === 'InsightPost')) {
+    throw new Error('InsightPost entity missing from ALL_ENTITIES registry');
   }
 
   const expressApp = express();
@@ -54,6 +57,9 @@ async function bootstrap(): Promise<express.Express> {
   const dataSource = app.get(DataSource);
   if (!dataSource.hasMetadata(Invoice)) {
     console.error('CRITICAL: Invoice entity metadata not registered after TypeORM init');
+  }
+  if (!dataSource.hasMetadata(InsightPost)) {
+    console.error('CRITICAL: InsightPost entity metadata not registered after TypeORM init');
   }
 
   cachedServer = expressApp;

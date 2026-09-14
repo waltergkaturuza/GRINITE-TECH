@@ -29,6 +29,8 @@ export async function trackPageView(path: string) {
         sessionId,
         userAgent: navigator.userAgent || null,
       }),
+      keepalive: true,
+      signal: AbortSignal.timeout(8000),
     });
   } catch {
     // swallow analytics errors
@@ -50,6 +52,8 @@ export async function trackEvent(eventName: string, metadata: Record<string, any
         sessionId,
         metadata,
       }),
+      keepalive: true,
+      signal: AbortSignal.timeout(8000),
     });
   } catch {
     // ignore
