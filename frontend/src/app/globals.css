@@ -183,3 +183,8 @@
 .quantis-logo-on-dark {
   filter: invert(1) hue-rotate(180deg) brightness(1.45) contrast(1.05);
 }
+
+.quantis-logo-hinge.quantis-logo-on-dark {
+  filter: invert(1) hue-rotate(180deg) brightness(1.45) contrast(1.05)
+    drop-shadow(0 10px 28px rgba(0, 0, 0, 0.55));
+}

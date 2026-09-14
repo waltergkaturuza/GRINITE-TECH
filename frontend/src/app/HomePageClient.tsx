@@ -34,11 +34,11 @@ export default function HomePageClient() {
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)] gap-6 lg:gap-8 xl:gap-10 items-center">
             {/* Full wordmark on a light plate so navy artwork reads on the photo */}
             <div className="flex justify-center lg:justify-start order-1 min-w-0">
-              <div className="rounded-3xl bg-white px-4 py-3 sm:px-6 sm:py-5 shadow-2xl [perspective:1100px] overflow-visible w-full max-w-[320px] lg:max-w-none">
+              <div className="[perspective:1100px] overflow-visible w-full max-w-[320px] lg:max-w-none">
                 <img
                   src={QUANTIS_LOGO_URL}
                   alt="Quantis Technologies"
-                  className="quantis-logo-hinge h-20 sm:h-24 lg:h-28 w-auto max-w-full object-contain"
+                  className="quantis-logo-hinge quantis-logo-on-dark h-20 sm:h-24 lg:h-28 w-auto max-w-full object-contain"
                 />
               </div>
             </div>
