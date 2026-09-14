@@ -1,6 +1,7 @@
 import PublicPage from '@/components/PublicPage'
 import Link from 'next/link'
 import { QUANTIS_LOGO_URL } from '@/constants/company'
+import ValuesTypingCards from '@/components/ValuesTypingCards'
 
 const values = [
   {
@@ -104,17 +105,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {values.map((value, index) => (
-              <div 
-                key={index}
-                className="text-center bg-gradient-to-br from-granite-50 to-white p-8 rounded-2xl border border-granite-200 hover:shadow-lg transition-all duration-300"
-              >
-                <h3 className="text-xl font-bold text-granite-800 dark:text-granite-100 mb-4">{value.title}</h3>
-                <p className="text-granite-600 dark:text-granite-300">{value.description}</p>
-              </div>
-            ))}
-          </div>
+          <ValuesTypingCards values={values} />
         </div>
       </section>
 
