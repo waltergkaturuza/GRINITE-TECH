@@ -161,8 +161,8 @@ export default function SiteFooter() {
             &copy; 2026 <span className="text-crimson-300">Quantis Technologies</span>.{' '}
             {t(lang, 'footer.copyright')}
           </p>
-          <p className="text-gray-800 text-xs">
-            <Link href="/login" className="text-gray-800 hover:text-gray-600 transition-colors">
+          <p>
+            <Link href="/login" className="qt-stealth-link text-xs transition-colors">
               {t(lang, 'footer.adminLogin')}
             </Link>
           </p>

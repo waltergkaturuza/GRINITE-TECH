@@ -57,6 +57,22 @@ html.dark .public-page .bg-olive-900.text-granite-900 {
   color: #101820 !important;
 }
 
+/* Discreet admin entry: stay near the footer background in both themes. */
+.qt-stealth-link {
+  color: #1a2330;
+}
+.qt-stealth-link:hover {
+  color: #3d4b5c;
+}
+html.dark .public-page .qt-stealth-link,
+html.dark .qt-stealth-link {
+  color: #1a2330;
+}
+html.dark .public-page .qt-stealth-link:hover,
+html.dark .qt-stealth-link:hover {
+  color: #3d4b5c;
+}
+
 html.dark .public-page .text-granite-600,
 html.dark .public-page .text-granite-700,
 html.dark .public-page .text-gray-600,
