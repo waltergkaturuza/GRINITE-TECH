@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   EnvelopeIcon,
@@ -29,6 +29,23 @@ const services = [
   { id: 'custom', name: 'Custom Solution' },
   { id: 'consultation', name: 'General Consultation' }
 ]
+
+function ContactShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/wp4004960-engineer-wallpapers.jpg')" }}
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-granite-900/85 via-granite-800/75 to-crimson-950/80"
+        aria-hidden
+      />
+      <div className="relative z-10 pt-24 pb-16">{children}</div>
+    </div>
+  )
+}
 
 export default function ContactContent() {
   const searchParams = useSearchParams()
@@ -132,7 +149,7 @@ export default function ContactContent() {
 
   if (isSubmitted) {
     return (
-      <div className="pt-32 pb-20">
+      <ContactShell>
         <div className="wide-container">
           <div className="max-w-2xl mx-auto text-center">
             <div className="bg-white rounded-2xl shadow-xl p-12">
@@ -152,19 +169,19 @@ export default function ContactContent() {
             </div>
           </div>
         </div>
-      </div>
+      </ContactShell>
     )
   }
 
   return (
-    <div className="pt-24 pb-16">
+    <ContactShell>
       <div className="wide-container">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-site-max font-bold text-granite-900 mb-3">
-            Get In <span className="text-transparent bg-clip-text bg-gradient-to-r from-crimson-600 to-amber-500">Touch</span>
+          <h1 className="text-site-max font-bold text-white mb-3">
+            Get In <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-peach-400">Touch</span>
           </h1>
-          <p className="text-xl text-granite-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-granite-200 max-w-3xl mx-auto leading-relaxed">
             Ready to transform your business with cutting-edge technology? Let's discuss your project and create something amazing together.
           </p>
         </div>
@@ -515,6 +532,6 @@ export default function ContactContent() {
           </div>
         </div>
       </div>
-    </div>
+    </ContactShell>
   )
 }

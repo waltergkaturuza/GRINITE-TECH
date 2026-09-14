@@ -101,8 +101,16 @@ export default function NewsHub() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-gradient-to-br from-granite-800 via-granite-900 to-crimson-950 text-white">
-        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_right,_#FEE715_0,_transparent_32%),radial-gradient(circle_at_bottom_left,_#A4193D_0,_transparent_40%)]" />
+      <section className="relative overflow-hidden bg-granite-900 text-white">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/wallpaper.jpg')" }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-granite-900/85 via-granite-800/75 to-crimson-950/80"
+          aria-hidden
+        />
         <div className="relative wide-container px-4 sm:px-6 lg:px-8 pt-24 pb-16">
           <p className="text-yellow-900 font-semibold tracking-[0.2em] uppercase text-xs mb-6">
             Quantis Insights

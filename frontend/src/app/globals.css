@@ -263,3 +263,24 @@ html.dark .public-page select {
 html.dark .public-page .quantis-logo-on-light {
   filter: invert(1) hue-rotate(180deg) brightness(1.45) contrast(1.05);
 }
+
+@keyframes quantis-kenburns {
+  0% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: scale(1.16) translate3d(2%, 1.5%, 0);
+  }
+}
+
+.quantis-kenburns {
+  animation: quantis-kenburns 5.4s ease-out forwards;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quantis-kenburns {
+    animation: none;
+  }
+}

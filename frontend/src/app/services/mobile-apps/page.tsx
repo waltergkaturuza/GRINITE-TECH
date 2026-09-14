@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Navigation from '../../components/Navigation'
 import SiteFooter from '@/components/SiteFooter'
+import PhoneSlideshow from '@/components/PhoneSlideshow'
 import { CheckIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 
 export default function MobileAppsPage() {
@@ -26,7 +27,7 @@ export default function MobileAppsPage() {
 
       <main className="pt-28 pb-20">
         <div className="wide-container px-4 sm:px-6 lg:px-8">
-          <section className="grid gap-10 lg:grid-cols-2 items-center mb-16">
+          <section className="grid gap-10 lg:grid-cols-2 items-start mb-16">
             <div>
               <p className="text-sm font-semibold tracking-wide text-cyan-300 uppercase mb-3">
                 Mobile App Development
@@ -55,18 +56,21 @@ export default function MobileAppsPage() {
               </div>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur">
-              <h2 className="text-xl font-semibold mb-4 text-cyan-200">
-                Perfect for:
-              </h2>
-              <ul className="space-y-3 text-sm text-gray-100">
-                {useCases.map((u) => (
-                  <li key={u} className="flex items-start space-x-2">
-                    <CheckIcon className="h-5 w-5 text-cyan-300 mt-0.5" />
-                    <span>{u}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="space-y-6">
+              <PhoneSlideshow />
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur">
+                <h2 className="text-xl font-semibold mb-4 text-cyan-200">
+                  Perfect for:
+                </h2>
+                <ul className="space-y-3 text-sm text-gray-100">
+                  {useCases.map((u) => (
+                    <li key={u} className="flex items-start space-x-2">
+                      <CheckIcon className="h-5 w-5 text-cyan-300 mt-0.5" />
+                      <span>{u}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </section>
 
