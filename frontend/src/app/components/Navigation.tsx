@@ -26,46 +26,25 @@ const LANGUAGES: { code: Lang; region: string; label: string; name: string }[] =
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
-  const iconBtn =
-    'inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
+  const isDark = theme === 'dark'
 
   return (
-    <div
-      className="flex items-center rounded-full border border-emerald-500/40 bg-emerald-900/60 p-0.5"
-      role="group"
-      aria-label="Theme"
+    <button
+      type="button"
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      className="inline-flex items-center gap-1.5 rounded-md border border-emerald-800/30 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-800 hover:bg-emerald-50"
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
     >
-      <button
-        type="button"
-        onClick={() => setTheme('light')}
-        className={`${iconBtn} ${theme === 'light' ? 'bg-emerald-700 text-amber-300' : 'text-emerald-100/70 hover:text-white'}`}
-        aria-label="Light theme"
-        aria-pressed={theme === 'light'}
-      >
-        <SunIcon className="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        onClick={() => setTheme('dark')}
-        className={`${iconBtn} ${theme === 'dark' ? 'bg-emerald-700 text-amber-300' : 'text-emerald-100/70 hover:text-white'}`}
-        aria-label="Dark theme"
-        aria-pressed={theme === 'dark'}
-      >
-        <MoonIcon className="h-4 w-4" />
-      </button>
-    </div>
+      {isDark ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
+      <span>{isDark ? 'Dark' : 'Light'}</span>
+    </button>
   )
 }
 
-function LanguageMenu({
-  align = 'right',
-}: {
-  align?: 'left' | 'right'
-}) {
+function LanguageMenu() {
   const { lang, setLang } = useLanguage()
   const [isLangOpen, setIsLangOpen] = useState(false)
   const langMenuRef = useRef<HTMLDivElement>(null)
-  const current = LANGUAGES.find((item) => item.code === lang) ?? LANGUAGES[0]
 
   useEffect(() => {
     if (!isLangOpen) return
@@ -80,33 +59,38 @@ function LanguageMenu({
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [isLangOpen])
 
+  const pill = (code: Lang, label: string) => (
+    <button
+      key={code}
+      type="button"
+      onClick={() => setLang(code)}
+      className={`px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors ${
+        lang === code
+          ? 'bg-emerald-800 text-white'
+          : 'bg-white text-emerald-800 hover:bg-emerald-50'
+      }`}
+    >
+      {label}
+    </button>
+  )
+
   return (
-    <div className="relative" ref={langMenuRef}>
+    <div className="relative flex items-stretch overflow-hidden rounded-md border border-emerald-800/30" ref={langMenuRef}>
+      {pill('en', 'EN')}
+      {pill('fr', 'FR')}
       <button
         type="button"
         onClick={() => setIsLangOpen((v) => !v)}
-        className="inline-flex items-center gap-1 rounded-full border border-emerald-500/50 bg-emerald-900/70 px-3 py-1.5 text-xs text-emerald-50/90 hover:bg-emerald-800 hover:border-emerald-400 transition-colors"
-        aria-haspopup="listbox"
+        className="border-l border-emerald-800/30 bg-white px-2 text-emerald-800 hover:bg-emerald-50"
+        aria-label="More languages"
         aria-expanded={isLangOpen}
       >
-        <span className="font-semibold uppercase">{current.region}</span>
-        <span className="uppercase">{current.label}</span>
-        <svg className="ml-1 h-3 w-3" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M5.5 7.5L10 12L14.5 7.5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+        <svg className="h-3 w-3" viewBox="0 0 20 20" fill="none">
+          <path d="M5.5 7.5L10 12L14.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
       {isLangOpen && (
-        <div
-          className={`absolute mt-2 w-56 rounded-xl bg-emerald-950 border border-emerald-900/60 shadow-xl py-2 z-50 ${
-            align === 'right' ? 'right-0' : 'left-0'
-          }`}
-        >
+        <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-granite-200 bg-white py-2 shadow-xl z-50">
           {LANGUAGES.map((item) => (
             <button
               key={item.code}
@@ -115,13 +99,13 @@ function LanguageMenu({
                 setLang(item.code)
                 setIsLangOpen(false)
               }}
-              className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-50/90 hover:bg-emerald-900/80"
+              className="flex w-full items-center justify-between px-4 py-2 text-xs text-emerald-900 hover:bg-emerald-50"
             >
               <span className="flex items-center gap-2">
-                <span className="font-semibold">{item.region}</span>
+                <span className="font-semibold">{item.label}</span>
                 <span>{item.name}</span>
               </span>
-              {lang === item.code && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+              {lang === item.code && <span className="h-1.5 w-1.5 rounded-full bg-emerald-700" />}
             </button>
           ))}
         </div>
@@ -184,102 +168,82 @@ export default function Navigation() {
     setIsSignupModalOpen(false)
   }
 
+  const linkClass =
+    'text-sm font-medium text-emerald-800 hover:text-emerald-950 transition-colors duration-200'
+  const mobileLinkClass =
+    'block px-3 py-2 text-emerald-800 hover:text-emerald-950'
+
   return (
-    <nav className="bg-emerald-950 shadow-lg border-b border-emerald-900/30 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-[6.5rem] gap-3">
-          {/* Logo */}
-          <div className="flex items-center min-w-0">
-            <Link href="/" className="flex items-center">
-              <span className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 shadow-md">
-                <img
-                  src={QUANTIS_LOGO_URL}
-                  alt="Quantis Technologies logo"
-                  className="h-14 sm:h-[4.75rem] w-auto max-w-[min(72vw,300px)] object-contain object-left"
-                />
-              </span>
+    <nav className="bg-white shadow-sm border-b border-granite-200 sticky top-0 z-50">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center h-[5.5rem] gap-4">
+          {/* Far left: logo */}
+          <Link href="/" className="flex items-center shrink-0">
+            <img
+              src={QUANTIS_LOGO_URL}
+              alt="Quantis Technologies logo"
+              className="h-12 sm:h-16 w-auto max-w-[min(55vw,260px)] object-contain object-left"
+            />
+          </Link>
+
+          {/* Center: About and other links */}
+          <div className="hidden md:flex flex-1 items-center justify-center gap-6 lg:gap-8 min-w-0">
+            <Link href="/" className={linkClass}>
+              {t(lang, 'nav.home')}
             </Link>
-          </div>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6 flex-1 justify-end min-w-0">
-            {/* Search chip */}
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className="flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-900/60 px-3 py-1.5 text-xs text-emerald-50/90 hover:bg-emerald-800 hover:border-emerald-400 transition-colors"
-              aria-label="Search"
-            >
-              <MagnifyingGlassIcon className="h-4 w-4" />
-              <span className="hidden lg:inline">{t(lang, 'nav.search')}</span>
-              <span className="rounded-md border border-emerald-500/40 bg-emerald-950/60 px-1.5 py-0.5 text-[10px] tracking-wide text-emerald-100">
-                Ctrl K
-              </span>
-            </button>
-
             <div className="relative" ref={servicesMenuRef}>
               <button
                 onClick={() => setIsServicesOpen((v) => !v)}
-                className="inline-flex items-center text-emerald-50/90 hover:text-white transition-colors duration-200"
+                className={`inline-flex items-center ${linkClass}`}
                 aria-haspopup="menu"
                 aria-expanded={isServicesOpen}
               >
                 <span>{t(lang, 'nav.services')}</span>
-                <svg
-                  className="ml-1 h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M5.5 7.5L10 12L14.5 7.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                <svg className="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="none">
+                  <path d="M5.5 7.5L10 12L14.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </button>
               {isServicesOpen && (
-                <div className="absolute left-0 mt-2 w-64 rounded-xl shadow-lg bg-emerald-950 border border-emerald-900/40 py-2 z-50">
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl shadow-lg bg-white border border-granite-200 py-2 z-50">
                   <Link
                     href="/services"
-                    className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
                     onClick={() => setIsServicesOpen(false)}
                   >
                     {t(lang, 'nav.services')}
                   </Link>
-                  <div className="my-1 h-px bg-white/10" />
+                  <div className="my-1 h-px bg-granite-200" />
                   <Link
                     href="/services/custom-software"
-                    className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
                     onClick={() => setIsServicesOpen(false)}
                   >
                     Custom software
                   </Link>
                   <Link
                     href="/services/fuel-management-system-africa"
-                    className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
                     onClick={() => setIsServicesOpen(false)}
                   >
                     Fuel management systems
                   </Link>
                   <Link
                     href="/services/mobile-apps"
-                    className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
                     onClick={() => setIsServicesOpen(false)}
                   >
                     Mobile apps
                   </Link>
                   <Link
                     href="/services/business-automation"
-                    className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
                     onClick={() => setIsServicesOpen(false)}
                   >
                     Business automation
                   </Link>
                   <Link
                     href="/services/ecommerce"
-                    className="block px-4 py-2 text-sm text-emerald-50/90 hover:bg-white/10 hover:text-white"
+                    className="block px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-50"
                     onClick={() => setIsServicesOpen(false)}
                   >
                     E‑commerce & digital products
@@ -287,100 +251,76 @@ export default function Navigation() {
                 </div>
               )}
             </div>
-            <Link href="/products" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
+            <Link href="/products" className={linkClass}>
               {t(lang, 'nav.products')}
             </Link>
-            <Link href="/portfolio" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
+            <Link href="/portfolio" className={linkClass}>
               {t(lang, 'nav.portfolio')}
             </Link>
-            <Link href="/about" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
+            <Link href="/about" className={linkClass}>
               {t(lang, 'nav.about')}
             </Link>
-            <Link href="/contact" className="text-emerald-50/90 hover:text-white transition-colors duration-200">
+            <Link href="/contact" className={linkClass}>
               {t(lang, 'nav.contact')}
             </Link>
-            
             {isLoggedIn && (
-              <div className="flex items-center space-x-4">
-                <Link href="/dashboard" className="text-emerald-50/90 hover:text-white transition-colors duration-200 flex items-center">
-                  <UserIcon className="h-5 w-5 mr-1" />
+              <>
+                <Link href="/dashboard" className={`${linkClass} inline-flex items-center`}>
+                  <UserIcon className="h-4 w-4 mr-1" />
                   Dashboard
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  className="text-emerald-50/90 hover:text-white transition-colors duration-200"
-                >
+                <button onClick={handleLogout} className={linkClass}>
                   Logout
                 </button>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Top-right: theme + language */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Far right: search, theme, language */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="hidden sm:inline-flex items-center justify-center h-9 w-9 rounded-md text-emerald-800 hover:bg-emerald-50"
+              aria-label="Search"
+            >
+              <MagnifyingGlassIcon className="h-5 w-5" />
+            </button>
             <ThemeToggle />
             <LanguageMenu />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden text-emerald-50/90 hover:text-white transition-colors duration-200 p-1"
+              className="md:hidden text-emerald-800 hover:text-emerald-950 p-1"
               aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             >
-              {isMenuOpen ? (
-                <XMarkIcon className="h-6 w-6" />
-              ) : (
-                <Bars3Icon className="h-6 w-6" />
-              )}
+              {isMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-emerald-950 border-t border-emerald-900/40">
-              <Link 
-                href="/services" 
-                className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Services
+            <div className="px-2 pt-2 pb-3 space-y-1 border-t border-granite-200 bg-white">
+              <Link href="/" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
+                {t(lang, 'nav.home')}
               </Link>
-              <Link 
-                href="/products" 
-                className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Products
+              <Link href="/services" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
+                {t(lang, 'nav.services')}
               </Link>
-              <Link 
-                href="/portfolio" 
-                className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Portfolio
+              <Link href="/products" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
+                {t(lang, 'nav.products')}
               </Link>
-              <Link 
-                href="/about" 
-                className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About
+              <Link href="/portfolio" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
+                {t(lang, 'nav.portfolio')}
               </Link>
-              <Link 
-                href="/contact" 
-                className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contact
+              <Link href="/about" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
+                {t(lang, 'nav.about')}
               </Link>
-              
+              <Link href="/contact" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
+                {t(lang, 'nav.contact')}
+              </Link>
               {isLoggedIn ? (
                 <>
-                  <Link 
-                    href="/dashboard" 
-                    className="block px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link href="/dashboard" className={mobileLinkClass} onClick={() => setIsMenuOpen(false)}>
                     Dashboard
                   </Link>
                   <button
@@ -388,20 +328,18 @@ export default function Navigation() {
                       handleLogout()
                       setIsMenuOpen(false)
                     }}
-                    className="block w-full text-left px-3 py-2 text-emerald-50/90 hover:text-white transition-colors duration-200"
+                    className={`${mobileLinkClass} w-full text-left`}
                   >
                     Logout
                   </button>
                 </>
               ) : (
-                <>
-                  <button 
-                    onClick={openSignupModal}
-                    className="block px-3 py-2 bg-white text-emerald-950 rounded-lg font-medium mx-3"
-                  >
-                    Get Started
-                  </button>
-                </>
+                <button
+                  onClick={openSignupModal}
+                  className="block px-3 py-2 bg-emerald-900 text-white rounded-lg font-medium mx-3"
+                >
+                  Get Started
+                </button>
               )}
             </div>
           </div>

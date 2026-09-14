@@ -3,6 +3,7 @@ export type Lang = 'en' | 'fr' | 'zh' | 'sn' | 'pt' | 'ja' | 'ru' | 'el'
 export const messages: Record<Lang, Record<string, string>> = {
   en: {
     'nav.brand': 'Quantis Technologies',
+    'nav.home': 'Home',
     'nav.services': 'Services',
     'nav.products': 'Products',
     'nav.portfolio': 'Portfolio',
@@ -62,6 +63,7 @@ export const messages: Record<Lang, Record<string, string>> = {
   },
   fr: {
     'nav.brand': 'Quantis Technologies',
+    'nav.home': 'Accueil',
     'nav.services': 'Services',
     'nav.products': 'Produits',
     'nav.portfolio': 'Portfolio',
@@ -123,6 +125,7 @@ export const messages: Record<Lang, Record<string, string>> = {
   },
   zh: {
     'nav.brand': 'Quantis Technologies',
+    'nav.home': '首页',
     'nav.services': '服务',
     'nav.products': '产品',
     'nav.portfolio': '案例',
@@ -182,6 +185,7 @@ export const messages: Record<Lang, Record<string, string>> = {
   },
   sn: {
     'nav.brand': 'Quantis Technologies',
+    'nav.home': 'Pekutanga',
     'nav.services': 'Mabasa',
     'nav.products': 'Zvigadzirwa',
     'nav.portfolio': 'Portfolio',
@@ -243,6 +247,7 @@ export const messages: Record<Lang, Record<string, string>> = {
   },
   pt: {
     'nav.brand': 'Quantis Technologies',
+    'nav.home': 'Início',
     'nav.services': 'Serviços',
     'nav.products': 'Produtos',
     'nav.portfolio': 'Portfólio',
@@ -300,6 +305,7 @@ export const messages: Record<Lang, Record<string, string>> = {
   },
   ja: {
     'nav.brand': 'Quantis Technologies',
+    'nav.home': 'ホーム',
     'nav.services': 'サービス',
     'nav.products': 'プロダクト',
     'nav.portfolio': 'ポートフォリオ',
@@ -357,6 +363,7 @@ export const messages: Record<Lang, Record<string, string>> = {
   },
   ru: {
     'nav.brand': 'Quantis Technologies',
+    'nav.home': 'Главная',
     'nav.services': 'Сервисы',
     'nav.products': 'Продукты',
     'nav.portfolio': 'Портфолио',
@@ -414,6 +421,7 @@ export const messages: Record<Lang, Record<string, string>> = {
   },
   el: {
     'nav.brand': 'Quantis Technologies',
+    'nav.home': 'Αρχική',
     'nav.services': 'Υπηρεσίες',
     'nav.products': 'Προϊόντα',
     'nav.portfolio': 'Portfolio',
