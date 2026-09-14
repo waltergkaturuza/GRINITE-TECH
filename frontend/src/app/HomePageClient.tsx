@@ -31,18 +31,14 @@ export default function HomePageClient() {
         <div className="absolute inset-0 bg-gradient-to-br from-granite-900/85 via-granite-800/75 to-crimson-950/80" aria-hidden />
 
         <div className="wide-container px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,300px)_1fr] gap-8 lg:gap-12 items-center">
-            {/* Logo — no box, wordmark only */}
-            <div className="flex justify-center lg:justify-start order-1 lg:-ml-4">
-              <div className="relative w-[min(90vw,440px)] h-[min(32vw,210px)]">
-                <Image
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,520px)_1fr] gap-10 lg:gap-14 items-center">
+            {/* Full wordmark on a light plate so navy artwork reads on the photo */}
+            <div className="flex justify-center lg:justify-start order-1">
+              <div className="rounded-3xl bg-white px-8 py-6 sm:px-10 sm:py-8 shadow-2xl">
+                <img
                   src={QUANTIS_LOGO_URL}
                   alt="Quantis Technologies"
-                  fill
-                  sizes="(max-width: 640px) 280px, 440px"
-                  className="object-contain drop-shadow-[0_6px_28px_rgba(255,255,255,0.55)]"
-                  priority
-                  unoptimized
+                  className="h-28 sm:h-36 md:h-44 w-auto max-w-[min(88vw,500px)] object-contain"
                 />
               </div>
             </div>

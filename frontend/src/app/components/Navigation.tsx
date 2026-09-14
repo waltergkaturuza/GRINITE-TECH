@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bars3Icon, XMarkIcon, UserIcon, MagnifyingGlassIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
@@ -188,21 +187,17 @@ export default function Navigation() {
   return (
     <nav className="bg-emerald-950 shadow-lg border-b border-emerald-900/30 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 gap-3">
+        <div className="flex items-center justify-between h-[6.5rem] gap-3">
           {/* Logo */}
           <div className="flex items-center min-w-0">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="relative h-12 w-28 sm:h-16 sm:w-40 flex-shrink-0 rounded-xl bg-white px-2 py-1 shadow-sm">
-                <Image
+            <Link href="/" className="flex items-center">
+              <span className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 shadow-md">
+                <img
                   src={QUANTIS_LOGO_URL}
                   alt="Quantis Technologies logo"
-                  fill
-                  sizes="160px"
-                  className="object-contain"
-                  priority
-                  unoptimized
+                  className="h-14 sm:h-[4.75rem] w-auto max-w-[min(72vw,300px)] object-contain object-left"
                 />
-              </div>
+              </span>
             </Link>
           </div>
 
