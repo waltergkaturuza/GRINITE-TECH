@@ -130,7 +130,7 @@ export default function ProductDetailPage() {
 
   const getMockProductDetail = (): ProductDetail => {
     return {
-      id: 1,
+      id: '1',
       name: "API Development Package",
       description: "Comprehensive RESTful API solution with advanced authentication, database integration, and complete documentation. Perfect for businesses looking to build scalable, secure, and maintainable backend systems.",
       shortDescription: "RESTful API with documentation and authentication",
