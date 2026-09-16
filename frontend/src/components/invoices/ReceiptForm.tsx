@@ -79,7 +79,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
           : formData.payment_date,
         payment_reference: receipt.payment_reference || '',
         payment_method: receipt.payment_method || '',
-        tax_rate: receipt.tax_rate || 0,
+        tax_rate: asMoney(receipt.tax_rate),
         notes: receipt.notes || '',
         billing_address: receipt.billing_address || '',
         billing_email: receipt.billing_email || '',
@@ -142,6 +142,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
 
   const applyLinkedInvoice = (inv: any) => {
     const balance = getBalanceDue(inv)
+    const invoiceTax = asMoney(inv.tax_rate)
     setSelectedInvoiceId(inv.id)
     setPaymentAmount(balance)
     setFormData((prev) => ({
@@ -151,10 +152,8 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
       billing_address: inv.billing_address || prev.billing_address,
       billing_email: inv.billing_email || prev.billing_email,
       billing_phone: inv.billing_phone || prev.billing_phone,
-      tax_rate: inv.tax_rate || 0,
-      notes: balance < Number(inv.total_amount) - 0.01
-        ? `Partial payment for invoice ${inv.invoice_number}`
-        : `Payment for invoice ${inv.invoice_number}`,
+      tax_rate: invoiceTax,
+      notes: `Payment for invoice ${inv.invoice_number}`,
     }))
     setUseSimplePayment(true)
     setItems([{
@@ -178,15 +177,17 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
     setPaymentAmount(amount)
     const inv = openInvoices.find((i) => i.id === selectedInvoiceId) || linkedInvoice
     const invNum = inv?.invoice_number || formData.payment_reference || 'invoice'
-    const balance = inv ? getBalanceDue(inv) : amount
-    const isPartial = amount < balance - 0.01
+    const invoiceTotal = asMoney(inv?.total_amount)
+    const alreadyPaid = asMoney(inv?.amount_paid)
+    const paidAfter = alreadyPaid + amount
+    const isFull = invoiceTotal > 0 ? paidAfter >= invoiceTotal - 0.01 : amount > 0
     setFormData((prev) => ({
       ...prev,
-      notes: isPartial ? `Partial payment for invoice ${invNum}` : `Payment for invoice ${invNum}`,
+      notes: isFull ? `Payment in full for invoice ${invNum}` : `Partial payment for invoice ${invNum}`,
     }))
     if (useSimplePayment) {
       setItems([{
-        description: isPartial ? `Partial payment – ${invNum}` : `Payment for ${invNum}`,
+        description: isFull ? `Payment in full – ${invNum}` : `Partial payment – ${invNum}`,
         quantity: 1,
         unit_price: amount,
         discount_percent: 0,
@@ -197,6 +198,19 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
 
   const selectedInvoice = openInvoices.find((i) => i.id === selectedInvoiceId) || (linkedInvoice?.id === selectedInvoiceId ? linkedInvoice : null)
   const balanceDue = selectedInvoice ? getBalanceDue(selectedInvoice) : null
+  const invoiceTotal = selectedInvoice ? asMoney(selectedInvoice.total_amount) : 0
+  const alreadyPaid = selectedInvoice ? asMoney(selectedInvoice.amount_paid) : 0
+  const invoiceTaxRate = selectedInvoice ? asMoney(selectedInvoice.tax_rate) : asMoney(formData.tax_rate)
+  const invoiceHasVat = invoiceTaxRate > 0.001
+  const paidAfterThisReceipt = alreadyPaid + asMoney(useSimplePayment ? paymentAmount : items.reduce((sum, item) => sum + asMoney(item.total_price), 0))
+  const willBeFullyPaid = selectedInvoice ? paidAfterThisReceipt >= invoiceTotal - 0.01 : false
+  const nextInvoiceStatus = !selectedInvoice
+    ? ''
+    : willBeFullyPaid
+      ? 'Paid'
+      : paidAfterThisReceipt > 0.01
+        ? 'Partially paid'
+        : String(selectedInvoice.status || 'sent').replace(/_/g, ' ')
 
   const loadClients = async () => {
     try {
@@ -236,8 +250,10 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
 
   const calculateTotals = () => {
     const subtotal = items.reduce((sum, item) => sum + asMoney(item.total_price), 0)
-    const taxAmount = (asMoney(formData.tax_rate) / 100) * subtotal
-    return { subtotal, taxAmount, total: subtotal + taxAmount }
+    // Linked receipts record cash received. Do not add VAT on top, and keep 0% when the invoice had no VAT.
+    const taxRate = selectedInvoice ? invoiceTaxRate : asMoney(formData.tax_rate)
+    const taxAmount = selectedInvoice || taxRate < 0.001 ? 0 : (taxRate / 100) * subtotal
+    return { subtotal, taxAmount, total: subtotal + taxAmount, taxRate }
   }
 
   const handleClientChange = (clientId: string) => {
@@ -257,9 +273,10 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
       alert(`Payment amount cannot exceed balance due (${formatCurrency(balanceDue ?? 0)})`)
       return
     }
-    const { subtotal, taxAmount, total } = calculateTotals()
+    const { subtotal, taxAmount, total, taxRate } = calculateTotals()
     onSubmit({
       ...formData,
+      tax_rate: taxRate,
       document_type: 'receipt',
       parent_invoice_id: selectedInvoiceId || undefined,
       due_date: formData.payment_date,
@@ -270,7 +287,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
     })
   }
 
-  const { subtotal, taxAmount, total } = calculateTotals()
+  const { subtotal, taxAmount, total, taxRate } = calculateTotals()
 
   return (
     <div className="max-w-4xl mx-auto bg-granite-800 shadow-xl rounded-lg border border-granite-700">
@@ -315,9 +332,13 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
             )}
             {selectedInvoice && balanceDue != null && (
               <div className="mt-2 p-3 bg-granite-700/50 rounded-md text-sm text-gray-300 grid grid-cols-3 gap-2">
-                <div><span className="text-gray-400">Invoice total:</span> {formatCurrency(Number(selectedInvoice.total_amount))}</div>
-                <div><span className="text-gray-400">Already paid:</span> {formatCurrency(Number(selectedInvoice.amount_paid || 0))}</div>
+                <div><span className="text-gray-400">Invoice total:</span> {formatCurrency(invoiceTotal)}</div>
+                <div><span className="text-gray-400">Already paid:</span> {formatCurrency(alreadyPaid)}</div>
                 <div><span className="text-gray-400">Balance due:</span> <strong className="text-amber-400">{formatCurrency(balanceDue)}</strong></div>
+                <div className="col-span-3 pt-1 border-t border-granite-600">
+                  After this receipt: <strong className={willBeFullyPaid ? 'text-green-400' : 'text-amber-300'}>{nextInvoiceStatus}</strong>
+                  {' '}({formatCurrency(paidAfterThisReceipt)} of {formatCurrency(invoiceTotal)})
+                </div>
               </div>
             )}
           </div>
@@ -326,7 +347,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 <CurrencyDollarIcon className="w-4 h-4 inline mr-2" />
-                Payment amount {balanceDue != null && paymentAmount < balanceDue - 0.01 ? '(partial)' : '(full)'}
+                Payment amount {willBeFullyPaid ? '(full)' : '(partial)'}
               </label>
               <input
                 type="number"
@@ -338,6 +359,13 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
                 className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 required
               />
+              {selectedInvoice && (
+                <p className={`mt-2 text-sm ${willBeFullyPaid ? 'text-green-400' : 'text-amber-300'}`}>
+                  {willBeFullyPaid
+                    ? `This ${formatCurrency(paymentAmount)} payment settles the invoice. Status will update to Paid.`
+                    : `This ${formatCurrency(paymentAmount)} payment is ${formatCurrency(paidAfterThisReceipt)} of ${formatCurrency(invoiceTotal)}. Status will update to Partially paid.`}
+                </p>
+              )}
             </div>
           )}
 
@@ -421,10 +449,21 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
               type="number"
               min="0"
               step="0.01"
-              value={formData.tax_rate}
-              onChange={(e) => setFormData((prev) => ({ ...prev, tax_rate: parseFloat(e.target.value) || 0 }))}
-              className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              value={selectedInvoice ? invoiceTaxRate : formData.tax_rate}
+              onChange={(e) => {
+                if (selectedInvoice) return
+                setFormData((prev) => ({ ...prev, tax_rate: parseFloat(e.target.value) || 0 }))
+              }}
+              readOnly={!!selectedInvoice}
+              className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 read-only:opacity-70"
             />
+            {selectedInvoice && (
+              <p className="mt-1 text-xs text-gray-400">
+                {invoiceHasVat
+                  ? `Copied from the invoice (${invoiceTaxRate}%). The amount received is recorded as-is, without adding VAT again.`
+                  : 'This invoice has no VAT, so the receipt stays at 0%.'}
+              </p>
+            )}
           </div>
         </div>
 
@@ -545,7 +584,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
             <span>${asMoney(subtotal).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-gray-300">
-            <span>VAT ({formData.tax_rate}%):</span>
+            <span>VAT ({taxRate}%):</span>
             <span>${asMoney(taxAmount).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-white font-bold text-lg border-t border-granite-600 pt-2">

@@ -27,6 +27,15 @@ function blankToNull(value: unknown) {
   return value;
 }
 
+function money(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function documentKind(value: unknown): string {
+  return String(value || 'invoice').toLowerCase();
+}
+
 function invoiceDbError(error: unknown) {
   const driver = (error as { driverError?: { code?: string; detail?: string; message?: string } })?.driverError;
   const code = driver?.code || (error as { code?: string })?.code;
@@ -85,10 +94,13 @@ export class InvoicesService {
     let parentInvoice: Invoice | null = null;
     if (isReceipt && parent_invoice_id) {
       parentInvoice = await this.invoiceRepository.findOne({
-        where: { id: parent_invoice_id, document_type: 'invoice' },
+        where: { id: parent_invoice_id },
       });
       if (!parentInvoice) {
         throw new NotFoundException('Linked invoice not found');
+      }
+      if (documentKind(parentInvoice.document_type) === 'receipt') {
+        throw new BadRequestException('Receipts can only be linked to an invoice');
       }
     }
 
@@ -100,11 +112,17 @@ export class InvoicesService {
     };
 
     const subtotal = items.reduce((sum, item) => sum + calcLineTotal(item), 0);
-    const taxAmount = (Number(invoiceData.tax_rate) || 0) * subtotal / 100;
-    const totalAmount = subtotal + taxAmount - (Number(invoiceData.discount_amount) || 0);
+    // Linked receipts inherit the invoice VAT rate (including 0%) and record cash received as-is.
+    let taxRate = money(invoiceData.tax_rate);
+    if (isReceipt && parentInvoice) {
+      taxRate = money(parentInvoice.tax_rate);
+    }
+    const isLinkedReceipt = Boolean(isReceipt && parentInvoice);
+    const taxAmount = isLinkedReceipt ? 0 : (taxRate * subtotal) / 100;
+    const totalAmount = subtotal + taxAmount - money(invoiceData.discount_amount);
 
     if (isReceipt && parentInvoice) {
-      const balanceDue = parseFloat(String(parentInvoice.total_amount)) - parseFloat(String(parentInvoice.amount_paid || 0));
+      const balanceDue = money(parentInvoice.total_amount) - money(parentInvoice.amount_paid);
       if (totalAmount > balanceDue + 0.01) {
         throw new BadRequestException(`Payment amount (${totalAmount}) exceeds balance due (${balanceDue.toFixed(2)})`);
       }
@@ -120,34 +138,59 @@ export class InvoicesService {
       const invoiceNumber = await this.generateInvoiceNumber(document_type);
       const issueDate = new Date(invoiceData.issue_date);
       const dueDate = new Date(invoiceData.due_date);
-
-      const insertedRows: Array<{ id: number }> = await this.invoiceRepository.query(
-        `INSERT INTO invoices (
-            invoice_number, client_id, issue_date, due_date, status, payment_terms,
+      const receiptPaymentDate = isReceipt ? (payment_date ? new Date(payment_date) : issueDate) : null;
+      const coreColumns = `invoice_number, client_id, issue_date, due_date, status, payment_terms,
             subtotal, tax_rate, tax_amount, discount_amount, total_amount,
-            notes, terms_conditions, billing_address, billing_email, billing_phone
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-          RETURNING id`,
-        [
-          invoiceNumber,
-          client_id,
-          issueDate,
-          dueDate,
-          isReceipt ? 'paid' : 'draft',
-          invoiceData.payment_terms || 'net_30',
-          subtotal,
-          Number(invoiceData.tax_rate) || 0,
-          taxAmount,
-          Number(invoiceData.discount_amount) || 0,
-          totalAmount,
-          invoiceData.notes || null,
-          invoiceData.terms_conditions || null,
-          invoiceData.billing_address || null,
-          invoiceData.billing_email || null,
-          invoiceData.billing_phone || null,
-        ],
-      );
-      const savedId = Number(insertedRows?.[0]?.id);
+            notes, terms_conditions, billing_address, billing_email, billing_phone`;
+      const coreValues = [
+        invoiceNumber,
+        client_id,
+        issueDate,
+        dueDate,
+        isReceipt ? 'paid' : 'draft',
+        invoiceData.payment_terms || 'net_30',
+        subtotal,
+        taxRate,
+        taxAmount,
+        money(invoiceData.discount_amount),
+        totalAmount,
+        invoiceData.notes || null,
+        invoiceData.terms_conditions || null,
+        invoiceData.billing_address || null,
+        invoiceData.billing_email || null,
+        invoiceData.billing_phone || null,
+      ];
+
+      let savedId = 0;
+      try {
+        const insertedRows: Array<{ id: number }> = await this.invoiceRepository.query(
+          `INSERT INTO invoices (
+              ${coreColumns},
+              document_type, parent_invoice_id, amount_paid,
+              payment_date, payment_method, payment_reference
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
+            RETURNING id`,
+          [
+            ...coreValues,
+            document_type || 'invoice',
+            isReceipt ? parent_invoice_id || null : null,
+            isReceipt ? totalAmount : 0,
+            receiptPaymentDate,
+            isReceipt ? payment_method || 'Receipt' : null,
+            isReceipt ? payment_reference || parentInvoice?.invoice_number || null : null,
+          ],
+        );
+        savedId = Number(insertedRows?.[0]?.id);
+      } catch (insertError) {
+        this.logger.warn(`Extended invoice insert failed, retrying core columns: ${invoiceDbError(insertError)}`);
+        const insertedRows: Array<{ id: number }> = await this.invoiceRepository.query(
+          `INSERT INTO invoices (${coreColumns})
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+           RETURNING id`,
+          coreValues,
+        );
+        savedId = Number(insertedRows?.[0]?.id);
+      }
       if (!savedId) {
         throw new BadRequestException('Invoice was not saved');
       }
@@ -155,9 +198,10 @@ export class InvoicesService {
       const extras: Record<string, unknown> = {
         project_id: projectId,
         document_type: document_type || 'invoice',
+        tax_rate: taxRate,
         amount_paid: isReceipt ? totalAmount : 0,
         parent_invoice_id: isReceipt ? parent_invoice_id || null : null,
-        payment_date: isReceipt ? (payment_date ? new Date(payment_date) : issueDate) : null,
+        payment_date: receiptPaymentDate,
         payment_method: isReceipt ? payment_method || 'Receipt' : null,
         payment_reference: isReceipt ? payment_reference || parentInvoice?.invoice_number || null : null,
         billing_period_start: sanitizedData.billing_period_start
@@ -321,7 +365,7 @@ export class InvoicesService {
       throw new NotFoundException('Invoice not found');
     }
 
-    if (invoice.document_type === 'invoice') {
+    if (documentKind(invoice.document_type) !== 'receipt' && documentKind(invoice.document_type) !== 'quotation') {
       const receipts = await this.invoiceRepository.find({
         where: { parent_invoice_id: id, document_type: 'receipt' },
         order: { created_at: 'ASC' },
@@ -336,7 +380,7 @@ export class InvoicesService {
     const invoices = await this.invoiceRepository
       .createQueryBuilder('invoice')
       .leftJoinAndSelect('invoice.client', 'client')
-      .where('invoice.document_type = :type', { type: 'invoice' })
+      .where('(invoice.document_type = :type OR invoice.document_type IS NULL)', { type: 'invoice' })
       .andWhere('LOWER(invoice.status) NOT IN (:...closed)', { closed: ['paid', 'cancelled'] })
       .orderBy('invoice.created_at', 'DESC')
       .getMany();
@@ -355,39 +399,69 @@ export class InvoicesService {
   }
 
   private getBalanceDue(invoice: Invoice): number {
-    const total = parseFloat(String(invoice.total_amount || 0));
-    const paid = parseFloat(String(invoice.amount_paid || 0));
+    const total = money(invoice.total_amount);
+    const paid = money(invoice.amount_paid);
     return Math.max(0, total - paid);
   }
 
   private async syncParentInvoicePayments(parentInvoiceId: number): Promise<void> {
-    const parent = await this.invoiceRepository.findOne({ where: { id: parentInvoiceId } });
-    if (!parent || parent.document_type !== 'invoice') return;
-
-    const receipts = await this.invoiceRepository.find({
-      where: { parent_invoice_id: parentInvoiceId, document_type: 'receipt' },
-    });
-
-    const amountPaid = receipts.reduce(
-      (sum, r) => sum + parseFloat(String(r.total_amount || 0)),
-      0,
+    const parents = await this.invoiceRepository.query(
+      `SELECT id, total_amount, status, document_type, payment_date
+       FROM invoices WHERE id = $1`,
+      [parentInvoiceId],
     );
-    const total = parseFloat(String(parent.total_amount || 0));
-    let status = parent.status;
+    const parent = parents?.[0];
+    if (!parent) return;
+    if (documentKind(parent.document_type) === 'receipt' || documentKind(parent.document_type) === 'quotation') {
+      return;
+    }
 
-    if (amountPaid >= total - 0.01) {
+    const paidRows = await this.invoiceRepository.query(
+      `SELECT COALESCE(SUM(total_amount), 0) AS paid
+       FROM invoices
+       WHERE parent_invoice_id = $1
+         AND LOWER(COALESCE(document_type, 'receipt')) = 'receipt'
+         AND LOWER(COALESCE(status, '')) <> 'cancelled'`,
+      [parentInvoiceId],
+    );
+    const amountPaid = money(paidRows?.[0]?.paid);
+    const total = money(parent.total_amount);
+    const currentStatus = String(parent.status || '').toLowerCase();
+    if (currentStatus === 'cancelled') return;
+
+    let status = currentStatus || InvoiceStatus.SENT;
+    if (total > 0 && amountPaid >= total - 0.01) {
       status = InvoiceStatus.PAID;
-    } else if (amountPaid > 0) {
+    } else if (amountPaid > 0.01) {
       status = InvoiceStatus.PARTIALLY_PAID;
-    } else if (parent.status === InvoiceStatus.PAID || parent.status === InvoiceStatus.PARTIALLY_PAID) {
+    } else if (currentStatus === InvoiceStatus.PAID || currentStatus === InvoiceStatus.PARTIALLY_PAID) {
       status = InvoiceStatus.SENT;
     }
 
-    await this.invoiceRepository.update(parentInvoiceId, {
-      amount_paid: amountPaid,
-      status,
-      payment_date: amountPaid >= total - 0.01 ? new Date() : parent.payment_date,
-    });
+    const paymentDate = status === InvoiceStatus.PAID ? new Date() : parent.payment_date || null;
+
+    try {
+      await this.invoiceRepository.query(
+        `UPDATE invoices SET amount_paid = $1, status = $2, payment_date = $3 WHERE id = $4`,
+        [amountPaid, status, paymentDate, parentInvoiceId],
+      );
+    } catch (error) {
+      this.logger.warn(`Could not sync amount_paid/status together: ${invoiceDbError(error)}`);
+      try {
+        await this.invoiceRepository.query(`UPDATE invoices SET status = $1 WHERE id = $2`, [status, parentInvoiceId]);
+      } catch (statusError) {
+        this.logger.error(`Could not update invoice status: ${invoiceDbError(statusError)}`);
+        throw new BadRequestException('Receipt saved but the invoice status could not be updated.');
+      }
+      try {
+        await this.invoiceRepository.query(
+          `UPDATE invoices SET amount_paid = $1 WHERE id = $2`,
+          [amountPaid, parentInvoiceId],
+        );
+      } catch (paidError) {
+        this.logger.warn(`Could not update amount_paid: ${invoiceDbError(paidError)}`);
+      }
+    }
   }
 
   async update(id: number, updateInvoiceDto: UpdateInvoiceDto): Promise<Invoice> {
@@ -427,12 +501,27 @@ export class InvoicesService {
       // Remove existing items
       await this.invoiceItemRepository.delete({ invoice: { id } });
 
-      // Calculate new totals
+      const linkedParentId = parent_invoice_id ?? invoice.parent_invoice_id;
+      const isLinkedReceipt = documentKind(invoice.document_type) === 'receipt' && !!linkedParentId;
+      let taxRate = money(updateData.tax_rate ?? invoice.tax_rate);
+      if (isLinkedReceipt) {
+        const parent = await this.invoiceRepository.findOne({ where: { id: linkedParentId } });
+        if (parent) {
+          taxRate = money(parent.tax_rate);
+          const balanceDue = this.getBalanceDue(parent) + money(invoice.total_amount);
+          const proposedTotal = items.reduce((sum, item) => sum + calcLineTotal(item), 0);
+          if (proposedTotal > balanceDue + 0.01) {
+            throw new BadRequestException('Payment amount exceeds balance due');
+          }
+        }
+      }
+
       const subtotal = items.reduce((sum, item) => sum + calcLineTotal(item), 0);
-      const taxAmount = (updateData.tax_rate ?? invoice.tax_rate) * subtotal / 100;
-      const totalAmount = subtotal + taxAmount - (updateData.discount_amount ?? invoice.discount_amount);
+      const taxAmount = isLinkedReceipt ? 0 : (taxRate * subtotal) / 100;
+      const totalAmount = subtotal + taxAmount - money(updateData.discount_amount ?? invoice.discount_amount);
 
       updateData['subtotal'] = subtotal;
+      updateData['tax_rate'] = taxRate;
       updateData['tax_amount'] = taxAmount;
       updateData['total_amount'] = totalAmount;
 
@@ -448,16 +537,6 @@ export class InvoicesService {
       });
 
       await this.invoiceItemRepository.save(invoiceItems);
-
-      if (invoice.document_type === 'receipt' && parent_invoice_id) {
-        const parent = await this.invoiceRepository.findOne({ where: { id: parent_invoice_id } });
-        if (parent) {
-          const balanceDue = this.getBalanceDue(parent) + parseFloat(String(invoice.total_amount || 0));
-          if (totalAmount > balanceDue + 0.01) {
-            throw new BadRequestException(`Payment amount exceeds balance due`);
-          }
-        }
-      }
     }
 
     await this.invoiceRepository.update(id, updateData);

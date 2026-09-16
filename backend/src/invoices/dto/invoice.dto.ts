@@ -23,6 +23,7 @@ export class CreateInvoiceItemDto {
   unit_price: number;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   tax_rate?: number;
@@ -78,6 +79,7 @@ export class CreateInvoiceDto {
   payment_terms?: PaymentTerms;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   tax_rate?: number;
@@ -144,6 +146,7 @@ export class CreateInvoiceDto {
   company_website?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   parent_invoice_id?: number;
 
@@ -251,6 +254,7 @@ export class UpdateInvoiceDto {
   payment_terms?: PaymentTerms;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   tax_rate?: number;
@@ -317,6 +321,7 @@ export class UpdateInvoiceDto {
   company_website?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   parent_invoice_id?: number;
 

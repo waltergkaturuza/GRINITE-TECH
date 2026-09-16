@@ -99,7 +99,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
         billing_period_end: inv.billing_period_end ? new Date(inv.billing_period_end).toISOString().split('T')[0] : '',
         purchase_order: inv.purchase_order || '',
         payment_terms: inv.payment_terms || 'net_30',
-        tax_rate: asMoney(inv.tax_rate) || 10,
+        tax_rate: asMoney(inv.tax_rate),
         discount_amount: asMoney(inv.discount_amount),
         notes: inv.notes || '',
         terms_conditions: inv.terms_conditions || formData.terms_conditions,
@@ -134,7 +134,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
           unit: item.unit || 'ea',
           quantity: asMoney(item.quantity) || 1,
           unit_price: asMoney(item.unit_price),
-          tax_rate: asMoney(item.tax_rate) || 10,
+          tax_rate: asMoney(item.tax_rate),
           total_price: asMoney(item.total_price),
         })))
       }
