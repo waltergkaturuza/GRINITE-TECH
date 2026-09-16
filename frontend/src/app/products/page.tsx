@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import PublicPage from '@/components/PublicPage'
 import Link from 'next/link'
 import { productsAPI } from '../../lib/api'
+import { parseListField } from '@/lib/catalog'
 import { 
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -20,42 +21,27 @@ interface Product {
   description?: string
   shortDescription?: string
   price: number
-  category: string
+  category?: string
+  type?: string
+  status?: string
   images?: string[]
-  features?: string[]
-  technologies?: string[]
-  advantages?: string[]
-  functionalities?: string[]
-  costBreakdown?: any
-  timeline?: any
-  teamSize?: number
-  complexity?: string
-  deliverables?: string[]
-  supportIncluded?: boolean
-  warrantyMonths?: number
-  inStock?: boolean
-  featured?: boolean
-  demoUrl?: string
-  caseStudies?: any[]
-  testimonials?: any[]
-  // Optional fields for display compatibility
+  imageUrl?: string
+  features?: string[] | string
   rating?: number
   reviews?: number
   deliveryDays?: number
-  image?: string
-  type?: string
   createdAt: string
   updatedAt: string
 }
 
-const categories = [
+const PRODUCT_CATEGORIES = [
   { id: 'all', name: 'All Products' },
   { id: 'website', name: 'Websites' },
   { id: 'ecommerce', name: 'E-commerce' },
   { id: 'mobile', name: 'Mobile Apps' },
   { id: 'api', name: 'APIs' },
   { id: 'cloud', name: 'Cloud Solutions' },
-  { id: 'analytics', name: 'Analytics' }
+  { id: 'analytics', name: 'Analytics' },
 ]
 
 function ProductsPageContent() {
@@ -66,7 +52,7 @@ function ProductsPageContent() {
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [selectedCategory, setSelectedCategory] = useState(
-    categoryFromUrl && categories.some((c) => c.id === categoryFromUrl) ? categoryFromUrl : 'all'
+    categoryFromUrl && PRODUCT_CATEGORIES.some((c) => c.id === categoryFromUrl) ? categoryFromUrl : 'all'
   )
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('name')
@@ -75,7 +61,7 @@ function ProductsPageContent() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (categoryFromUrl && categories.some((c) => c.id === categoryFromUrl)) {
+    if (categoryFromUrl && PRODUCT_CATEGORIES.some((c) => c.id === categoryFromUrl)) {
       setSelectedCategory(categoryFromUrl)
       return
     }
@@ -100,9 +86,14 @@ function ProductsPageContent() {
         setIsLoading(true)
         setError(null)
         const response = await productsAPI.getProducts()
-        const productsData = response.products || response.data || response
-        setProducts(productsData)
-        setFilteredProducts(productsData)
+        const productsData = Array.isArray(response)
+          ? response
+          : response.products || response.data || []
+        const active = (productsData as Product[]).filter(
+          (product) => !product.status || product.status === 'active',
+        )
+        setProducts(active)
+        setFilteredProducts(active)
       } catch (err) {
         console.error('Failed to load products:', err)
         setError('Failed to load products. Please try again later.')
@@ -130,7 +121,9 @@ function ProductsPageContent() {
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory)
+      filtered = filtered.filter((product) =>
+        (product.category || product.type || '').toLowerCase() === selectedCategory.toLowerCase(),
+      )
     }
 
     // Filter by search query
@@ -215,7 +208,7 @@ function ProductsPageContent() {
 
             {/* Category Filter */}
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
+              {PRODUCT_CATEGORIES.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => selectCategory(category.id)}
@@ -264,8 +257,13 @@ function ProductsPageContent() {
                   className="bg-white rounded-2xl shadow-lg border border-granite-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:transform hover:scale-105"
                 >
                   {/* Product Image */}
-                  <div className="h-48 bg-gradient-to-br from-granite-100 to-granite-200 flex items-center justify-center">
-                    <div className="text-granite-400 text-4xl font-bold">{product.name.charAt(0)}</div>
+                  <div className="h-48 bg-gradient-to-br from-granite-100 to-granite-200 flex items-center justify-center overflow-hidden">
+                    {product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="text-granite-400 text-4xl font-bold">{product.name.charAt(0)}</div>
+                    )}
                   </div>
 
                   <div className="p-6">
@@ -274,7 +272,7 @@ function ProductsPageContent() {
                       <h3 className="text-xl font-bold text-granite-800 mb-2">{product.name}</h3>
                       <p className="text-granite-600 text-sm mb-3">{product.description}</p>
                       
-                      {/* Rating */}
+                      {(product.rating || 0) > 0 && (
                       <div className="flex items-center space-x-2 mb-3">
                         <div className="flex items-center">
                           {[...Array(5)].map((_, i) => (
@@ -292,32 +290,34 @@ function ProductsPageContent() {
                           {(product.rating || 0).toFixed(1)} ({product.reviews || 0} reviews)
                         </span>
                       </div>
+                      )}
                     </div>
 
-                    {/* Features */}
+                    {parseListField(product.features).length > 0 && (
                     <div className="mb-6">
                       <h4 className="font-semibold text-granite-800 mb-2">Features:</h4>
                       <ul className="space-y-1">
-                        {product.features && product.features.slice(0, 4).map((feature, index) => (
+                        {parseListField(product.features).slice(0, 4).map((feature, index) => (
                           <li key={index} className="flex items-center text-sm text-granite-600">
                             <CheckIcon className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
                             {feature}
                           </li>
                         ))}
-                        {product.features && product.features.length > 4 && (
+                        {parseListField(product.features).length > 4 && (
                           <li className="text-sm text-granite-500">
-                            +{product.features.length - 4} more features
+                            +{parseListField(product.features).length - 4} more features
                           </li>
                         )}
                       </ul>
                     </div>
+                    )}
 
                     {/* Price and CTA */}
                     <div className="border-t border-granite-200 pt-4">
                       <div className="flex justify-between items-center mb-4">
                         <div>
                           <p className="text-2xl font-bold text-granite-800">
-                            ${product.price.toLocaleString()}
+                            ${Number(product.price || 0).toLocaleString()}
                           </p>
                           <p className="text-sm text-granite-500">
                             {product.deliveryDays || 30}-day delivery

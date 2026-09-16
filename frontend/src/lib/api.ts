@@ -461,6 +461,10 @@ export const servicesAPI = {
     const response = await api.get('/services', { params })
     return response.data
   },
+  getCategories: async () => {
+    const response = await api.get('/services/categories')
+    return response.data
+  },
   getService: async (id: string) => {
     const response = await api.get(`/services/${id}`)
     return response.data

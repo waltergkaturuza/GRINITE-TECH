@@ -1,32 +1,76 @@
-// Service entity for managing digital solutions
-export interface Service {
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm'
+
+@Entity('catalog_services')
+export class CatalogService {
+  @PrimaryGeneratedColumn('uuid')
   id: string
+
+  @Column()
   title: string
+
+  @Column('text')
   description: string
+
+  @Column()
   category: string
+
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
   price: number
-  features: string[] // Array of features
-  icon?: string // Icon name or path
+
+  @Column('simple-json', { nullable: true })
+  features: string[]
+
+  @Column({ nullable: true })
+  icon: string
+
+  @Column({ type: 'text', default: 'active' })
   status: 'active' | 'inactive' | 'draft'
-  duration?: string // e.g., "6-8 weeks"
-  currency?: string // USD, ZWL, etc.
-  keyBenefits?: string[] // Array of key benefits
-  targetMarket?: string[] // Array of target markets
-  deliverables?: string[] // Array of deliverables
-  setupFee?: number
-  monthlyFee?: number
+
+  @Column({ nullable: true })
+  duration: string
+
+  @Column({ default: 'USD' })
+  currency: string
+
+  @Column('simple-json', { nullable: true })
+  keyBenefits: string[]
+
+  @Column('simple-json', { nullable: true })
+  targetMarket: string[]
+
+  @Column('simple-json', { nullable: true })
+  deliverables: string[]
+
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  setupFee: number
+
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  monthlyFee: number
+
+  @Column({ type: 'int', default: 0 })
   displayOrder: number
+
+  @CreateDateColumn()
   createdAt: Date
+
+  @UpdateDateColumn()
   updatedAt: Date
 }
 
-// DTO for creating/updating services
+export type Service = CatalogService
+
 export interface CreateServiceDto {
   title: string
   description: string
   category: string
   price: number
-  features: string[]
+  features?: string[]
   icon?: string
   status?: 'active' | 'inactive' | 'draft'
   duration?: string
@@ -40,5 +84,5 @@ export interface CreateServiceDto {
 }
 
 export interface UpdateServiceDto extends Partial<CreateServiceDto> {
-  id: string
+  id?: string
 }

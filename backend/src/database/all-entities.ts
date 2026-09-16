@@ -28,6 +28,7 @@ import { InsightComment } from '../insights/entities/insight-comment.entity';
 import { InsightVote } from '../insights/entities/insight-vote.entity';
 import { InsightSubscriber } from '../insights/entities/insight-subscriber.entity';
 import { CompanyDocument } from '../documents/entities/company-document.entity';
+import { CatalogService } from '../services/entities/service.entity';
 
 export {
   User,
@@ -55,6 +56,7 @@ export {
   InsightVote,
   InsightSubscriber,
   CompanyDocument,
+  CatalogService,
 };
 
 export const ALL_ENTITIES: Function[] = [
@@ -83,4 +85,5 @@ export const ALL_ENTITIES: Function[] = [
   InsightVote,
   InsightSubscriber,
   CompanyDocument,
+  CatalogService,
 ];

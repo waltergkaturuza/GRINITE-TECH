@@ -24,6 +24,8 @@ interface Product {
   price: number
   type: 'digital' | 'service' | 'subscription' | 'physical'
   status: 'active' | 'inactive' | 'archived'
+  category?: string
+  imageUrl?: string
   features?: string
   digitalFiles?: string
   recurringInterval?: string
@@ -63,8 +65,9 @@ export default function ProductsPage() {
     name: '',
     description: '',
     price: '',
-    type: 'service' as Product['type'],
+    type: 'digital' as Product['type'],
     status: 'active' as Product['status'],
+    category: '',
     features: '',
     digitalFiles: '',
     recurringInterval: ''
@@ -206,6 +209,7 @@ export default function ProductsPage() {
         price: product.price,
         type: product.type,
         status: 'inactive' as Product['status'],
+        category: product.category,
         features: product.features,
         digitalFiles: product.digitalFiles,
         recurringInterval: product.recurringInterval
@@ -227,6 +231,7 @@ export default function ProductsPage() {
       price: product.price.toString(),
       type: product.type,
       status: product.status,
+      category: product.category || '',
       features: product.features || '',
       digitalFiles: product.digitalFiles || '',
       recurringInterval: product.recurringInterval || ''
@@ -244,8 +249,9 @@ export default function ProductsPage() {
       name: '',
       description: '',
       price: '',
-      type: 'service',
+      type: 'digital',
       status: 'active',
+      category: '',
       features: '',
       digitalFiles: '',
       recurringInterval: ''
@@ -631,15 +637,43 @@ export default function ProductsPage() {
                   className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
                 />
                 <select
+                  value={formData.category}
+                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
+                >
+                  <option value="">Select category</option>
+                  <option value="website">Websites</option>
+                  <option value="ecommerce">E-commerce</option>
+                  <option value="mobile">Mobile Apps</option>
+                  <option value="api">APIs</option>
+                  <option value="cloud">Cloud Solutions</option>
+                  <option value="analytics">Analytics</option>
+                </select>
+                <select
                   value={formData.type}
                   onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as Product['type'] }))}
                   className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
                 >
-                  <option value="service">Service</option>
                   <option value="digital">Digital</option>
+                  <option value="service">Service</option>
                   <option value="subscription">Subscription</option>
                   <option value="physical">Physical</option>
                 </select>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Product['status'] }))}
+                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="archived">Archived</option>
+                </select>
+                <textarea
+                  placeholder="Features (one per line)"
+                  value={formData.features}
+                  onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
+                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
+                />
                 <div className="flex space-x-2">
                   <button
                     onClick={handleCreateProduct}
@@ -691,12 +725,25 @@ export default function ProductsPage() {
                   className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
                 />
                 <select
+                  value={formData.category}
+                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
+                >
+                  <option value="">Select category</option>
+                  <option value="website">Websites</option>
+                  <option value="ecommerce">E-commerce</option>
+                  <option value="mobile">Mobile Apps</option>
+                  <option value="api">APIs</option>
+                  <option value="cloud">Cloud Solutions</option>
+                  <option value="analytics">Analytics</option>
+                </select>
+                <select
                   value={formData.type}
                   onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as Product['type'] }))}
                   className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
                 >
-                  <option value="service">Service</option>
                   <option value="digital">Digital</option>
+                  <option value="service">Service</option>
                   <option value="subscription">Subscription</option>
                   <option value="physical">Physical</option>
                 </select>
@@ -709,6 +756,12 @@ export default function ProductsPage() {
                   <option value="inactive">Inactive</option>
                   <option value="archived">Archived</option>
                 </select>
+                <textarea
+                  placeholder="Features (one per line)"
+                  value={formData.features}
+                  onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
+                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
+                />
                 <div className="flex space-x-2">
                   <button
                     onClick={handleEditProduct}

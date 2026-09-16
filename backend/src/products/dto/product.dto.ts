@@ -9,6 +9,8 @@ export interface CreateProductDto {
   recurringInterval?: string;
   category?: string;
   imageUrl?: string;
+  features?: string;
+  digitalFiles?: string;
   metadata?: Record<string, any>;
 }
 
@@ -21,6 +23,8 @@ export interface UpdateProductDto {
   recurringInterval?: string;
   category?: string;
   imageUrl?: string;
+  features?: string;
+  digitalFiles?: string;
   metadata?: Record<string, any>;
 }
 

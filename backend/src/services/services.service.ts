@@ -1,153 +1,99 @@
-import { Injectable } from '@nestjs/common'
-import { Service, CreateServiceDto, UpdateServiceDto } from './entities/service.entity'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { CatalogService, CreateServiceDto, UpdateServiceDto } from './entities/service.entity'
 
 @Injectable()
 export class ServicesService {
-  private services: Service[] = [
-    {
-      id: '1',
-      title: 'Systems Digitalization',
-      description: 'Transform manual processes into efficient digital workflows',
-      category: 'Digital Transformation',
-      price: 3500,
-      features: [
-        'Process Analysis & Mapping',
-        'Digital Workflow Design',
-        'System Integration',
-        'Staff Training',
-        'Documentation & Support'
-      ],
-      icon: 'ComputerDesktopIcon',
-      status: 'active',
-      duration: '4-6 weeks',
-      currency: 'USD',
-      keyBenefits: [
-        'Increased Efficiency',
-        'Reduced Manual Errors',
-        'Better Data Management',
-        'Cost Savings'
-      ],
-      targetMarket: ['SMEs', 'Government Offices', 'NGOs'],
-      deliverables: [
-        'Digital Process Documentation',
-        'Custom Software Solution',
-        'Training Materials',
-        '3 Months Support'
-      ],
-      setupFee: 3500,
-      displayOrder: 1,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: '2',
-      title: 'ERP Systems',
-      description: 'Enterprise Resource Planning systems for SMEs, schools, SMBs, and hospitals',
-      category: 'Enterprise Solutions',
-      price: 8000,
-      features: [
-        'Integrated ERP',
-        'Accounting Integration',
-        'HR Management',
-        'Procurement System',
-        'Inventory Management'
-      ],
-      icon: 'BuildingOfficeIcon',
-      status: 'active',
-      duration: '8-12 weeks',
-      currency: 'USD',
-      keyBenefits: [
-        'Centralized Operations',
-        'Real-time Reporting',
-        'Compliance Management',
-        'Scalable Solution'
-      ],
-      targetMarket: ['Schools', 'NGOs', 'Hospitals', 'Retail Businesses'],
-      deliverables: [
-        'Complete ERP System',
-        'Data Migration',
-        'User Training',
-        '6 Months Support'
-      ],
-      setupFee: 8000,
-      monthlyFee: 200,
-      displayOrder: 2,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-    // Add more default services here...
-  ]
+  constructor(
+    @InjectRepository(CatalogService)
+    private readonly serviceRepo: Repository<CatalogService>,
+  ) {}
 
-  async findAll(category?: string, status?: string): Promise<Service[]> {
-    let filteredServices = [...this.services]
+  private toList(value: unknown): string[] {
+    if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean)
+    if (typeof value === 'string' && value.trim()) {
+      return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean)
+    }
+    return []
+  }
+
+  private normalizePayload(dto: CreateServiceDto | UpdateServiceDto) {
+    const payload: Record<string, unknown> = { ...dto }
+    if ('features' in dto) payload.features = this.toList(dto.features)
+    if ('keyBenefits' in dto) payload.keyBenefits = this.toList(dto.keyBenefits)
+    if ('targetMarket' in dto) payload.targetMarket = this.toList(dto.targetMarket)
+    if ('deliverables' in dto) payload.deliverables = this.toList(dto.deliverables)
+    if ('price' in dto && dto.price != null) payload.price = Number(dto.price)
+    if ('setupFee' in dto && dto.setupFee != null) payload.setupFee = Number(dto.setupFee)
+    if ('monthlyFee' in dto && dto.monthlyFee != null) payload.monthlyFee = Number(dto.monthlyFee)
+    if ('displayOrder' in dto && dto.displayOrder != null) payload.displayOrder = Number(dto.displayOrder)
+    return payload
+  }
+
+  async findAll(category?: string, status?: string): Promise<CatalogService[]> {
+    const query = this.serviceRepo.createQueryBuilder('service')
 
     if (category) {
-      filteredServices = filteredServices.filter(service => 
-        service.category.toLowerCase().includes(category.toLowerCase())
-      )
+      query.andWhere('LOWER(service.category) LIKE LOWER(:category)', {
+        category: `%${category}%`,
+      })
     }
 
     if (status) {
-      filteredServices = filteredServices.filter(service => service.status === status)
+      query.andWhere('service.status = :status', { status })
     }
 
-    return filteredServices.sort((a, b) => a.displayOrder - b.displayOrder)
+    return query.orderBy('service.displayOrder', 'ASC').addOrderBy('service.title', 'ASC').getMany()
   }
 
   async getCategories(): Promise<string[]> {
-    const categorySet = new Set(this.services.map(service => service.category))
-    const categories = Array.from(categorySet)
-    return categories.sort()
+    const rows = await this.serviceRepo
+      .createQueryBuilder('service')
+      .select('DISTINCT service.category', 'category')
+      .orderBy('service.category', 'ASC')
+      .getRawMany<{ category: string }>()
+    return rows.map((row) => row.category).filter(Boolean)
   }
 
-  async findById(id: string): Promise<Service | null> {
-    return this.services.find(service => service.id === id) || null
+  async findById(id: string): Promise<CatalogService | null> {
+    return this.serviceRepo.findOne({ where: { id } })
   }
 
-  async create(createServiceDto: CreateServiceDto): Promise<Service> {
-    const newService: Service = {
-      id: `service_${Date.now()}`,
-      ...createServiceDto,
-      status: createServiceDto.status || 'active',
-      displayOrder: createServiceDto.displayOrder || this.services.length + 1,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
-    this.services.push(newService)
-    return newService
+  async create(createServiceDto: CreateServiceDto): Promise<CatalogService> {
+    const count = await this.serviceRepo.count()
+    const service = this.serviceRepo.create({
+      status: 'active',
+      currency: 'USD',
+      displayOrder: count + 1,
+      features: [],
+      ...this.normalizePayload(createServiceDto),
+    } as CatalogService)
+    return this.serviceRepo.save(service)
   }
 
-  async update(id: string, updateServiceDto: Omit<UpdateServiceDto, 'id'>): Promise<Service> {
-    const serviceIndex = this.services.findIndex(service => service.id === id)
-    if (serviceIndex === -1) {
-      throw new Error('Service not found')
+  async update(id: string, updateServiceDto: Omit<UpdateServiceDto, 'id'>): Promise<CatalogService> {
+    const service = await this.serviceRepo.findOne({ where: { id } })
+    if (!service) {
+      throw new NotFoundException('Service not found')
     }
-
-    const updatedService = {
-      ...this.services[serviceIndex],
-      ...updateServiceDto,
-      updatedAt: new Date()
-    }
-
-    this.services[serviceIndex] = updatedService
-    return updatedService
+    Object.assign(service, this.normalizePayload(updateServiceDto))
+    return this.serviceRepo.save(service)
   }
 
   async delete(id: string): Promise<void> {
-    const serviceIndex = this.services.findIndex(service => service.id === id)
-    if (serviceIndex === -1) {
-      throw new Error('Service not found')
+    const service = await this.serviceRepo.findOne({ where: { id } })
+    if (!service) {
+      throw new NotFoundException('Service not found')
     }
-
-    this.services.splice(serviceIndex, 1)
+    await this.serviceRepo.remove(service)
   }
 
-  async updateStatus(id: string, status: 'active' | 'inactive' | 'draft'): Promise<Service> {
+  async updateStatus(id: string, status: 'active' | 'inactive' | 'draft'): Promise<CatalogService> {
     return this.update(id, { status })
   }
 
-  async updateDisplayOrder(id: string, displayOrder: number): Promise<Service> {
+  async updateDisplayOrder(id: string, displayOrder: number): Promise<CatalogService> {
     return this.update(id, { displayOrder })
   }
 }

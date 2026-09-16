@@ -27,6 +27,10 @@ export class ProductsService {
       query.andWhere('product.type = :type', { type: filters.type });
     }
 
+    if (filters?.category) {
+      query.andWhere('product.category = :category', { category: filters.category });
+    }
+
     if (filters?.search) {
       query.andWhere(
         '(product.name LIKE :search OR product.description LIKE :search)',

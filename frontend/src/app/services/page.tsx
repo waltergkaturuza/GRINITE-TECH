@@ -10,6 +10,8 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
 
+import { parseListField } from '@/lib/catalog'
+
 interface Service {
   id: string
   title: string
@@ -63,7 +65,16 @@ export default function ServicesPage() {
         }
         const data = await response.json()
         if (data.success) {
-          setServices(data.data)
+          setServices(
+            (data.data || []).map((service: Service) => ({
+              ...service,
+              price: Number(service.price) || 0,
+              setupFee: service.setupFee != null ? Number(service.setupFee) : undefined,
+              monthlyFee: service.monthlyFee != null ? Number(service.monthlyFee) : undefined,
+              features: parseListField(service.features),
+              targetMarket: parseListField(service.targetMarket),
+            })),
+          )
         } else {
           throw new Error(data.message || 'Failed to fetch services')
         }
@@ -293,7 +304,7 @@ export default function ServicesPage() {
 
                     {/* CTA Button */}
                     <Link 
-                      href="/contact" 
+                      href={`/contact?service=${encodeURIComponent(service.title)}`} 
                       className="inline-flex items-center justify-center w-full bg-gradient-to-r from-crimson-600 to-amber-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-crimson-700 hover:to-amber-600 transition-all duration-300 group"
                     >
                       Get Started

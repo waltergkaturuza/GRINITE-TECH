@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import PublicPage from '@/components/PublicPage'
 import { productsAPI } from '@/lib/api'
+import { parseListField } from '@/lib/catalog'
 import { 
   PlayIcon, 
   StarIcon, 
@@ -25,13 +26,13 @@ import {
 } from '@heroicons/react/24/outline'
 
 interface ProductDetail {
-  id: number
+  id: string
   name: string
   description: string
-  shortDescription: string
+  shortDescription?: string
   price: number
-  category: string
-  images: string[]
+  category?: string
+  images?: string[]
   videos: string[]
   gifs: string[]
   specifications: any
@@ -102,7 +103,23 @@ export default function ProductDetailPage() {
     try {
       setLoading(true)
       const response = await productsAPI.getProduct(productId)
-      setProduct(response)
+      const features = parseListField(response.features)
+      setProduct({
+        ...response,
+        price: Number(response.price) || 0,
+        features,
+        images: Array.isArray(response.images)
+          ? response.images
+          : response.imageUrl
+            ? [response.imageUrl]
+            : [],
+        videos: Array.isArray(response.videos) ? response.videos : [],
+        gifs: Array.isArray(response.gifs) ? response.gifs : [],
+        technologies: parseListField(response.technologies),
+        advantages: parseListField(response.advantages),
+        functionalities: parseListField(response.functionalities),
+        deliverables: parseListField(response.deliverables),
+      })
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load product')
       console.error('Error loading product:', err)
@@ -417,7 +434,7 @@ export default function ProductDetailPage() {
               {/* Thumbnail Gallery */}
               <div className="p-4">
                 <div className="flex gap-2 overflow-x-auto">
-                  {product.images.map((image, index) => (
+                  { (product.images || []).map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}

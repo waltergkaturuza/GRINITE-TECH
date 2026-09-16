@@ -46,6 +46,12 @@ export class Product {
   price: number;
 
   @Column({ nullable: true })
+  category: string;
+
+  @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column({ nullable: true })
   recurringInterval: string;
 
   @Column('text', { nullable: true })
