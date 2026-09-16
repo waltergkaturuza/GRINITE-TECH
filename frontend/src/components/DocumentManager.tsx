@@ -20,6 +20,15 @@ import type { BlobUploadType } from '@/lib/blobStorage'
 
 type ViewScope = 'all' | 'company' | 'project'
 
+type FormFile = {
+  url: string
+  pathname?: string
+  name?: string
+  originalName?: string
+  fileSize?: number
+  mimeType?: string
+}
+
 type DocumentManagerProps = {
   scope?: 'company' | 'project'
   projectId?: string
@@ -28,7 +37,12 @@ type DocumentManagerProps = {
   library?: boolean
 }
 
-type ProjectOption = { id: string; title: string }
+type ProjectOption = {
+  id: string
+  title: string
+  supportingDocuments?: FormFile[]
+  fundingDocuments?: FormFile[]
+}
 
 function titleFromFile(name: string) {
   return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim()
@@ -36,6 +50,60 @@ function titleFromFile(name: string) {
 
 function categoriesFor(scope: 'company' | 'project') {
   return scope === 'project' ? PROJECT_DOCUMENT_CATEGORIES : COMPANY_DOCUMENT_CATEGORIES
+}
+
+function mapProject(project: {
+  id: string
+  title: string
+  metadata?: { supportingDocuments?: FormFile[]; fundingDocuments?: FormFile[] }
+  supportingDocuments?: FormFile[]
+  fundingDocuments?: FormFile[]
+}): ProjectOption {
+  return {
+    id: project.id,
+    title: project.title,
+    supportingDocuments: project.metadata?.supportingDocuments || project.supportingDocuments || [],
+    fundingDocuments: project.metadata?.fundingDocuments || project.fundingDocuments || [],
+  }
+}
+
+function docsFromProjectForm(project: ProjectOption): CompanyDocument[] {
+  const groups = [
+    {
+      files: project.supportingDocuments || [],
+      category: 'specs',
+      description: 'Supporting document from the project form',
+    },
+    {
+      files: project.fundingDocuments || [],
+      category: 'other',
+      description: 'Funding / budget document from the project form',
+    },
+  ]
+
+  return groups.flatMap((group) =>
+    group.files
+      .filter((file) => file?.url)
+      .map((file) => {
+        const originalName = file.name || file.originalName || file.url.split('/').pop() || 'document'
+        return {
+          id: `form-${project.id}-${file.url}`,
+          title: titleFromFile(originalName) || originalName,
+          description: group.description,
+          category: group.category,
+          scope: 'project' as const,
+          projectId: project.id,
+          project: { id: project.id, title: project.title },
+          url: file.url,
+          pathname: file.pathname || file.url,
+          originalName,
+          fileSize: file.fileSize || 0,
+          mimeType: file.mimeType,
+          createdAt: '',
+          updatedAt: '',
+        }
+      }),
+  )
 }
 
 export default function DocumentManager({
@@ -108,22 +176,28 @@ export default function DocumentManager({
   const total = sidebarGroups.reduce((sum, group) => sum + groupTotal(group.scope), 0)
 
   useEffect(() => {
-    if (!library) return
     let cancelled = false
-    projectsAPI
-      .getProjects({ limit: 500 })
-      .then((res) => {
-        if (cancelled) return
-        const list = (res.projects || res.data || []) as ProjectOption[]
-        setProjects(Array.isArray(list) ? list.map((p) => ({ id: p.id, title: p.title })) : [])
-      })
-      .catch(() => {
+    const loadProjects = async () => {
+      try {
+        if (library) {
+          const res = await projectsAPI.getProjects({ limit: 500 })
+          const list = (res.projects || res.data || []) as Parameters<typeof mapProject>[0][]
+          if (!cancelled) setProjects(Array.isArray(list) ? list.map(mapProject) : [])
+          return
+        }
+        if (lockedProjectId) {
+          const project = await projectsAPI.getProject(lockedProjectId)
+          if (!cancelled) setProjects(project ? [mapProject(project)] : [])
+        }
+      } catch {
         if (!cancelled) setProjects([])
-      })
+      }
+    }
+    loadProjects()
     return () => {
       cancelled = true
     }
-  }, [library])
+  }, [library, lockedProjectId])
 
   const load = useCallback(async () => {
     try {
@@ -147,13 +221,44 @@ export default function DocumentManager({
         }),
         documentsAPI.categories({ projectId: queryProjectId, scope: listScope }),
       ])
-      setDocs(Array.isArray(items) ? items : [])
+      let nextDocs = Array.isArray(items) ? items : []
+      if (queryScope === 'project' || listScope === 'project') {
+        nextDocs = nextDocs.filter((doc) => doc.scope === 'project')
+      }
+
+      const relevantProjects = queryProjectId
+        ? projects.filter((project) => project.id === queryProjectId)
+        : queryScope === 'company'
+          ? []
+          : projects
+      const existingUrls = new Set(nextDocs.map((doc) => doc.url))
+      const q = search.trim().toLowerCase()
+      const extras = relevantProjects
+        .flatMap(docsFromProjectForm)
+        .filter((doc) => !existingUrls.has(doc.url))
+        .filter((doc) => !queryCategory || doc.category === queryCategory)
+        .filter((doc) => {
+          if (!q) return true
+          return (
+            doc.title.toLowerCase().includes(q) ||
+            doc.originalName.toLowerCase().includes(q) ||
+            (doc.project?.title || '').toLowerCase().includes(q)
+          )
+        })
+
       const map: Record<string, number> = {}
       for (const row of cat.counts || []) {
         const scopedKey = row.scope ? `${row.scope}:${row.category}` : row.category
         map[scopedKey] = row.count
         map[row.category] = (map[row.category] || 0) + row.count
       }
+      for (const extra of extras) {
+        const scopedKey = `${extra.scope}:${extra.category}`
+        map[scopedKey] = (map[scopedKey] || 0) + 1
+        map[extra.category] = (map[extra.category] || 0) + 1
+      }
+
+      setDocs([...extras, ...nextDocs])
       setCounts(map)
     } catch (err) {
       console.error(err)
@@ -162,7 +267,7 @@ export default function DocumentManager({
     } finally {
       setLoading(false)
     }
-  }, [listScope, listProjectId, category, search])
+  }, [listScope, listProjectId, category, search, projects])
 
   useEffect(() => {
     const timer = setTimeout(load, search ? 250 : 0)
@@ -476,7 +581,10 @@ export default function DocumentManager({
                         {doc.scope === 'project' ? 'Project' : 'Company'}
                         {` · ${documentCategoryLabel(doc.category, doc.scope)}`}
                         {doc.project?.title ? ` · ${doc.project.title}` : ''}
-                        {` · ${formatFileSize(doc.fileSize)} · ${new Date(doc.createdAt).toLocaleDateString()}`}
+                        {` · ${formatFileSize(doc.fileSize)}`}
+                        {doc.createdAt
+                          ? ` · ${new Date(doc.createdAt).toLocaleDateString()}`
+                          : ' · From project form'}
                       </p>
                       <p className={`truncate text-xs ${muted}`}>{doc.originalName}</p>
                       {doc.description && <p className={`mt-1 text-sm ${muted}`}>{doc.description}</p>}
@@ -491,22 +599,26 @@ export default function DocumentManager({
                       >
                         <ArrowDownTrayIcon className="h-4 w-4" />
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => setEditing(doc)}
-                        className={`rounded-md p-2 ${hoverBtn}`}
-                        title="Edit details"
-                      >
-                        <PencilSquareIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeDoc(doc.id)}
-                        className={`rounded-md p-2 text-crimson-400 ${hoverBtn}`}
-                        title="Delete"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
+                      {doc.id.startsWith('form-') ? null : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setEditing(doc)}
+                            className={`rounded-md p-2 ${hoverBtn}`}
+                            title="Edit details"
+                          >
+                            <PencilSquareIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeDoc(doc.id)}
+                            className={`rounded-md p-2 text-crimson-400 ${hoverBtn}`}
+                            title="Delete"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </li>
                 ))}

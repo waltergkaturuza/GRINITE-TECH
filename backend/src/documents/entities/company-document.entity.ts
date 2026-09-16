@@ -41,6 +41,7 @@ export type CompanyDocumentCategory =
 @Entity('company_documents')
 @Index(['scope', 'category'])
 @Index(['projectId'])
+@Index('idx_company_documents_project_url', ['projectId', 'url'], { unique: true })
 export class CompanyDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -43,6 +43,7 @@ interface ProjectOption {
   title: string
   projectCode?: string
   status?: string
+  clientId?: string
 }
 
 interface InvoiceOption {
@@ -51,7 +52,11 @@ interface InvoiceOption {
   total_amount?: number
   amount_due?: number
   project_id?: string
+  client_id?: string
   client_name?: string
+  document_type?: 'invoice' | 'quotation' | 'receipt' | string
+  status?: string
+  notes?: string
 }
 
 interface HostingOption {
@@ -275,6 +280,60 @@ function asList<T>(value: unknown): T[] {
   return []
 }
 
+function clientNameFrom(row: Record<string, any>) {
+  if (row.client_name) return String(row.client_name)
+  const client = row.client || {}
+  return [client.firstName, client.lastName].filter(Boolean).join(' ') || client.email || ''
+}
+
+function mapProject(row: Record<string, any>): ProjectOption {
+  return {
+    id: String(row.id),
+    title: row.title || '',
+    projectCode: row.projectCode || row.project_code,
+    status: row.status,
+    clientId: row.client?.id || row.client_id || row.clientId,
+  }
+}
+
+function mapInvoice(row: Record<string, any>): InvoiceOption {
+  return {
+    id: row.id,
+    invoice_number: row.invoice_number,
+    total_amount: Number(row.total_amount) || 0,
+    amount_due: Number(row.amount_due ?? row.balance_due ?? row.total_amount) || 0,
+    project_id: row.project_id || row.project?.id,
+    client_id: row.client_id || row.client?.id,
+    client_name: clientNameFrom(row),
+    document_type: row.document_type || 'invoice',
+    status: row.status,
+    notes: row.notes || '',
+  }
+}
+
+function projectTokens(project?: ProjectOption | null) {
+  if (!project) return []
+  return [project.projectCode, project.title]
+    .filter(Boolean)
+    .flatMap((value) => String(value).split(/[\s_\-/]+/))
+    .map((token) => token.toLowerCase())
+    .filter((token) => token.length >= 4)
+}
+
+function documentMatchesProject(doc: InvoiceOption, project?: ProjectOption | null) {
+  if (!project) return true
+  if (doc.project_id && String(doc.project_id) === String(project.id)) return true
+  const haystack = [
+    doc.invoice_number,
+    doc.client_name,
+    doc.notes,
+    doc.project_id,
+  ]
+    .join(' ')
+    .toLowerCase()
+  return projectTokens(project).some((token) => haystack.includes(token))
+}
+
 const emptyEntryForm = () => ({
   purposeId: 'bank_charge_monthly',
   entryDate: new Date().toISOString().slice(0, 10),
@@ -326,13 +385,19 @@ export default function AccountsPage() {
   }, [selectedAccount])
 
   const loadLookups = async () => {
-    const [projectRes, invoiceRes, hostingRes] = await Promise.allSettled([
-      projectsAPI.getProjects({ limit: 100 }),
-      invoicesAPI.getOpenInvoices(),
-      hostingExpensesAPI.getAll({ limit: 50 }),
+    const [projectRes, invoiceRes, receiptRes, hostingRes] = await Promise.allSettled([
+      projectsAPI.getProjects({ limit: 500 }),
+      invoicesAPI.getInvoices({ documentType: 'invoice', limit: 300 }),
+      invoicesAPI.getInvoices({ documentType: 'receipt', limit: 300 }),
+      hostingExpensesAPI.getAll({ limit: 100 }),
     ])
-    if (projectRes.status === 'fulfilled') setProjects(asList<ProjectOption>(projectRes.value))
-    if (invoiceRes.status === 'fulfilled') setInvoices(asList<InvoiceOption>(invoiceRes.value))
+    if (projectRes.status === 'fulfilled') {
+      setProjects(asList<Record<string, any>>(projectRes.value).map(mapProject))
+    }
+    const docs: InvoiceOption[] = []
+    if (invoiceRes.status === 'fulfilled') docs.push(...asList<Record<string, any>>(invoiceRes.value).map(mapInvoice))
+    if (receiptRes.status === 'fulfilled') docs.push(...asList<Record<string, any>>(receiptRes.value).map(mapInvoice))
+    setInvoices(docs.filter((doc) => doc.document_type !== 'quotation'))
     if (hostingRes.status === 'fulfilled') setHosting(asList<HostingOption>(hostingRes.value))
   }
 
@@ -439,9 +504,8 @@ export default function AccountsPage() {
       description: purpose.description(next.entryDate, selectedAccount?.name || 'Bank'),
     })
     setShowEntryModal(true)
+    loadLookups()
   }
-
-  const openEditEntry = (entry: LedgerEntry) => {
     const purpose = purposeFor(entry.category, entry.type)
     setEditingEntry(entry)
     setEntryForm({
@@ -455,17 +519,22 @@ export default function AccountsPage() {
       hostingId: entry.referenceType === 'hosting_expense' ? String(entry.referenceId || '') : '',
     })
     setShowEntryModal(true)
+    loadLookups()
   }
-
-  const handleInvoiceChange = (invoiceId: string) => {
     const invoice = invoices.find((item) => String(item.id) === invoiceId)
     setEntryForm((current) => ({
       ...current,
       invoiceId,
-      amount: invoice ? String(invoice.amount_due ?? invoice.total_amount ?? current.amount) : current.amount,
+      amount: invoice
+        ? String(
+            invoice.document_type === 'receipt'
+              ? invoice.total_amount ?? current.amount
+              : invoice.amount_due ?? invoice.total_amount ?? current.amount,
+          )
+        : current.amount,
       projectId: invoice?.project_id || current.projectId,
       description: invoice
-        ? `Payment ${invoice.invoice_number || ''} ${invoice.client_name ? `– ${invoice.client_name}` : ''}`.trim()
+        ? `${invoice.document_type === 'receipt' ? 'Receipt' : 'Payment'} ${invoice.invoice_number || ''} ${invoice.client_name ? `– ${invoice.client_name}` : ''}`.trim()
         : current.description,
     }))
   }
@@ -587,6 +656,31 @@ export default function AccountsPage() {
     })
     return match?.id || ''
   }, [entryForm.description, entryForm.projectId, projects])
+
+  const selectedProject =
+    projects.find((project) => project.id === (entryForm.projectId || suggestedProjectId)) || null
+
+  const invoicesForProject = useMemo(() => {
+    const usable = invoices.filter((doc) => doc.document_type === 'invoice' || doc.document_type === 'receipt')
+    if (!selectedProject) return usable
+    const linked = usable.filter((doc) => documentMatchesProject(doc, selectedProject))
+    if (linked.length) return linked
+    if (selectedProject.clientId) {
+      const byClient = usable.filter((doc) => String(doc.client_id || '') === String(selectedProject.clientId))
+      if (byClient.length) return byClient
+    }
+    return []
+  }, [invoices, selectedProject])
+
+  const invoiceOptions = useMemo(() => {
+    const usable = invoices.filter((doc) => doc.document_type === 'invoice' || doc.document_type === 'receipt')
+    const list = invoicesForProject.length ? invoicesForProject : usable
+    if (entryForm.invoiceId && !list.some((doc) => String(doc.id) === entryForm.invoiceId)) {
+      const current = usable.find((doc) => String(doc.id) === entryForm.invoiceId)
+      if (current) return [current, ...list]
+    }
+    return list
+  }, [invoices, invoicesForProject, entryForm.invoiceId])
 
   return (
     <div className="space-y-6">
@@ -910,40 +1004,15 @@ export default function AccountsPage() {
                 {entryTypeLabel(selectedPurpose.storedType)} · {isMoneyIn(selectedPurpose.storedType) ? 'money in' : 'money out'}
               </p>
 
-              {selectedPurpose.linkInvoice && (
-                <label className="block text-sm text-gray-400">
-                  Link invoice
-                  <select value={entryForm.invoiceId} onChange={(e) => handleInvoiceChange(e.target.value)} className={`${inputClass} mt-1`}>
-                    <option value="">No invoice</option>
-                    {invoices.map((invoice) => (
-                      <option key={String(invoice.id)} value={String(invoice.id)}>
-                        {invoice.invoice_number || invoice.id} {invoice.client_name ? `· ${invoice.client_name}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-
-              {selectedPurpose.linkHosting && (
-                <label className="block text-sm text-gray-400">
-                  Link hosting expense
-                  <select value={entryForm.hostingId} onChange={(e) => handleHostingChange(e.target.value)} className={`${inputClass} mt-1`}>
-                    <option value="">No hosting record</option>
-                    {hosting.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.provider || 'Hosting'} · {formatCurrency(Number(item.amount), selectedAccount.currency)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-
               {(selectedPurpose.needsProject || entryForm.projectId) && (
                 <label className="block text-sm text-gray-400">
                   Project {selectedPurpose.needsProject ? '' : '(optional)'}
                   <select
                     value={entryForm.projectId}
-                    onChange={(e) => setEntryForm((f) => ({ ...f, projectId: e.target.value }))}
+                    onChange={(e) => {
+                      const projectId = e.target.value
+                      setEntryForm((f) => ({ ...f, projectId, invoiceId: '' }))
+                    }}
                     className={`${inputClass} mt-1`}
                   >
                     <option value="">No project</option>
@@ -952,6 +1021,45 @@ export default function AccountsPage() {
                         {project.projectCode ? `${project.projectCode} · ` : ''}{project.title}
                       </option>
                     ))}
+                  </select>
+                </label>
+              )}
+
+              {selectedPurpose.linkInvoice && (
+                <label className="block text-sm text-gray-400">
+                  Link invoice or receipt
+                  <select value={entryForm.invoiceId} onChange={(e) => handleInvoiceChange(e.target.value)} className={`${inputClass} mt-1`}>
+                    <option value="">No invoice</option>
+                    {invoiceOptions.map((invoice) => (
+                      <option key={String(invoice.id)} value={String(invoice.id)}>
+                        {invoice.document_type === 'receipt' ? 'Receipt' : 'Invoice'} · {invoice.invoice_number || invoice.id}
+                        {invoice.client_name ? ` · ${invoice.client_name}` : ''}
+                        {invoice.total_amount ? ` · ${formatCurrency(Number(invoice.document_type === 'receipt' ? invoice.total_amount : invoice.amount_due ?? invoice.total_amount), selectedAccount.currency)}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-1 block text-xs text-gray-500">
+                    {selectedProject && invoicesForProject.length
+                      ? `Showing ${invoicesForProject.filter((d) => d.document_type === 'invoice').length} invoice(s) and ${invoicesForProject.filter((d) => d.document_type === 'receipt').length} receipt(s) for this project.`
+                      : selectedProject
+                        ? 'No invoices or receipts are linked to this project yet. Showing all documents so you can still link one.'
+                        : 'Select a project to filter invoices and receipts for that job.'}
+                  </span>
+                </label>
+              )}
+
+              {selectedPurpose.linkHosting && (
+                <label className="block text-sm text-gray-400">
+                  Link hosting expense
+                  <select value={entryForm.hostingId} onChange={(e) => handleHostingChange(e.target.value)} className={`${inputClass} mt-1`}>
+                    <option value="">No hosting record</option>
+                    {hosting
+                      .filter((item) => !entryForm.projectId || item.projectId === entryForm.projectId)
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.provider || 'Hosting'} · {formatCurrency(Number(item.amount), selectedAccount.currency)}
+                        </option>
+                      ))}
                   </select>
                 </label>
               )}

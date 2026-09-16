@@ -529,6 +529,7 @@ export const invoicesAPI = {
     limit?: number
     status?: 'draft' | 'sent' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled'
     clientId?: string
+    projectId?: string
     documentType?: 'invoice' | 'quotation' | 'receipt'
     search?: string
   }) => {

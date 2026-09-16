@@ -16,6 +16,7 @@ import { FeaturesController } from './controllers/features.controller';
 import { FeaturesService } from './services/features.service';
 import { ProjectTypesController } from '../services/project-types.controller';
 import { ProjectTypesService } from '../services/project-types.service';
+import { DocumentsModule } from '../documents/documents.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ProjectTypesService } from '../services/project-types.service';
       ProjectType,
       User,
     ]),
+    DocumentsModule,
   ],
   providers: [
     ProjectsService,

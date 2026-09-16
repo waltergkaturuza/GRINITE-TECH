@@ -44,6 +44,7 @@ export class InvoicesController {
     @Query('limit') limit: string = '10',
     @Query('status') status?: string,
     @Query('clientId') clientId?: string,
+    @Query('projectId') projectId?: string,
     @Query('documentType') documentType?: string,
     @Query('search') search?: string,
   ) {
@@ -54,6 +55,7 @@ export class InvoicesController {
       clientId,
       documentType,
       search,
+      projectId,
     );
   }
 

@@ -129,7 +129,15 @@ export class InvoicesService {
     return withItems ?? savedInvoice;
   }
 
-  async findAll(page: number = 1, limit: number = 10, status?: InvoiceStatus, clientId?: string, documentType?: string, search?: string): Promise<{ invoices: Invoice[]; total: number }> {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    status?: InvoiceStatus,
+    clientId?: string,
+    documentType?: string,
+    search?: string,
+    projectId?: string,
+  ): Promise<{ invoices: Invoice[]; total: number }> {
     const qb = this.invoiceRepository
       .createQueryBuilder('invoice')
       .leftJoinAndSelect('invoice.client', 'client')
@@ -141,6 +149,7 @@ export class InvoicesService {
 
     if (status) qb.andWhere('invoice.status = :status', { status });
     if (clientId) qb.andWhere('invoice.client_id = :clientId', { clientId });
+    if (projectId) qb.andWhere('invoice.project_id = :projectId', { projectId });
     if (documentType) qb.andWhere('invoice.document_type = :documentType', { documentType });
     if (search && search.trim()) {
       qb.andWhere(

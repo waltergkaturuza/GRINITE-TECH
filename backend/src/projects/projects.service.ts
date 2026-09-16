@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, ILike } from 'typeorm';
 import { Project, ProjectStatus } from './entities/project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { User } from '../users/entities/user.entity';
+import { DocumentsService } from '../documents/documents.service';
 
 interface QueryParams {
   page: number;
@@ -17,11 +18,14 @@ interface QueryParams {
 
 @Injectable()
 export class ProjectsService {
+  private readonly logger = new Logger(ProjectsService.name);
+
   constructor(
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private readonly documentsService: DocumentsService,
   ) {}
 
   async create(createProjectDto: CreateProjectDto, user: User): Promise<Project> {
@@ -33,7 +37,9 @@ export class ProjectsService {
         : null,
     });
 
-    return this.projectRepository.save(project);
+    const saved = await this.projectRepository.save(project);
+    await this.syncProjectFormDocuments(saved, user);
+    return saved;
   }
 
   async findAll(queryParams: QueryParams, user: User) {
@@ -114,7 +120,23 @@ export class ProjectsService {
     // Update other fields
     Object.assign(project, dto);
 
-    return this.projectRepository.save(project);
+    const saved = await this.projectRepository.save(project);
+    await this.syncProjectFormDocuments(saved, user);
+    return saved;
+  }
+
+  private async syncProjectFormDocuments(project: Project, user: User) {
+    try {
+      await this.documentsService.importProjectFormFiles(project, {
+        userId: (user as User & { userId?: string }).userId || user.id,
+        role: user.role,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Could not copy project form files into the documents library for ${project.id}`,
+        error instanceof Error ? error.stack : error,
+      );
+    }
   }
 
   async remove(id: string, user: User): Promise<void> {

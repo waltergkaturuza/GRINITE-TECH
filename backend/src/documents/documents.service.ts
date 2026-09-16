@@ -15,11 +15,63 @@ import {
 import { CreateCompanyDocumentDto, UpdateCompanyDocumentDto } from './dto/document.dto';
 import { Project } from '../projects/entities/project.entity';
 
-type AuthUser = { userId?: string; role?: string };
+type AuthUser = { userId?: string; id?: string; role?: string };
+
+type MetaFile = {
+  url?: string;
+  pathname?: string;
+  name?: string;
+  originalName?: string;
+  fileSize?: number;
+  mimeType?: string;
+};
+
+const PROJECT_FORM_FILE_GROUPS = [
+  {
+    key: 'supportingDocuments',
+    category: 'specs',
+    description: 'Supporting document from the project form',
+  },
+  {
+    key: 'fundingDocuments',
+    category: 'other',
+    description: 'Funding / budget document from the project form',
+  },
+] as const;
 
 function isPrivileged(role?: string) {
   const r = (role || '').toLowerCase();
   return r === 'admin' || r === 'developer';
+}
+
+function authUserId(user?: AuthUser) {
+  return user?.userId || user?.id || null;
+}
+
+function asFileList(value: unknown): MetaFile[] {
+  if (!value) return [];
+  let parsed: unknown = value;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed.filter(
+    (item): item is MetaFile =>
+      Boolean(item && typeof item === 'object' && typeof (item as MetaFile).url === 'string'),
+  );
+}
+
+function titleFromFileName(name: string) {
+  return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || name;
+}
+
+function isUniqueViolation(error: unknown) {
+  const err = error as { code?: string; driverError?: { code?: string } };
+  return err?.code === '23505' || err?.driverError?.code === '23505';
 }
 
 @Injectable()
@@ -63,7 +115,7 @@ export class DocumentsService {
       originalName: dto.originalName,
       fileSize: Number(dto.fileSize) || 0,
       mimeType: dto.mimeType || null,
-      uploadedById: user?.userId || null,
+      uploadedById: authUserId(user),
     });
     return this.documents.save(doc);
   }
@@ -77,6 +129,8 @@ export class DocumentsService {
     },
     user?: AuthUser,
   ) {
+    await this.syncProjectFormDocuments(filters, user);
+
     const qb = this.documents
       .createQueryBuilder('doc')
       .leftJoinAndSelect('doc.project', 'project')
@@ -103,6 +157,8 @@ export class DocumentsService {
     filters: { projectId?: string; scope?: string },
     user?: AuthUser,
   ) {
+    await this.syncProjectFormDocuments(filters, user);
+
     const qb = this.documents
       .createQueryBuilder('doc')
       .leftJoin('doc.project', 'project')
@@ -142,8 +198,108 @@ export class DocumentsService {
 
   async remove(id: string, user?: AuthUser) {
     const doc = await this.findOne(id, user);
+    await this.detachFromProjectMetadata(doc);
     await this.documents.remove(doc);
     return { ok: true, pathname: doc.pathname, url: doc.url };
+  }
+
+  async importProjectFormFiles(project: Project, user?: AuthUser) {
+    if (!project?.id) return [];
+
+    const files = this.collectProjectFormFiles(project);
+    if (!files.length) return [];
+
+    const existing = await this.documents.find({ where: { projectId: project.id } });
+    const existingUrls = new Set(existing.map((doc) => doc.url));
+    const created: CompanyDocument[] = [];
+
+    for (const file of files) {
+      if (!file.url || existingUrls.has(file.url)) continue;
+      const originalName = file.originalName;
+      const doc = this.documents.create({
+        id: randomUUID(),
+        title: titleFromFileName(originalName),
+        description: file.description,
+        category: file.category,
+        scope: 'project',
+        projectId: project.id,
+        url: file.url,
+        pathname: file.pathname,
+        originalName,
+        fileSize: file.fileSize,
+        mimeType: file.mimeType,
+        uploadedById: authUserId(user),
+      });
+      try {
+        created.push(await this.documents.save(doc));
+        existingUrls.add(file.url);
+      } catch (error) {
+        if (!isUniqueViolation(error)) throw error;
+      }
+    }
+
+    return created;
+  }
+
+  private collectProjectFormFiles(project: Project) {
+    const metadata = (project.metadata || {}) as Record<string, unknown>;
+    return PROJECT_FORM_FILE_GROUPS.flatMap((group) =>
+      asFileList(metadata[group.key]).map((file) => ({
+        url: String(file.url),
+        pathname: file.pathname || String(file.url),
+        originalName: file.name || file.originalName || String(file.url).split('/').pop() || 'document',
+        fileSize: Number(file.fileSize) || 0,
+        mimeType: file.mimeType || null,
+        category: group.category,
+        description: group.description,
+      })),
+    );
+  }
+
+  private async syncProjectFormDocuments(
+    filters: { projectId?: string; scope?: string },
+    user?: AuthUser,
+  ) {
+    if (filters.scope === 'company') return;
+
+    const qb = this.projects
+      .createQueryBuilder('project')
+      .leftJoinAndSelect('project.client', 'client')
+      .andWhere('project.metadata IS NOT NULL');
+
+    if (filters.projectId) {
+      await this.assertProjectAccess(filters.projectId, user);
+      qb.andWhere('project.id = :projectId', { projectId: filters.projectId });
+    } else if (!isPrivileged(user?.role)) {
+      const clientId = authUserId(user);
+      if (!clientId) return;
+      qb.andWhere('client.id = :clientId', { clientId });
+    }
+
+    const projects = await qb.getMany();
+    for (const project of projects) {
+      await this.importProjectFormFiles(project, user);
+    }
+  }
+
+  private async detachFromProjectMetadata(doc: CompanyDocument) {
+    if (doc.scope !== 'project' || !doc.projectId || !doc.url) return;
+    const project = await this.projects.findOne({ where: { id: doc.projectId } });
+    if (!project?.metadata) return;
+
+    const metadata = { ...project.metadata };
+    let changed = false;
+    for (const group of PROJECT_FORM_FILE_GROUPS) {
+      const current = asFileList(metadata[group.key]);
+      const next = current.filter((file) => file.url !== doc.url);
+      if (next.length !== current.length) {
+        metadata[group.key] = next;
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    project.metadata = metadata;
+    await this.projects.save(project);
   }
 
   private assertCategory(scope: 'company' | 'project', category: string) {
@@ -174,9 +330,10 @@ export class DocumentsService {
     }
 
     if (!privileged) {
-      if (!user?.userId) throw new ForbiddenException('Missing authenticated user');
+      const clientId = authUserId(user);
+      if (!clientId) throw new ForbiddenException('Missing authenticated user');
       qb.andWhere('doc.scope = :clientScope', { clientScope: 'project' });
-      qb.andWhere('client.id = :clientId', { clientId: user.userId });
+      qb.andWhere('client.id = :clientId', { clientId });
     }
   }
 
@@ -195,7 +352,7 @@ export class DocumentsService {
       relations: ['client'],
     });
     if (!project) throw new NotFoundException('Project not found');
-    if (project.client?.id !== user?.userId) {
+    if (project.client?.id !== authUserId(user)) {
       throw new ForbiddenException('Not allowed to access this project');
     }
   }
