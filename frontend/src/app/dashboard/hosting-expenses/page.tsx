@@ -19,6 +19,17 @@ import {
 import Link from 'next/link'
 import { hostingExpensesAPI, projectsAPI } from '@/lib/api'
 import { uploadToBlob } from '@/lib/blobStorage'
+import {
+  CURRENCY_OPTIONS,
+  combineBag,
+  defaultFxConfig,
+  formatMoney,
+  formatMoneyBag,
+  moneyCurrencyOf,
+  rowsToBag,
+  type FxConfig,
+} from '@/lib/money'
+import FxRatesPanel from '@/components/FxRatesPanel'
 
 interface HostingExpense {
   id: string
@@ -43,6 +54,8 @@ interface HostingExpense {
 interface Project {
   id: string
   title: string
+  currency?: string
+  metadata?: { currency?: string }
 }
 
 const STATUS_OPTIONS = [
@@ -98,10 +111,12 @@ export default function HostingExpensesPage() {
   const [stats, setStats] = useState<{
     totalAmount: number
     totalCount: number
-    byProject: { projectId: string; projectTitle: string; total: number }[]
-    byProvider: { provider: string; total: number }[]
-    byMonth?: { month: string; total: number; count: number }[]
+    byCurrency?: { currency: string; total: number }[]
+    byProject: { projectId: string; projectTitle: string; total: number; currency?: string }[]
+    byProvider: { provider: string; total: number; currency?: string }[]
+    byMonth?: { month: string; total: number; count: number; currency?: string }[]
   } | null>(null)
+  const [fx, setFx] = useState<FxConfig>(defaultFxConfig)
   const [uploadingFile, setUploadingFile] = useState(false)
 
   useEffect(() => {
@@ -254,10 +269,7 @@ export default function HostingExpensesPage() {
     }
   }
 
-  const formatCurrency = (amount: number, currency = 'USD') =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(
-      Number(amount)
-    )
+  const formatCurrency = (amount: number, currency = 'USD') => formatMoney(amount, currency)
 
   const formatDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'
@@ -352,9 +364,14 @@ export default function HostingExpensesPage() {
             </div>
             <div>
               <p className="text-sm text-gray-400">Total paid</p>
-              <p className="text-xl font-semibold text-white">
-                {stats ? formatCurrency(stats.totalAmount) : '—'}
+              <p className="text-xl font-semibold text-white leading-snug">
+                {stats ? formatMoneyBag(rowsToBag(stats.byCurrency)) : '—'}
               </p>
+              {fx.combine && stats && combineBag(rowsToBag(stats.byCurrency), fx) != null && (stats.byCurrency?.length || 0) > 1 && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Combined ≈ {formatMoney(combineBag(rowsToBag(stats.byCurrency), fx), fx.reportingCurrency)}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -399,6 +416,8 @@ export default function HostingExpensesPage() {
         </div>
       </div>
 
+      <FxRatesPanel tone="dark" onChange={setFx} />
+
       {/* Upcoming renewals */}
       {upcomingRenewals.length > 0 && (
         <div className="rounded-lg border border-amber-900/30 bg-amber-900/10 p-5">
@@ -437,9 +456,9 @@ export default function HostingExpensesPage() {
               const label = m.month ? `${m.month.slice(0, 4)}-${m.month.slice(5)}` : '—'
               return (
                 <div
-                  key={m.month}
+                  key={`${m.month}-${m.currency || 'USD'}`}
                   className="flex-1 flex flex-col items-center gap-1"
-                  title={`${label}: ${formatCurrency(m.total)}`}
+                  title={`${label}: ${formatCurrency(m.total, m.currency)}`}
                 >
                   <div
                     className="w-full min-h-[4px] rounded-t bg-gradient-to-t from-blue-600 to-cyan-500 transition-all"
@@ -467,7 +486,7 @@ export default function HostingExpensesPage() {
                 const max = Math.max(...stats.byProject.map((x) => x.total), 1)
                 const pct = (p.total / max) * 100
                 return (
-                  <div key={p.projectId || '_none'} className="flex items-center gap-3">
+                  <div key={`${p.projectId || '_none'}-${p.currency || 'USD'}`} className="flex items-center gap-3">
                     <span className="w-32 truncate text-sm text-gray-300">
                       {p.projectTitle}
                     </span>
@@ -477,8 +496,8 @@ export default function HostingExpensesPage() {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-sm font-medium text-white w-20 text-right">
-                      {formatCurrency(p.total)}
+                    <span className="text-sm font-medium text-white w-28 text-right">
+                      {formatCurrency(p.total, p.currency)}
                     </span>
                   </div>
                 )
@@ -494,7 +513,7 @@ export default function HostingExpensesPage() {
                 const max = Math.max(...stats.byProvider.map((x) => x.total), 1)
                 const pct = (p.total / max) * 100
                 return (
-                  <div key={p.provider} className="flex items-center gap-3">
+                  <div key={`${p.provider}-${p.currency || 'USD'}`} className="flex items-center gap-3">
                     <span className="w-32 truncate text-sm text-gray-300">
                       {p.provider}
                     </span>
@@ -504,8 +523,8 @@ export default function HostingExpensesPage() {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-sm font-medium text-white w-20 text-right">
-                      {formatCurrency(p.total)}
+                    <span className="text-sm font-medium text-white w-28 text-right">
+                      {formatCurrency(p.total, p.currency)}
                     </span>
                   </div>
                 )
@@ -743,16 +762,22 @@ export default function HostingExpensesPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-sm text-gray-400">
                     Project (optional)
                   </label>
                   <select
                     value={form.projectId}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, projectId: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      const projectId = e.target.value
+                      const proj = projects.find((item) => item.id === projectId)
+                      setForm((f) => ({
+                        ...f,
+                        projectId,
+                        currency: proj ? moneyCurrencyOf(proj) : f.currency,
+                      }))
+                    }}
                     className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white"
                   >
                     <option value="">— None —</option>
@@ -788,6 +813,20 @@ export default function HostingExpensesPage() {
                     }
                     className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white"
                   />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm text-gray-400">
+                    Currency
+                  </label>
+                  <select
+                    value={form.currency}
+                    onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}
+                    className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white"
+                  >
+                    {CURRENCY_OPTIONS.map((item) => (
+                      <option key={item.code} value={item.code}>{item.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

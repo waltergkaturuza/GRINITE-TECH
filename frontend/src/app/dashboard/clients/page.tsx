@@ -22,6 +22,7 @@ import {
 } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { usersAPI, projectsAPI, invoicesAPI } from '@/lib/api'
+import { formatMoneyBag, rowsToBag } from '@/lib/money'
 
 interface Client {
   id: string
@@ -74,7 +75,13 @@ export default function ClientsPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [viewModalProjects, setViewModalProjects] = useState<any[]>([])
-  const [viewModalRevenue, setViewModalRevenue] = useState<{ totalRevenue: number; paidCount: number; pendingAmount: number } | null>(null)
+  const [viewModalRevenue, setViewModalRevenue] = useState<{
+    totalRevenue: number
+    paidCount: number
+    pendingAmount: number
+    revenue_by_currency?: { currency: string; total: number }[]
+    pending_by_currency?: { currency: string; total: number }[]
+  } | null>(null)
   const [viewModalLoading, setViewModalLoading] = useState(false)
   
   // Form State
@@ -285,7 +292,13 @@ export default function ClientsPage() {
       if (cancelled) return
       const projects = projectsRes?.data ?? projectsRes?.projects ?? (Array.isArray(projectsRes) ? projectsRes : [])
       setViewModalProjects(Array.isArray(projects) ? projects : [])
-      setViewModalRevenue(revenue as { totalRevenue: number; paidCount: number; pendingAmount: number })
+      setViewModalRevenue(revenue as {
+        totalRevenue: number
+        paidCount: number
+        pendingAmount: number
+        revenue_by_currency?: { currency: string; total: number }[]
+        pending_by_currency?: { currency: string; total: number }[]
+      })
       setViewModalLoading(false)
     }).catch(() => {
       if (!cancelled) setViewModalLoading(false)
@@ -1043,7 +1056,7 @@ export default function ClientsPage() {
                       <div className="flex justify-between">
                         <span className="text-gray-400">Total Revenue</span>
                         <span className="text-white font-medium">
-                          $ {Number(viewModalRevenue.totalRevenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {formatMoneyBag(rowsToBag(viewModalRevenue.revenue_by_currency))}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -1053,7 +1066,7 @@ export default function ClientsPage() {
                       <div className="flex justify-between">
                         <span className="text-gray-400">Pending Amount</span>
                         <span className="text-amber-400">
-                          $ {Number(viewModalRevenue.pendingAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {formatMoneyBag(rowsToBag(viewModalRevenue.pending_by_currency))}
                         </span>
                       </div>
                     </div>

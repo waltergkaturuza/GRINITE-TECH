@@ -87,6 +87,7 @@ export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_website VARCHAR`,
       `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS unit VARCHAR DEFAULT 'ea'`,
       `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS discount_percent DECIMAL(5,2) DEFAULT 0`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS currency VARCHAR(8)`,
     ];
     for (const sql of alters) {
       await this.dataSource.query(sql);
@@ -125,6 +126,7 @@ export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
         tax_amount DECIMAL(10,2) DEFAULT 0,
         discount_amount DECIMAL(10,2) DEFAULT 0,
         total_amount DECIMAL(10,2) NOT NULL,
+        currency VARCHAR(8),
         notes TEXT,
         terms_conditions TEXT,
         payment_date TIMESTAMP,

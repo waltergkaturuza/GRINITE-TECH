@@ -1,6 +1,7 @@
 'use client'
 
 import { XMarkIcon, PencilIcon, DocumentArrowDownIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
+import { formatMoney, moneyCurrencyOf } from '@/lib/money'
 
 interface ProjectDetailsModalProps {
   project: any
@@ -13,7 +14,7 @@ export default function ProjectDetailsModal({ project, onClose, onEdit, onGoToTr
   if (!project) return null
 
   const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
-  const formatCurrency = (n: number) => n != null ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n) : '—'
+  const money = (n: number) => n != null ? formatMoney(n, moneyCurrencyOf(project)) : '—'
 
   const statusColors: Record<string, string> = {
     active: 'bg-green-100 text-green-800',
@@ -145,12 +146,12 @@ export default function ProjectDetailsModal({ project, onClose, onEdit, onGoToTr
             </div>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-xs font-medium text-gray-500 uppercase">Budget</p>
-              <p className="text-lg font-semibold text-gray-900 mt-1">{formatCurrency(project.totalBudget ?? project.budget)}</p>
+              <p className="text-lg font-semibold text-gray-900 mt-1">{money(project.totalBudget ?? project.budget)}</p>
               {project.fundingSource && (
                 <p className="text-sm text-gray-500 mt-1">Funding: {project.fundingSource}</p>
               )}
               {project.spentBudget != null && (
-                <p className="text-sm text-gray-500">Spent: {formatCurrency(project.spentBudget)}</p>
+                <p className="text-sm text-gray-500">Spent: {money(project.spentBudget)}</p>
               )}
             </div>
             <div className="bg-gray-50 rounded-lg p-4">

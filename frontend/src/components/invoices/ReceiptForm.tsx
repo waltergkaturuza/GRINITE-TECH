@@ -10,7 +10,8 @@ import {
 } from '@heroicons/react/24/outline'
 import { usersAPI, invoicesAPI } from '../../lib/api'
 import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
-import { getBalanceDue, formatCurrency, asMoney, getVatRate, toInputDate } from '../../lib/invoiceUtils'
+import { getBalanceDue, formatCurrency as formatCurrencyAmount, asMoney, getVatRate, toInputDate } from '../../lib/invoiceUtils'
+import { invoiceCurrencyOf } from '../../lib/money'
 
 interface ReceiptItem {
   description: string
@@ -236,6 +237,8 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
   })()
   const selectedInvoice = invoiceOptions.find((i) => i.id === selectedInvoiceId) || null
   const currentReceiptAmount = receipt ? asMoney(receipt.total_amount) : 0
+  const formatCurrency = (amount: unknown) =>
+    formatCurrencyAmount(amount, invoiceCurrencyOf(selectedInvoice || receipt))
   const balanceDue = selectedInvoice ? getBalanceDue(selectedInvoice) + currentReceiptAmount : null
   const invoiceTotal = selectedInvoice ? asMoney(selectedInvoice.total_amount) : 0
   const alreadyPaid = selectedInvoice
@@ -324,6 +327,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
       project_id: selectedInvoice?.project_id || formData.project_id || undefined,
       tax_rate: taxRate,
       document_type: 'receipt',
+      currency: invoiceCurrencyOf(selectedInvoice || receipt),
       parent_invoice_id: selectedInvoiceId || undefined,
       due_date: formData.payment_date,
       items: items.filter((item) => item.description.trim() !== ''),

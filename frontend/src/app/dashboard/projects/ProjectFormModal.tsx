@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { CURRENCY_OPTIONS, moneyCurrencyOf } from '@/lib/money'
 
 const TABS = [
   { id: 'basic', label: 'Basic Info' },
@@ -67,7 +68,7 @@ export default function ProjectFormModal({
         status: project.status ?? 'planning',
         priority: project.priority ?? 'medium',
         completionPercentage: project.completionPercentage ?? 0,
-        currency: 'USD',
+        currency: moneyCurrencyOf(project),
         budget: project.budget?.toString() ?? '',
         startDate: project.startDate ? new Date(project.startDate).toISOString().slice(0, 10) : '',
         endDate: project.endDate ? new Date(project.endDate).toISOString().slice(0, 10) : '',
@@ -104,6 +105,10 @@ export default function ProjectFormModal({
       endDate: form.endDate || undefined,
       estimatedHours: form.estimatedHours ? parseInt(form.estimatedHours) : undefined,
       clientId: form.clientId || undefined,
+      metadata: {
+        ...(project?.metadata || {}),
+        currency: form.currency || 'USD',
+      },
     }
     if (mode === 'edit') {
       payload.completionPercentage = Number(form.completionPercentage)
@@ -225,12 +230,15 @@ export default function ProjectFormModal({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                <input
-                  type="text"
+                <select
                   value={form.currency}
                   onChange={(e) => setForm({ ...form, currency: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                />
+                >
+                  {CURRENCY_OPTIONS.map((item) => (
+                    <option key={item.code} value={item.code}>{item.label}</option>
+                  ))}
+                </select>
               </div>
               {mode === 'edit' && project?.id && (
                 <p className="text-xs text-gray-500">Project ID: {project.id}</p>

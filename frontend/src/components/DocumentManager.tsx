@@ -408,7 +408,7 @@ export default function DocumentManager({
   )
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-col gap-4">
       <div className={`border-b ${isDark ? 'border-granite-600' : 'border-granite-200'}`}>
         <nav className="-mb-px flex gap-6" aria-label="Document workspace">
           <button
@@ -510,7 +510,7 @@ export default function DocumentManager({
       )}
 
       {workspaceTab === 'search' && (
-        <div className="flex min-h-0 flex-col gap-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 lg:h-[calc(100vh-12.5rem)] lg:min-h-[28rem]">
           {library && (
             <div className={`flex shrink-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center ${panel}`}>
               <div className="flex flex-wrap gap-2">
@@ -546,8 +546,8 @@ export default function DocumentManager({
             </div>
           )}
 
-          <div className="grid min-h-0 items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:h-[min(32rem,calc(100vh-18rem))]">
-            <aside className={`rounded-xl border p-3 lg:sticky lg:top-4 lg:max-h-full lg:overflow-y-auto ${panel}`}>
+          <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:overflow-hidden">
+            <aside className={`max-h-64 min-h-0 overflow-y-auto overscroll-contain rounded-xl border p-3 lg:max-h-none lg:h-full ${panel}`}>
               <p className={`px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${muted}`}>Categories</p>
               <button
                 type="button"
@@ -586,7 +586,7 @@ export default function DocumentManager({
               ))}
             </aside>
 
-            <div className={`flex min-h-0 flex-col rounded-xl border p-4 ${panel}`}>
+            <div className={`flex h-[min(70vh,36rem)] min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border p-4 lg:h-full lg:max-h-full ${panel}`}>
               <div className="mb-3 shrink-0">
                 <div className="relative">
                   <MagnifyingGlassIcon className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${muted}`} />
@@ -601,7 +601,7 @@ export default function DocumentManager({
                 {error && <p className={`mt-2 text-sm ${errorText}`}>{error}</p>}
               </div>
 
-              <div className="min-h-0 max-h-[22rem] flex-1 overflow-y-auto overscroll-contain pr-1 lg:max-h-none">
+              <div className="min-h-0 flex-1 overflow-y-scroll overscroll-contain pr-1">
                 {loading ? (
                   <div className={`h-32 animate-pulse rounded-lg ${isDark ? 'bg-granite-700/40' : 'bg-granite-100'}`} />
                 ) : docs.length === 0 ? (

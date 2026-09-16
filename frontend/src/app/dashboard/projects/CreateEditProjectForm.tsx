@@ -26,6 +26,7 @@ import {
   type OutcomeIndicator,
   type OutputIndicator,
 } from '@/constants/projectForm'
+import { CURRENCY_OPTIONS } from '@/lib/money'
 
 const emptyIndicator = (): OutcomeIndicator => ({
   id: crypto.randomUUID(),
@@ -115,6 +116,7 @@ export default function CreateEditProjectForm({
     methodologies: [] as string[],
     implementingOrgs: [] as string[],
     totalBudget: '',
+    currency: 'USD',
     fundingSource: '',
     teamMemberIds: [] as string[],
   })
@@ -144,6 +146,7 @@ export default function CreateEditProjectForm({
         methodologies: (project.metadata?.methodologies as string[]) ?? [],
         implementingOrgs: (project.metadata?.implementingOrgs as string[]) ?? [],
         totalBudget: (project.totalBudget ?? project.budget)?.toString() ?? '',
+        currency: project.currency || project.metadata?.currency || 'USD',
         fundingSource: project.fundingSource ?? '',
         teamMemberIds: (project.metadata?.teamMemberIds as string[]) ?? [],
       })
@@ -360,6 +363,7 @@ export default function CreateEditProjectForm({
       projectDurationYears: projectDurationYears,
       supportingDocuments,
       fundingDocuments,
+      currency: form.currency || 'USD',
     }
     const payload: Record<string, any> = {
       title: form.title,
@@ -713,6 +717,18 @@ export default function CreateEditProjectForm({
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Financial Details</h3>
                 <p className="text-sm text-gray-500">Specify budget and funding source information</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Budget currency</label>
+                <select
+                  value={form.currency}
+                  onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+                  {CURRENCY_OPTIONS.map((item) => (
+                    <option key={item.code} value={item.code}>{item.label}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Total Budget *</label>

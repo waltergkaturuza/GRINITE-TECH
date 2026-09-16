@@ -11,6 +11,7 @@ import {
 import { usersAPI, projectsAPI } from '../../lib/api'
 import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
 import { asMoney, normalizeInvoice } from '../../lib/invoiceUtils'
+import { CURRENCY_OPTIONS, invoiceCurrencyOf, moneyCurrencyOf, formatMoney } from '../../lib/money'
 
 interface InvoiceFormProps {
   invoice?: any
@@ -68,6 +69,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
     buyer_bank_name: '',
     buyer_swift: '',
     buyer_iban: '',
+    currency: 'USD',
   })
   const [items, setItems] = useState<InvoiceItem[]>([
     {
@@ -126,6 +128,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
         buyer_bank_name: inv.buyer_bank_name || '',
         buyer_swift: inv.buyer_swift || '',
         buyer_iban: inv.buyer_iban || '',
+        currency: invoiceCurrencyOf(inv),
       })
       
       if (inv.items && inv.items.length > 0) {
@@ -285,7 +288,15 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
             </label>
             <select
               value={formData.project_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, project_id: e.target.value }))}
+              onChange={(e) => {
+                const projectId = e.target.value
+                const proj = projects.find((item) => item.id === projectId)
+                setFormData((prev) => ({
+                  ...prev,
+                  project_id: projectId,
+                  currency: proj ? moneyCurrencyOf(proj) : prev.currency,
+                }))
+              }}
               className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
               <option value="">No project</option>
@@ -312,6 +323,21 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
               <option value="net_30">Net 30 Days</option>
               <option value="net_45">Net 45 Days</option>
               <option value="net_60">Net 60 Days</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Currency
+            </label>
+            <select
+              value={formData.currency}
+              onChange={(e) => setFormData((prev) => ({ ...prev, currency: e.target.value }))}
+              className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            >
+              {CURRENCY_OPTIONS.map((item) => (
+                <option key={item.code} value={item.code}>{item.label}</option>
+              ))}
             </select>
           </div>
 
@@ -587,21 +613,21 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
             <div className="space-y-2">
               <div className="flex justify-between text-gray-300">
                 <span>Subtotal:</span>
-                <span>${subtotal}</span>
+                <span>{formatMoney(subtotal, formData.currency)}</span>
               </div>
               <div className="flex justify-between text-gray-300">
                 <span>Tax ({formData.tax_rate}%):</span>
-                <span>${taxAmount}</span>
+                <span>{formatMoney(taxAmount, formData.currency)}</span>
               </div>
               {formData.discount_amount > 0 && (
                 <div className="flex justify-between text-gray-300">
                   <span>Discount:</span>
-                  <span>-${asMoney(formData.discount_amount).toFixed(2)}</span>
+                  <span>-{formatMoney(formData.discount_amount, formData.currency)}</span>
                 </div>
               )}
               <div className="flex justify-between text-white font-bold text-lg border-t border-granite-600 pt-2">
                 <span>Total:</span>
-                <span>${total}</span>
+                <span>{formatMoney(total, formData.currency)}</span>
               </div>
             </div>
           </div>

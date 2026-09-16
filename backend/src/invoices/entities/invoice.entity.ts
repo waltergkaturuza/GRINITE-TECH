@@ -90,6 +90,9 @@ export class Invoice {
   @Column('decimal', { precision: 10, scale: 2 })
   total_amount: number;
 
+  @Column({ type: 'varchar', length: 8, nullable: true })
+  currency: string;
+
   @Column('text', { nullable: true })
   notes: string;
 

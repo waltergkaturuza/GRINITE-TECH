@@ -24,7 +24,7 @@ export default function EditProjectModal({ project, onClose, onSave }: EditProje
     description: project?.description ?? '',
     priority: project?.priority ?? 'medium',
     completionPercentage: project?.completionPercentage ?? 0,
-    currency: project?.currency ?? 'USD',
+    currency: project?.currency || project?.metadata?.currency || 'USD',
     budget: project?.budget ?? '',
     startDate: project?.startDate ? new Date(project.startDate).toISOString().slice(0, 10) : '',
     endDate: project?.endDate ? new Date(project.endDate).toISOString().slice(0, 10) : '',
@@ -38,10 +38,13 @@ export default function EditProjectModal({ project, onClose, onSave }: EditProje
       description: form.description,
       priority: form.priority,
       completionPercentage: Number(form.completionPercentage),
-      currency: form.currency,
       budget: form.budget ? Number(form.budget) : undefined,
       startDate: form.startDate || undefined,
       endDate: form.endDate || undefined,
+      metadata: {
+        ...(project?.metadata || {}),
+        currency: form.currency || 'USD',
+      },
     })
   }
 
@@ -152,12 +155,17 @@ export default function EditProjectModal({ project, onClose, onSave }: EditProje
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                <input
-                  type="text"
+                <select
                   value={form.currency}
                   onChange={(e) => setForm({ ...form, currency: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                />
+                >
+                  <option value="USD">USD — US Dollar</option>
+                  <option value="ZWG">ZiG — Zimbabwe Gold</option>
+                  <option value="ZAR">ZAR — South African Rand</option>
+                  <option value="GBP">GBP — British Pound</option>
+                  <option value="EUR">EUR — Euro</option>
+                </select>
               </div>
               <p className="text-xs text-gray-500">Project ID: {project.id}</p>
             </div>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowDownTrayIcon, ChevronDownIcon, BanknotesIcon } from '@heroicons/react/24/outline'
 import { QUANTIS_LETTERHEAD, formatSellerBankBlock } from '../../lib/companyLetterhead'
 import {
-  formatCurrency,
+  formatCurrency as formatCurrencyAmount,
   formatDate,
   formatBillingPeriod,
   formatPaymentTerms,
@@ -14,6 +14,7 @@ import {
   getPaymentStatusLabel,
   getVatRate,
 } from '../../lib/invoiceUtils'
+import { invoiceCurrencyOf } from '../../lib/money'
 
 interface InvoiceViewProps {
   invoice: any
@@ -36,6 +37,7 @@ function MetaRow({ label, value }: { label: string; value?: string | null }) {
 export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment, autoPrint }: InvoiceViewProps) {
   const printRef = useRef<HTMLDivElement>(null)
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const formatCurrency = (amount: unknown) => formatCurrencyAmount(amount, invoiceCurrencyOf(invoice))
 
   useEffect(() => {
     if (autoPrint && invoice) {
@@ -254,7 +256,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
           </div>
 
           <p className="text-sm italic text-gray-600 mb-8">
-            Amount in words: {amountInWords(Number(invoice.total_amount))}
+            Amount in words: {amountInWords(Number(invoice.total_amount), invoiceCurrencyOf(invoice))}
           </p>
 
           {!isQuotation && (

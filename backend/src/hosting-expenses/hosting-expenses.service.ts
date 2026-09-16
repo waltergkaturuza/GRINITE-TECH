@@ -107,57 +107,71 @@ export class HostingExpensesService {
   async getStats(): Promise<{
     totalAmount: number;
     totalCount: number;
-    byProject: { projectId: string; projectTitle: string; total: number }[];
-    byProvider: { provider: string; total: number }[];
-    byMonth: { month: string; total: number; count: number }[];
+    byCurrency: { currency: string; total: number }[];
+    byProject: { projectId: string; projectTitle: string; total: number; currency: string }[];
+    byProvider: { provider: string; total: number; currency: string }[];
+    byMonth: { month: string; total: number; count: number; currency: string }[];
   }> {
     const expenses = await this.hostingExpenseRepository.find({
       relations: ['project'],
       where: { status: 'paid' },
     });
 
-    const totalAmount = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
     const totalCount = expenses.length;
-
-    const byProjectMap = new Map<string, { projectTitle: string; total: number }>();
+    const byCurrencyMap = new Map<string, number>();
     for (const e of expenses) {
-      const key = e.projectId || '_none';
+      const code = String(e.currency || 'USD').toUpperCase();
+      byCurrencyMap.set(code, (byCurrencyMap.get(code) || 0) + Number(e.amount || 0));
+    }
+    const byCurrency = Array.from(byCurrencyMap.entries()).map(([currency, total]) => ({ currency, total }));
+
+    const totalAmount = byCurrency.length <= 1
+      ? (byCurrency[0]?.total || 0)
+      : 0;
+
+    const byProjectMap = new Map<string, { projectTitle: string; total: number; currency: string }>();
+    for (const e of expenses) {
+      const currency = String(e.currency || 'USD').toUpperCase();
+      const key = `${e.projectId || '_none'}:${currency}`;
       const title = e.project?.title || 'Unassigned';
-      const current = byProjectMap.get(key) || { projectTitle: title, total: 0 };
+      const current = byProjectMap.get(key) || { projectTitle: title, total: 0, currency };
       current.total += Number(e.amount || 0);
       byProjectMap.set(key, current);
     }
     const byProject = Array.from(byProjectMap.entries())
-      .map(([projectId, { projectTitle, total }]) => ({
-        projectId: projectId === '_none' ? '' : projectId,
+      .map(([key, { projectTitle, total, currency }]) => ({
+        projectId: key.split(':')[0] === '_none' ? '' : key.split(':')[0],
         projectTitle,
         total,
+        currency,
       }))
       .sort((a, b) => b.total - a.total);
 
-    const byProviderMap = new Map<string, number>();
+    const byProviderMap = new Map<string, { provider: string; total: number; currency: string }>();
     for (const e of expenses) {
-      const p = e.provider || 'Other';
-      byProviderMap.set(p, (byProviderMap.get(p) || 0) + Number(e.amount || 0));
+      const currency = String(e.currency || 'USD').toUpperCase();
+      const provider = e.provider || 'Other';
+      const key = `${provider}:${currency}`;
+      const current = byProviderMap.get(key) || { provider, total: 0, currency };
+      current.total += Number(e.amount || 0);
+      byProviderMap.set(key, current);
     }
-    const byProvider = Array.from(byProviderMap.entries())
-      .map(([provider, total]) => ({ provider, total }))
-      .sort((a, b) => b.total - a.total);
+    const byProvider = Array.from(byProviderMap.values()).sort((a, b) => b.total - a.total);
 
-    const byMonthMap = new Map<string, { total: number; count: number }>();
+    const byMonthMap = new Map<string, { month: string; total: number; count: number; currency: string }>();
     for (const e of expenses) {
+      const currency = String(e.currency || 'USD').toUpperCase();
       const d = e.paymentDate || e.createdAt;
-      const key = d ? new Date(d).toISOString().slice(0, 7) : 'unknown';
-      const current = byMonthMap.get(key) || { total: 0, count: 0 };
+      const month = d ? new Date(d).toISOString().slice(0, 7) : 'unknown';
+      const key = `${month}:${currency}`;
+      const current = byMonthMap.get(key) || { month, total: 0, count: 0, currency };
       current.total += Number(e.amount || 0);
       current.count += 1;
       byMonthMap.set(key, current);
     }
-    const byMonth = Array.from(byMonthMap.entries())
-      .map(([month, data]) => ({ month, ...data }))
-      .sort((a, b) => a.month.localeCompare(b.month));
+    const byMonth = Array.from(byMonthMap.values()).sort((a, b) => a.month.localeCompare(b.month) || a.currency.localeCompare(b.currency));
 
-    return { totalAmount, totalCount, byProject, byProvider, byMonth };
+    return { totalAmount, totalCount, byCurrency, byProject, byProvider, byMonth };
   }
 
   async getUpcomingRenewals(limit = 10): Promise<HostingExpense[]> {

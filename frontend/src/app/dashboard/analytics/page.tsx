@@ -15,6 +15,7 @@ import {
   labelForAnalyticsPath,
   normalizeAnalyticsPath,
 } from '@/lib/analytics';
+import { formatMoneyBag, rowsToBag } from '@/lib/money'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -47,6 +48,7 @@ const RANGE_OPTIONS: RangeOption[] = [
 
 interface BusinessKpis {
   totalRevenue: number
+  revenueByCurrency: { currency: string; total: number }[]
   activeClients: number
   totalProjects: number
   growthPercent: number
@@ -99,6 +101,7 @@ export default function AnalyticsPage() {
 
         setKpis({
           totalRevenue: inv?.total_revenue ?? 0,
+          revenueByCurrency: inv?.revenue_by_currency || [],
           activeClients: usr?.clients ?? usr?.active ?? 0,
           totalProjects: proj?.total ?? 0,
           growthPercent: inv?.monthly_growth ?? 0,
@@ -357,7 +360,7 @@ export default function AnalyticsPage() {
                 <dl>
                   <dt className="text-sm font-medium text-blue-100 truncate">Total Revenue</dt>
                   <dd className="text-lg font-medium text-white">
-                    ${(kpis?.totalRevenue ?? 0).toLocaleString()}
+                    {formatMoneyBag(rowsToBag(kpis?.revenueByCurrency))}
                   </dd>
                 </dl>
               </div>

@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 import ProjectDetailsModal from './ProjectDetailsModal'
 import EditProjectModal from './EditProjectModal'
+import { formatMoney, moneyCurrencyOf } from '@/lib/money'
 import { 
   ClockIcon,
   CheckCircleIcon,
@@ -262,7 +263,7 @@ const TimelineView = ({ projects, formatDate, getStatusBadge, getPriorityBadge, 
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 truncate text-sm">{p.title}</p>
                 <p className="text-xs text-gray-500 truncate">
-                  {p.client ? `${p.client.firstName} ${p.client.lastName}` : '—'} · ${(p.budget || 0).toLocaleString()}
+                  {p.client ? `${p.client.firstName} ${p.client.lastName}` : '—'} · {formatMoney(p.budget || 0, moneyCurrencyOf(p))}
                 </p>
               </div>
               <button onClick={() => onViewProject(p)} className="p-1 text-gray-400 hover:text-blue-600" title="View">
@@ -1265,9 +1266,9 @@ export default function ProjectTrackingPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="text-sm">
-                              <div>${(project.budget || 0).toLocaleString()}</div>
-                              <div className="text-xs text-gray-500">Spent ${project.spentBudget?.toLocaleString() || '0'}</div>
-                              <div className="text-xs text-gray-500">Remaining ${((project.budget || 0) - (project.spentBudget || 0)).toLocaleString()}</div>
+                              <div>{formatMoney(project.budget || 0, moneyCurrencyOf(project))}</div>
+                              <div className="text-xs text-gray-500">Spent {formatMoney(project.spentBudget || 0, moneyCurrencyOf(project))}</div>
+                              <div className="text-xs text-gray-500">Remaining {formatMoney((project.budget || 0) - (project.spentBudget || 0), moneyCurrencyOf(project))}</div>
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -1359,7 +1360,7 @@ export default function ProjectTrackingPage() {
                 </div>
                 <div>
                   <span className="text-gray-500">Budget:</span>
-                  <p className="font-medium">${(selectedProject.budget || 0).toLocaleString()}</p>
+                  <p className="font-medium">{formatMoney(selectedProject.budget || 0, moneyCurrencyOf(selectedProject))}</p>
                 </div>
                 <div>
                   <span className="text-gray-500">Progress:</span>
@@ -1547,11 +1548,11 @@ export default function ProjectTrackingPage() {
                               </div>
                               <div>
                                 <span className="text-gray-500">Rate:</span>
-                                <p className="font-medium">${resource.hourlyRate}/hr</p>
+                                <p className="font-medium">{formatMoney(resource.hourlyRate, moneyCurrencyOf(selectedProject))}/hr</p>
                               </div>
                               <div>
                                 <span className="text-gray-500">Total Cost:</span>
-                                <p className="font-medium">${(resource.usedHours * resource.hourlyRate).toLocaleString()}</p>
+                                <p className="font-medium">{formatMoney(resource.usedHours * resource.hourlyRate, moneyCurrencyOf(selectedProject))}</p>
                               </div>
                             </div>
                           </div>

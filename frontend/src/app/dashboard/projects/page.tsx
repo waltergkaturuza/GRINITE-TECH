@@ -20,6 +20,8 @@ import {
 } from '@heroicons/react/24/outline'
 import CreateEditProjectForm from './CreateEditProjectForm'
 import ProjectDetailsModal from '../tracking/ProjectDetailsModal'
+import { addToBag, combineBag, defaultFxConfig, formatMoney, formatMoneyBag, moneyCurrencyOf, type FxConfig, type MoneyBag } from '@/lib/money'
+import FxRatesPanel from '@/components/FxRatesPanel'
 
 // Types
 interface Project {
@@ -30,6 +32,8 @@ interface Project {
   status: string
   budget?: number
   totalBudget?: number
+  currency?: string
+  metadata?: { currency?: string }
   startDate?: string
   endDate?: string
   estimatedHours?: number
@@ -53,6 +57,7 @@ interface ProjectStats {
   completed: number
   cancelled: number
   totalBudget: number
+  budgetByCurrency: MoneyBag
   totalActualHours: number
   averageCompletion: number
 }
@@ -79,6 +84,7 @@ export default function ProjectsPage() {
     completed: 0,
     cancelled: 0,
     totalBudget: 0,
+    budgetByCurrency: {},
     totalActualHours: 0,
     averageCompletion: 0
   })
@@ -91,7 +97,9 @@ export default function ProjectsPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [viewingProject, setViewingProject] = useState<Project | null>(null)
-  const [hostingByProject, setHostingByProject] = useState<Record<string, number>>({})
+  const [hostingByProject, setHostingByProject] = useState<Record<string, MoneyBag>>({})
+  const [hostingByCurrency, setHostingByCurrency] = useState<MoneyBag>({})
+  const [fx, setFx] = useState<FxConfig>(defaultFxConfig)
 
   // Load data
   useEffect(() => {
@@ -103,20 +111,25 @@ export default function ProjectsPage() {
     loadHostingStats()
   }, [])
 
-  const [totalHostingCost, setTotalHostingCost] = useState(0)
-
   const loadHostingStats = async () => {
     try {
       const res = await hostingExpensesAPI.getStats()
-      const map: Record<string, number> = {}
+      const map: Record<string, MoneyBag> = {}
       for (const p of res?.byProject || []) {
-        if (p.projectId) map[p.projectId] = p.total
+        if (!p.projectId) continue
+        map[p.projectId] = addToBag(map[p.projectId] || {}, p.total, p.currency)
       }
       setHostingByProject(map)
-      setTotalHostingCost(res?.totalAmount ?? 0)
+      const bag: MoneyBag = {}
+      if (Array.isArray(res?.byCurrency) && res.byCurrency.length) {
+        for (const row of res.byCurrency) addToBag(bag, row.total, row.currency)
+      } else if (res?.totalAmount) {
+        addToBag(bag, res.totalAmount, 'USD')
+      }
+      setHostingByCurrency(bag)
     } catch {
       setHostingByProject({})
-      setTotalHostingCost(0)
+      setHostingByCurrency({})
     }
   }
 
@@ -155,6 +168,7 @@ export default function ProjectsPage() {
         completed: 0,
         cancelled: 0,
         totalBudget: 0,
+        budgetByCurrency: {},
         totalActualHours: 0,
         averageCompletion: 0
       })
@@ -186,10 +200,10 @@ export default function ProjectsPage() {
       const n = Number(v)
       return Number.isFinite(n) ? n : 0
     }
-    const totalBudget = projectsData.reduce(
-      (sum, p) => sum + toNum(p.budget ?? p.totalBudget),
-      0
-    )
+    const budgetByCurrency: MoneyBag = {}
+    for (const p of projectsData) {
+      addToBag(budgetByCurrency, toNum(p.budget ?? p.totalBudget), moneyCurrencyOf(p))
+    }
     const totalActualHours = projectsData.reduce((sum, p) => sum + toNum(p.actualHours), 0)
     const averageCompletion =
       total > 0
@@ -203,7 +217,8 @@ export default function ProjectsPage() {
       review,
       completed,
       cancelled,
-      totalBudget,
+      totalBudget: Object.values(budgetByCurrency).reduce((sum, value) => sum + value, 0),
+      budgetByCurrency,
       totalActualHours,
       averageCompletion
     }
@@ -280,15 +295,6 @@ export default function ProjectsPage() {
     )
   }
 
-  const formatCurrency = (amount: number) => {
-    const n = Number(amount)
-    if (!Number.isFinite(n)) return '$0.00'
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(n)
-  }
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
   }
@@ -347,7 +353,14 @@ export default function ProjectsPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Budget</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.totalBudget)}</p>
+              <p className="text-lg font-semibold text-gray-900 leading-snug">
+                {formatMoneyBag(stats.budgetByCurrency)}
+              </p>
+              {fx.combine && combineBag(stats.budgetByCurrency, fx) != null && Object.keys(stats.budgetByCurrency).length > 1 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Combined ≈ {formatMoney(combineBag(stats.budgetByCurrency, fx), fx.reportingCurrency)}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -359,7 +372,12 @@ export default function ProjectsPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Hosting</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalHostingCost)}</p>
+              <p className="text-lg font-semibold text-gray-900 leading-snug">{formatMoneyBag(hostingByCurrency)}</p>
+              {fx.combine && combineBag(hostingByCurrency, fx) != null && Object.keys(hostingByCurrency).length > 1 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Combined ≈ {formatMoney(combineBag(hostingByCurrency, fx), fx.reportingCurrency)}
+                </p>
+              )}
             </div>
           </div>
           <Link href="/dashboard/hosting-expenses" className="mt-2 block text-xs text-blue-600 hover:underline">
@@ -380,6 +398,10 @@ export default function ProjectsPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <FxRatesPanel tone="light" onChange={setFx} />
       </div>
 
       {/* Filters */}
@@ -534,7 +556,9 @@ export default function ProjectsPage() {
                       {getStatusBadge(project.status)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {(project.budget ?? project.totalBudget) ? formatCurrency(Number(project.budget ?? project.totalBudget) || 0) : 'Not set'}
+                      {(project.budget ?? project.totalBudget)
+                        ? formatMoney(Number(project.budget ?? project.totalBudget) || 0, moneyCurrencyOf(project))
+                        : 'Not set'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {hostingByProject[project.id] != null ? (
@@ -542,7 +566,7 @@ export default function ProjectsPage() {
                           href={`/dashboard/hosting-expenses?projectId=${project.id}`}
                           className="text-blue-600 hover:underline"
                         >
-                          {formatCurrency(hostingByProject[project.id])}
+                          {formatMoneyBag(hostingByProject[project.id])}
                         </Link>
                       ) : (
                         '—'

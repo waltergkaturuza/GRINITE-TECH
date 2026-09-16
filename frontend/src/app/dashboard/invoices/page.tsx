@@ -10,6 +10,8 @@ import {
   FunnelIcon
 } from '@heroicons/react/24/outline'
 import { invoicesAPI } from '../../../lib/api'
+import { formatMoney, formatMoneyBag, invoiceCurrencyOf, rowsToBag, combineBag, defaultFxConfig, type FxConfig } from '@/lib/money'
+import FxRatesPanel from '@/components/FxRatesPanel'
 import InvoiceForm from '../../../components/invoices/InvoiceForm'
 import InvoiceView from '../../../components/invoices/InvoiceView'
 import InvoiceActions from '../../../components/invoices/InvoiceActions'
@@ -26,6 +28,8 @@ interface InvoiceStats {
   overdue_invoices: number
   monthly_revenue: number
   monthly_growth: number
+  revenue_by_currency?: { currency: string; total: number }[]
+  monthly_by_currency?: { currency: string; total: number }[]
 }
 
 export default function InvoicesPage() {
@@ -39,6 +43,7 @@ export default function InvoicesPage() {
   const [openForPrint, setOpenForPrint] = useState(false)
   const [activeTab, setActiveTab] = useState<'invoices' | 'quotations' | 'receipts'>('invoices')
   const [linkedInvoiceForReceipt, setLinkedInvoiceForReceipt] = useState<any>(null)
+  const [fx, setFx] = useState<FxConfig>(defaultFxConfig)
   
   // Filters and pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -183,12 +188,7 @@ export default function InvoicesPage() {
 
   const filteredInvoices = invoices
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number, currency?: string) => formatMoney(amount, currency)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -326,7 +326,14 @@ export default function InvoicesPage() {
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-300 truncate">Total Revenue</dt>
-                    <dd className="text-lg font-medium text-white">{formatCurrency(stats.total_revenue)}</dd>
+                    <dd className="text-lg font-medium text-white leading-snug">
+                      {formatMoneyBag(rowsToBag(stats.revenue_by_currency))}
+                      {fx.combine && combineBag(rowsToBag(stats.revenue_by_currency), fx) != null && (stats.revenue_by_currency?.length || 0) > 1 && (
+                        <div className="text-xs text-gray-400 font-normal mt-1">
+                          Combined ≈ {formatMoney(combineBag(rowsToBag(stats.revenue_by_currency), fx), fx.reportingCurrency)}
+                        </div>
+                      )}
+                    </dd>
                   </dl>
                 </div>
               </div>
@@ -360,6 +367,8 @@ export default function InvoicesPage() {
           </div>
         </div>
       )}
+
+      {!isReceiptTab && <FxRatesPanel tone="dark" onChange={setFx} />}
 
       {/* Filters and Search */}
       <div className="bg-granite-800 shadow rounded-lg border border-granite-700 p-4">
@@ -473,10 +482,10 @@ export default function InvoicesPage() {
                         {invoice.project?.title || invoice.parent_invoice?.project?.title || '—'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
-                        {formatCurrency(invoice.total_amount)}
+                        {formatCurrency(invoice.total_amount, invoiceCurrencyOf(invoice))}
                         {!isReceiptTab && activeTab === 'invoices' && Number(invoice.amount_paid) > 0 && (
                           <div className="text-xs text-gray-400 font-normal">
-                            Paid: {formatCurrency(Number(invoice.amount_paid))}
+                            Paid: {formatCurrency(Number(invoice.amount_paid), invoiceCurrencyOf(invoice))}
                           </div>
                         )}
                       </td>

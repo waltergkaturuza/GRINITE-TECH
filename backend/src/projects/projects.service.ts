@@ -214,7 +214,14 @@ export class ProjectsService {
     const completed = projects.filter(p => p.status === ProjectStatus.COMPLETED).length;
     const cancelled = projects.filter(p => p.status === ProjectStatus.CANCELLED).length;
 
-    const totalBudget = projects.reduce((sum, project) => sum + (project.budget || 0), 0);
+    const budgetByCurrencyMap = new Map<string, number>();
+    for (const project of projects) {
+      const raw = String(project.metadata?.currency || 'USD').trim().toUpperCase();
+      const currency = raw === 'ZIG' || raw === 'ZWG' || raw === 'ZWL' || raw === 'Z$' ? 'ZWG' : (raw || 'USD');
+      budgetByCurrencyMap.set(currency, (budgetByCurrencyMap.get(currency) || 0) + Number(project.budget || project.totalBudget || 0));
+    }
+    const budgetByCurrency = Array.from(budgetByCurrencyMap.entries()).map(([currency, total]) => ({ currency, total }));
+    const totalBudget = budgetByCurrency.length <= 1 ? (budgetByCurrency[0]?.total || 0) : 0;
     const totalActualHours = projects.reduce((sum, project) => sum + (project.actualHours || 0), 0);
     const averageCompletion = total > 0 
       ? projects.reduce((sum, project) => sum + project.completionPercentage, 0) / total 
@@ -228,6 +235,7 @@ export class ProjectsService {
       completed,
       cancelled,
       totalBudget,
+      budgetByCurrency,
       totalActualHours,
       averageCompletion: Math.round(averageCompletion * 100) / 100,
     };

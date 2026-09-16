@@ -1,4 +1,5 @@
 import { QUANTIS_LETTERHEAD } from './companyLetterhead'
+import { formatMoney, currencyLabel } from './money'
 
 export function asMoney(value: unknown): number {
   const n = typeof value === 'number' ? value : Number(value)
@@ -55,7 +56,7 @@ export function normalizeInvoice(invoice: any) {
 }
 
 export const formatCurrency = (amount: unknown, currency = QUANTIS_LETTERHEAD.currency) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(asMoney(amount))
+  formatMoney(amount, currency)
 
 export const formatDate = (dateString?: string | Date) => {
   if (!dateString) return '—'
@@ -156,7 +157,7 @@ export function amountInWords(amount: number, currency = 'USD'): string {
   const cents = Math.round((amount - dollars) * 100)
   const dollarWords = numberToWords(dollars)
   const centPart = cents > 0 ? ` and ${cents}/100` : ', 00ct'
-  return `${dollarWords} ${currency}${centPart}.`
+  return `${dollarWords} ${currencyLabel(currency)}${centPart}.`
 }
 
 export function getPaymentStatusLabel(invoice: { status?: string; total_amount?: number; amount_paid?: number }) {

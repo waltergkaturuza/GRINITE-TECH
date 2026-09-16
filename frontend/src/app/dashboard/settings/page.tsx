@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { PhotoIcon } from '@heroicons/react/24/outline'
+import FxRatesPanel from '@/components/FxRatesPanel'
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -69,6 +70,16 @@ export default function SettingsPage() {
                 <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-granite-800 shadow rounded-lg border border-granite-700 mb-6">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg font-medium text-white mb-4">Currencies & exchange rates</h3>
+            <p className="text-sm text-gray-400 mb-4">
+              USD and ZiG stay separate across accounts, projects, invoices, and hosting. Combine totals only after you set a rate.
+            </p>
+            <FxRatesPanel tone="dark" />
           </div>
         </div>
 

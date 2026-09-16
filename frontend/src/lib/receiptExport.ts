@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx'
 import { QUANTIS_LETTERHEAD, formatSellerBankBlock } from './companyLetterhead'
 import { getVatRate } from './invoiceUtils'
+import { formatMoney, invoiceCurrencyOf } from './money'
 
 export type ReceiptDocument = {
   invoice_number: string
@@ -28,8 +29,9 @@ export type ReceiptDocument = {
   company_usd_account?: string
   company_zig_account?: string
   client?: { firstName?: string; lastName?: string; company?: string; email?: string }
-  project?: { title?: string }
-  parent_invoice?: { tax_rate?: number; project?: { title?: string }; total_amount?: number }
+  project?: { title?: string; currency?: string; metadata?: { currency?: string } }
+  parent_invoice?: { tax_rate?: number; currency?: string; project?: { title?: string; currency?: string; metadata?: { currency?: string } }; total_amount?: number }
+  currency?: string
   items?: Array<{
     description: string
     quantity: number
@@ -48,8 +50,12 @@ const formatDate = (dateString?: string) => {
   })
 }
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: QUANTIS_LETTERHEAD.currency }).format(amount)
+export const formatCurrency = (amount: number, currency?: string) =>
+  formatMoney(amount, currency || QUANTIS_LETTERHEAD.currency)
+
+function money(receipt: ReceiptDocument, amount: number) {
+  return formatCurrency(amount, invoiceCurrencyOf(receipt))
+}
 
 function vatLine(receipt: ReceiptDocument) {
   const rate = getVatRate(receipt.parent_invoice || receipt)
@@ -57,7 +63,7 @@ function vatLine(receipt: ReceiptDocument) {
   return {
     label: showVat ? `V.A.T (${rate}%)` : 'V.A.T',
     amount: showVat ? receipt.tax_amount : 0,
-    display: showVat ? formatCurrency(receipt.tax_amount) : '—',
+    display: showVat ? money(receipt, receipt.tax_amount) : '—',
   }
 }
 
@@ -85,9 +91,9 @@ export function exportReceiptWord(receipt: ReceiptDocument) {
       <tr>
         <td style="border:1px solid #ccc;padding:8px;">${item.description}</td>
         <td style="border:1px solid #ccc;padding:8px;text-align:center;">${item.quantity}</td>
-        <td style="border:1px solid #ccc;padding:8px;text-align:right;">${formatCurrency(item.unit_price)}</td>
+        <td style="border:1px solid #ccc;padding:8px;text-align:right;">${money(receipt, item.unit_price)}</td>
         <td style="border:1px solid #ccc;padding:8px;text-align:center;">${item.discount_percent || 0}%</td>
-        <td style="border:1px solid #ccc;padding:8px;text-align:right;">${formatCurrency(item.total_price)}</td>
+        <td style="border:1px solid #ccc;padding:8px;text-align:right;">${money(receipt, item.total_price)}</td>
       </tr>`
     )
     .join('')
@@ -135,9 +141,9 @@ export function exportReceiptWord(receipt: ReceiptDocument) {
     <tbody>${rows}</tbody>
   </table>
   <div style="width:280px;margin-left:auto;">
-    <p style="display:flex;justify-content:space-between;"><span>SUB-TOTAL</span><span>${formatCurrency(receipt.subtotal)}</span></p>
+    <p style="display:flex;justify-content:space-between;"><span>SUB-TOTAL</span><span>${money(receipt, receipt.subtotal)}</span></p>
     <p style="display:flex;justify-content:space-between;"><span>${vatLine(receipt).label}</span><span>${vatLine(receipt).display}</span></p>
-    <p style="display:flex;justify-content:space-between;font-weight:bold;font-size:18px;"><span>TOTAL</span><span>${formatCurrency(receipt.total_amount)}</span></p>
+    <p style="display:flex;justify-content:space-between;font-weight:bold;font-size:18px;"><span>TOTAL</span><span>${money(receipt, receipt.total_amount)}</span></p>
   </div>
 </body></html>`
 
@@ -185,4 +191,4 @@ export function exportReceiptPDF() {
   window.print()
 }
 
-export { formatCurrency, formatDate, clientName }
+export { formatDate, clientName }

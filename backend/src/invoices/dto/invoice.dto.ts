@@ -91,6 +91,10 @@ export class CreateInvoiceDto {
 
   @IsOptional()
   @IsString()
+  currency?: string;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 
   @IsOptional()
@@ -266,6 +270,10 @@ export class UpdateInvoiceDto {
 
   @IsOptional()
   @IsString()
+  currency?: string;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 
   @IsOptional()
@@ -415,4 +423,6 @@ export class InvoiceStatsDto {
   overdue_invoices: number;
   monthly_revenue: number;
   monthly_growth: number;
+  revenue_by_currency: { currency: string; total: number }[];
+  monthly_by_currency: { currency: string; total: number }[];
 }

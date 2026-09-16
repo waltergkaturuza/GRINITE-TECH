@@ -19,6 +19,7 @@ import {
 import { projectsAPI, authAPI, dashboardAPI } from '../../lib/api'
 import DocumentManager from '@/components/DocumentManager'
 import { canManageCompanyDocuments } from '@/lib/dashboardRoles'
+import { formatMoney, moneyCurrencyOf } from '@/lib/money'
 
 interface Project {
   id: string
@@ -36,6 +37,8 @@ interface Project {
   estimatedHours?: number
   actualHours?: number
   budget?: number
+  currency?: string
+  metadata?: { currency?: string }
 }
 
 interface DashboardStats {
@@ -469,7 +472,7 @@ export default function DashboardPage() {
                             <div className="flex justify-between items-center">
                               <span className="text-sm font-medium text-granite-600">Budget:</span>
                               <span className="text-granite-800">
-                                ${selectedProject.budget.toLocaleString()}
+                                {formatMoney(selectedProject.budget, moneyCurrencyOf(selectedProject))}
                               </span>
                             </div>
                           )}

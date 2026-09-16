@@ -12,6 +12,19 @@ import {
   ArrowTrendingDownIcon,
 } from '@heroicons/react/24/outline'
 import { hostingExpensesAPI, invoicesAPI, ledgerAPI, projectsAPI } from '@/lib/api'
+import {
+  CURRENCY_OPTIONS,
+  addToBag,
+  combineBag,
+  currencyLabel,
+  defaultFxConfig,
+  formatMoney,
+  loadFxConfig,
+  normalizeCurrency,
+  type FxConfig,
+  type MoneyBag,
+} from '@/lib/money'
+import FxRatesPanel from '@/components/FxRatesPanel'
 
 interface LedgerAccount {
   id: string
@@ -364,6 +377,7 @@ export default function AccountsPage() {
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [purposeFilter, setPurposeFilter] = useState('all')
+  const [fx, setFx] = useState<FxConfig>(defaultFxConfig)
 
   const [accountForm, setAccountForm] = useState({
     name: '',
@@ -378,6 +392,7 @@ export default function AccountsPage() {
   useEffect(() => {
     loadAccounts()
     loadLookups()
+    setFx(loadFxConfig())
   }, [])
 
   useEffect(() => {
@@ -468,7 +483,7 @@ export default function AccountsPage() {
       const payload = {
         name: accountForm.name,
         type: accountForm.type,
-        currency: accountForm.currency,
+        currency: normalizeCurrency(accountForm.currency),
         openingBalance: parseFloat(accountForm.openingBalance) || 0,
         description: accountForm.description || undefined,
       }
@@ -605,19 +620,18 @@ export default function AccountsPage() {
     }
   }
 
-  const formatCurrency = (amount: number, currency = 'USD') => {
-    try {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(amount) || 0)
-    } catch {
-      return `${currency} ${(Number(amount) || 0).toLocaleString()}`
-    }
-  }
-
   const formatDate = (value?: string) =>
     value ? new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
   const currentBalance = accountsWithBalances.find((row) => row.account.id === selectedAccount?.id)?.balance ?? 0
-  const totalBalance = accountsWithBalances.reduce((sum, row) => sum + row.balance, 0)
+  const balancesByCurrency = useMemo(() => {
+    const bag: MoneyBag = {}
+    for (const row of accountsWithBalances) {
+      addToBag(bag, row.balance, row.account.currency)
+    }
+    return bag
+  }, [accountsWithBalances])
+  const combinedBalance = fx.combine ? combineBag(balancesByCurrency, fx) : null
 
   const filteredEntries = entries.filter((entry) => {
     const purpose = purposeFor(entry.category, entry.type)
@@ -707,24 +721,51 @@ export default function AccountsPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-lg border border-white/10 bg-white/5 p-5">
-          <p className="text-sm text-gray-400">Total balance</p>
-          <p className={`text-2xl font-semibold ${totalBalance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {formatCurrency(totalBalance, selectedAccount?.currency || 'USD')}
+          <p className="text-sm text-gray-400">Balances by currency</p>
+          <div className="mt-1 space-y-1">
+            {Object.keys(balancesByCurrency).length === 0 ? (
+              <p className="text-2xl font-semibold text-gray-500">—</p>
+            ) : (
+              Object.entries(balancesByCurrency).map(([code, amount]) => (
+                <p
+                  key={code}
+                  className={`text-2xl font-semibold ${amount >= 0 ? 'text-green-400' : 'text-red-400'}`}
+                >
+                  {formatMoney(amount, code)}
+                </p>
+              ))
+            )}
+          </div>
+          {fx.combine && combinedBalance != null && Object.keys(balancesByCurrency).length > 1 && (
+            <p className="mt-2 text-xs text-gray-400">
+              Combined ≈ {formatMoney(combinedBalance, fx.reportingCurrency)}
+            </p>
+          )}
+          {fx.combine && combinedBalance == null && Object.keys(balancesByCurrency).length > 1 && (
+            <p className="mt-2 text-xs text-amber-300">Set an exchange rate below to combine currencies.</p>
+          )}
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/5 p-5">
+          <p className="text-sm text-gray-400">{selectedAccount ? `Money in this month · ${currencyLabel(selectedAccount.currency)}` : 'Money in this month'}</p>
+          <p className="text-2xl font-semibold text-green-400">
+            {selectedAccount ? formatMoney(monthStats.moneyIn, selectedAccount.currency) : '—'}
           </p>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 p-5">
-          <p className="text-sm text-gray-400">Money in this month</p>
-          <p className="text-2xl font-semibold text-green-400">{formatCurrency(monthStats.moneyIn, selectedAccount?.currency)}</p>
+          <p className="text-sm text-gray-400">{selectedAccount ? `Money out this month · ${currencyLabel(selectedAccount.currency)}` : 'Money out this month'}</p>
+          <p className="text-2xl font-semibold text-red-400">
+            {selectedAccount ? formatMoney(monthStats.moneyOut, selectedAccount.currency) : '—'}
+          </p>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 p-5">
-          <p className="text-sm text-gray-400">Money out this month</p>
-          <p className="text-2xl font-semibold text-red-400">{formatCurrency(monthStats.moneyOut, selectedAccount?.currency)}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-5">
-          <p className="text-sm text-gray-400">Bank charges this month</p>
-          <p className="text-2xl font-semibold text-amber-300">{formatCurrency(monthStats.charges, selectedAccount?.currency)}</p>
+          <p className="text-sm text-gray-400">{selectedAccount ? `Bank charges this month · ${currencyLabel(selectedAccount.currency)}` : 'Bank charges this month'}</p>
+          <p className="text-2xl font-semibold text-amber-300">
+            {selectedAccount ? formatMoney(monthStats.charges, selectedAccount.currency) : '—'}
+          </p>
         </div>
       </div>
+
+      <FxRatesPanel tone="dark" onChange={setFx} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="rounded-lg border border-white/10 bg-white/5">
@@ -753,11 +794,11 @@ export default function AccountsPage() {
                 >
                   <div>
                     <p className="font-medium text-white">{account.name}</p>
-                    <p className="text-xs text-gray-500 capitalize">{account.type.replace('_', ' ')} · {account.currency}</p>
+                    <p className="text-xs text-gray-500 capitalize">{account.type.replace('_', ' ')} · {currencyLabel(account.currency)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={balance >= 0 ? 'text-green-400' : 'text-red-400'}>
-                      {formatCurrency(balance, account.currency)}
+                      {formatMoney(balance, account.currency)}
                     </span>
                     <button
                       onClick={(e) => {
@@ -793,7 +834,7 @@ export default function AccountsPage() {
                   <p className="text-sm text-gray-400">
                     Balance:{' '}
                     <span className={currentBalance >= 0 ? 'text-green-400' : 'text-red-400'}>
-                      {formatCurrency(currentBalance, selectedAccount.currency)}
+                      {formatMoney(currentBalance, selectedAccount.currency)}
                     </span>
                   </p>
                 </div>
@@ -858,11 +899,11 @@ export default function AccountsPage() {
                           <td className="px-4 py-2 text-right text-sm font-medium">
                             <span className={isMoneyIn(entry.type) ? 'text-green-400' : 'text-red-400'}>
                               {isMoneyIn(entry.type) ? '+' : '-'}
-                              {formatCurrency(Number(entry.amount), selectedAccount.currency)}
+                              {formatMoney(Number(entry.amount), selectedAccount.currency)}
                             </span>
                           </td>
                           <td className="px-4 py-2 text-right text-xs text-gray-400">
-                            {formatCurrency(entry.runningBalance, selectedAccount.currency)}
+                            {formatMoney(entry.runningBalance, selectedAccount.currency)}
                           </td>
                           <td className="px-4 py-2 text-right whitespace-nowrap">
                             <button onClick={() => openEditEntry(entry)} className="p-1 text-yellow-400 hover:text-yellow-300" title="Edit">
@@ -920,7 +961,15 @@ export default function AccountsPage() {
                 </label>
                 <label className="block text-sm text-gray-400">
                   Currency
-                  <input value={accountForm.currency} onChange={(e) => setAccountForm((f) => ({ ...f, currency: e.target.value }))} className={`${inputClass} mt-1`} />
+                  <select
+                    value={normalizeCurrency(accountForm.currency)}
+                    onChange={(e) => setAccountForm((f) => ({ ...f, currency: e.target.value }))}
+                    className={`${inputClass} mt-1`}
+                  >
+                    {CURRENCY_OPTIONS.map((item) => (
+                      <option key={item.code} value={item.code}>{item.label}</option>
+                    ))}
+                  </select>
                 </label>
               </div>
               <label className="block text-sm text-gray-400">
@@ -1039,7 +1088,7 @@ export default function AccountsPage() {
                       <option key={String(invoice.id)} value={String(invoice.id)}>
                         {invoice.document_type === 'receipt' ? 'Receipt' : 'Invoice'} · {invoice.invoice_number || invoice.id}
                         {invoice.client_name ? ` · ${invoice.client_name}` : ''}
-                        {invoice.total_amount ? ` · ${formatCurrency(Number(invoice.document_type === 'receipt' ? invoice.total_amount : invoice.amount_due ?? invoice.total_amount), selectedAccount.currency)}` : ''}
+                        {invoice.total_amount ? ` · ${formatMoney(Number(invoice.document_type === 'receipt' ? invoice.total_amount : invoice.amount_due ?? invoice.total_amount), selectedAccount.currency)}` : ''}
                       </option>
                     ))}
                   </select>
@@ -1062,7 +1111,7 @@ export default function AccountsPage() {
                       .filter((item) => !entryForm.projectId || item.projectId === entryForm.projectId)
                       .map((item) => (
                         <option key={item.id} value={item.id}>
-                          {item.provider || 'Hosting'} · {formatCurrency(Number(item.amount), selectedAccount.currency)}
+                          {item.provider || 'Hosting'} · {formatMoney(Number(item.amount), selectedAccount.currency)}
                         </option>
                       ))}
                   </select>

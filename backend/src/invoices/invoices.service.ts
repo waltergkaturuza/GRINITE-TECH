@@ -36,6 +36,40 @@ function documentKind(value: unknown): string {
   return String(value || 'invoice').toLowerCase();
 }
 
+function normalizeMoneyCode(code?: string | null): string {
+  const raw = String(code || 'USD').trim().toUpperCase();
+  if (!raw) return 'USD';
+  if (raw === 'ZIG' || raw === 'ZWG' || raw === 'ZWL' || raw === 'Z$') return 'ZWG';
+  return raw;
+}
+
+function moneyCodeOf(invoice: {
+  currency?: string;
+  project?: Project | null;
+  parent_invoice?: Invoice | null;
+}): string {
+  return normalizeMoneyCode(
+    invoice.currency
+    || invoice.project?.metadata?.currency
+    || invoice.parent_invoice?.currency
+    || invoice.parent_invoice?.project?.metadata?.currency,
+  );
+}
+
+function isSalesInvoice(invoice: { document_type?: string }): boolean {
+  const kind = documentKind(invoice.document_type);
+  return kind === 'invoice' || kind === '';
+}
+
+function bagFromDocs(docs: Invoice[], pickAmount: (doc: Invoice) => number) {
+  const bag = new Map<string, number>();
+  for (const doc of docs) {
+    const code = moneyCodeOf(doc);
+    bag.set(code, (bag.get(code) || 0) + pickAmount(doc));
+  }
+  return Array.from(bag.entries()).map(([currency, total]) => ({ currency, total }));
+}
+
 function invoiceDbError(error: unknown) {
   const driver = (error as { driverError?: { code?: string; detail?: string; message?: string } })?.driverError;
   const code = driver?.code || (error as { code?: string })?.code;
@@ -102,12 +136,19 @@ export class InvoicesService {
       ? parentInvoice.project_id
       : projectId;
 
+    let resolvedProject: Project | null = null;
     if (resolvedProjectId) {
-      const project = await this.projectRepository.findOne({ where: { id: resolvedProjectId } });
-      if (!project) {
+      resolvedProject = await this.projectRepository.findOne({ where: { id: resolvedProjectId } });
+      if (!resolvedProject) {
         throw new BadRequestException('Selected project was not found');
       }
     }
+
+    const currency = normalizeMoneyCode(
+      isReceipt && parentInvoice
+        ? parentInvoice.currency || parentInvoice.project?.metadata?.currency
+        : (invoiceData as { currency?: string }).currency || resolvedProject?.metadata?.currency,
+    );
 
     const calcLineTotal = (item: { quantity: number; unit_price: number; discount_percent?: number }) => {
       const qty = Number(item.quantity) || 0;
@@ -236,6 +277,7 @@ export class InvoicesService {
         buyer_bank_name: invoiceData.buyer_bank_name || null,
         buyer_swift: invoiceData.buyer_swift || null,
         buyer_iban: invoiceData.buyer_iban || null,
+        currency,
       };
 
       for (const [key, value] of Object.entries(extras)) {
@@ -339,26 +381,28 @@ export class InvoicesService {
     return { invoices, total };
   }
 
-  async getClientRevenue(clientId: string): Promise<{ totalRevenue: number; paidCount: number; pendingAmount: number }> {
-    const paid = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .select('COALESCE(SUM(invoice.total_amount), 0)', 'total')
-      .where('invoice.client_id = :clientId', { clientId })
-      .andWhere('invoice.status = :status', { status: InvoiceStatus.PAID })
-      .getRawOne();
-    const pending = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .select('COALESCE(SUM(invoice.total_amount), 0)', 'total')
-      .where('invoice.client_id = :clientId', { clientId })
-      .andWhere('invoice.status = :status', { status: InvoiceStatus.SENT })
-      .getRawOne();
-    const paidCount = await this.invoiceRepository.count({
-      where: { client_id: clientId, status: InvoiceStatus.PAID },
+  async getClientRevenue(clientId: string): Promise<{
+    totalRevenue: number;
+    paidCount: number;
+    pendingAmount: number;
+    revenue_by_currency: { currency: string; total: number }[];
+    pending_by_currency: { currency: string; total: number }[];
+  }> {
+    const invoices = await this.invoiceRepository.find({
+      where: { client_id: clientId },
+      relations: ['project'],
     });
+    const sales = invoices.filter(isSalesInvoice);
+    const paid = sales.filter((inv) => String(inv.status).toLowerCase() === InvoiceStatus.PAID);
+    const pending = sales.filter((inv) => String(inv.status).toLowerCase() === InvoiceStatus.SENT);
+    const revenue_by_currency = bagFromDocs(paid, (inv) => money(inv.total_amount));
+    const pending_by_currency = bagFromDocs(pending, (inv) => money(inv.total_amount));
     return {
-      totalRevenue: parseFloat(paid?.total || '0'),
-      paidCount,
-      pendingAmount: parseFloat(pending?.total || '0'),
+      totalRevenue: revenue_by_currency.length <= 1 ? (revenue_by_currency[0]?.total || 0) : 0,
+      paidCount: paid.length,
+      pendingAmount: pending_by_currency.length <= 1 ? (pending_by_currency[0]?.total || 0) : 0,
+      revenue_by_currency,
+      pending_by_currency,
     };
   }
 
@@ -606,17 +650,12 @@ export class InvoicesService {
       overdue_invoices: 0,
       monthly_revenue: 0,
       monthly_growth: 0,
+      revenue_by_currency: [],
+      monthly_by_currency: [],
     }
 
     try {
       const totalInvoices = await this.invoiceRepository.count();
-
-      const totalRevenueResult = await this.invoiceRepository
-        .createQueryBuilder('invoice')
-        .select('COALESCE(SUM(invoice.total_amount), 0)', 'total')
-        .where('invoice.status = :status', { status: InvoiceStatus.PAID })
-        .getRawOne();
-
       const paidInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.PAID } });
       const pendingInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.SENT } });
       const draftInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.DRAFT } });
@@ -627,36 +666,32 @@ export class InvoicesService {
         },
       });
 
+      const paidDocs = await this.invoiceRepository.find({
+        where: { status: InvoiceStatus.PAID },
+        relations: ['project'],
+      });
+      const sales = paidDocs.filter(isSalesInvoice);
+      const revenue_by_currency = bagFromDocs(sales, (inv) => money(inv.total_amount));
+
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
-
-      const monthlyRevenueResult = await this.invoiceRepository
-        .createQueryBuilder('invoice')
-        .select('COALESCE(SUM(invoice.total_amount), 0)', 'monthly')
-        .where('invoice.status = :status', { status: InvoiceStatus.PAID })
-        .andWhere('invoice.payment_date BETWEEN :start AND :end', {
-          start: startOfMonth,
-          end: endOfMonth,
-        })
-        .getRawOne();
-
+      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59);
       const startOfPrevMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
-      const endOfPrevMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0);
+      const endOfPrevMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0, 23, 59, 59);
 
-      const prevMonthRevenueResult = await this.invoiceRepository
-        .createQueryBuilder('invoice')
-        .select('COALESCE(SUM(invoice.total_amount), 0)', 'previous')
-        .where('invoice.status = :status', { status: InvoiceStatus.PAID })
-        .andWhere('invoice.payment_date BETWEEN :start AND :end', {
-          start: startOfPrevMonth,
-          end: endOfPrevMonth,
-        })
-        .getRawOne();
+      const inRange = (date: Date | string | null | undefined, start: Date, end: Date) => {
+        if (!date) return false;
+        const parsed = new Date(date);
+        return parsed >= start && parsed <= end;
+      };
 
-      const totalRevenue = parseFloat(String(totalRevenueResult?.total ?? '0')) || 0;
-      const monthlyRevenue = parseFloat(String(monthlyRevenueResult?.monthly ?? '0')) || 0;
-      const prevMonthRevenue = parseFloat(String(prevMonthRevenueResult?.previous ?? '0')) || 0;
+      const monthlySales = sales.filter((inv) => inRange(inv.payment_date, startOfMonth, endOfMonth));
+      const prevMonthSales = sales.filter((inv) => inRange(inv.payment_date, startOfPrevMonth, endOfPrevMonth));
+      const monthly_by_currency = bagFromDocs(monthlySales, (inv) => money(inv.total_amount));
+      const prevMonthBag = bagFromDocs(prevMonthSales, (inv) => money(inv.total_amount));
 
+      const totalRevenue = revenue_by_currency.length <= 1 ? (revenue_by_currency[0]?.total || 0) : 0;
+      const monthlyRevenue = monthly_by_currency.length <= 1 ? (monthly_by_currency[0]?.total || 0) : 0;
+      const prevMonthRevenue = prevMonthBag.length <= 1 ? (prevMonthBag[0]?.total || 0) : 0;
       const monthlyGrowth = prevMonthRevenue > 0
         ? ((monthlyRevenue - prevMonthRevenue) / prevMonthRevenue) * 100
         : monthlyRevenue > 0 ? 100 : 0;
@@ -670,6 +705,8 @@ export class InvoicesService {
         overdue_invoices: overdueInvoices,
         monthly_revenue: monthlyRevenue,
         monthly_growth: monthlyGrowth,
+        revenue_by_currency,
+        monthly_by_currency,
       };
     } catch (error) {
       this.logger.error('Failed to load invoice stats', error instanceof Error ? error.stack : error);
@@ -731,6 +768,7 @@ export class InvoicesService {
       payment_terms: originalInvoice.payment_terms,
       tax_rate: toNumber(originalInvoice.tax_rate),
       discount_amount: toNumber(originalInvoice.discount_amount),
+      currency: originalInvoice.currency || 'USD',
       notes: originalInvoice.notes,
       terms_conditions: originalInvoice.terms_conditions,
       billing_address: originalInvoice.billing_address,

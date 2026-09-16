@@ -7,11 +7,12 @@ import {
   exportReceiptPDF,
   exportReceiptWord,
   exportReceiptExcel,
-  formatCurrency,
+  formatCurrency as formatCurrencyAmount,
   formatDate,
   clientName,
 } from '../../lib/receiptExport'
 import { getVatRate } from '../../lib/invoiceUtils'
+import { invoiceCurrencyOf } from '../../lib/money'
 
 interface ReceiptViewProps {
   receipt: any
@@ -23,6 +24,7 @@ interface ReceiptViewProps {
 export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: ReceiptViewProps) {
   const printRef = useRef<HTMLDivElement>(null)
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const formatCurrency = (amount: number) => formatCurrencyAmount(amount, invoiceCurrencyOf(receipt))
 
   useEffect(() => {
     if (autoPrint && receipt) {
