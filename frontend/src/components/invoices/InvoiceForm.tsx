@@ -134,7 +134,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
           unit: item.unit || 'ea',
           quantity: asMoney(item.quantity) || 1,
           unit_price: asMoney(item.unit_price),
-          tax_rate: asMoney(item.tax_rate),
+          tax_rate: asMoney(inv.tax_rate),
           total_price: asMoney(item.total_price),
         })))
       }
@@ -226,7 +226,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
           unit: item.unit || 'ea',
           quantity: asMoney(item.quantity) || 1,
           unit_price: asMoney(item.unit_price),
-          tax_rate: asMoney(item.tax_rate),
+          tax_rate: asMoney(formData.tax_rate),
         })),
     }
     
@@ -422,7 +422,12 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
               min="0"
               max="100"
               value={formData.tax_rate}
-              onChange={(e) => setFormData(prev => ({ ...prev, tax_rate: parseFloat(e.target.value) || 0 }))}
+              onChange={(e) => {
+                const rate = parseFloat(e.target.value)
+                const nextRate = Number.isFinite(rate) ? rate : 0
+                setFormData((prev) => ({ ...prev, tax_rate: nextRate }))
+                setItems((prev) => prev.map((item) => ({ ...item, tax_rate: nextRate })))
+              }}
               className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
             />
           </div>

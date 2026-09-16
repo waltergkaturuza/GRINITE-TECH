@@ -11,6 +11,7 @@ import {
   formatDate,
   clientName,
 } from '../../lib/receiptExport'
+import { getVatRate } from '../../lib/invoiceUtils'
 
 interface ReceiptViewProps {
   receipt: any
@@ -36,6 +37,10 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
     receipt.company_logo_url?.startsWith('http')
       ? receipt.company_logo_url
       : `${typeof window !== 'undefined' ? window.location.origin : ''}${receipt.company_logo_url || QUANTIS_LETTERHEAD.company_logo_url}`
+
+  const vatRate = getVatRate(receipt.parent_invoice || receipt)
+  const showVat = vatRate > 0.001 && Number(receipt.tax_amount) > 0
+  const projectTitle = receipt.project?.title || receipt.parent_invoice?.project?.title
 
   const handleExport = (type: 'pdf' | 'word' | 'excel') => {
     setShowExportMenu(false)
@@ -150,6 +155,12 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
                   <span>{receipt.payment_method}</span>
                 </p>
               )}
+              {projectTitle && (
+                <p>
+                  <span className="text-gray-500">Project: </span>
+                  <span>{projectTitle}</span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -194,8 +205,8 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
                 <span>{formatCurrency(Number(receipt.subtotal))}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-semibold">V.A.T ({receipt.tax_rate || 0}%)</span>
-                <span>{formatCurrency(Number(receipt.tax_amount))}</span>
+                <span className="font-semibold">V.A.T {showVat ? `(${vatRate}%)` : ''}</span>
+                <span>{showVat ? formatCurrency(Number(receipt.tax_amount)) : '—'}</span>
               </div>
               <div className="flex justify-between text-lg font-bold border-t border-gray-400 pt-2">
                 <span>TOTAL</span>

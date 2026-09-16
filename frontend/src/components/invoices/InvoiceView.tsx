@@ -12,6 +12,7 @@ import {
   amountInWords,
   getBalanceDue,
   getPaymentStatusLabel,
+  getVatRate,
 } from '../../lib/invoiceUtils'
 
 interface InvoiceViewProps {
@@ -70,10 +71,11 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
       ? `Paid in full · ${formatCurrency(invoice.total_amount)}`
       : `${formatCurrency(balanceDue > 0 ? balanceDue : invoice.total_amount)} due ${formatDate(invoice.due_date)}`
 
+  const vatRate = getVatRate(invoice)
+
   const itemVat = (item: any) => {
-    const rate = item.tax_rate ?? invoice.tax_rate ?? 0
     const lineTotal = Number(item.total_price || item.quantity * item.unit_price)
-    return (rate / 100) * lineTotal
+    return (vatRate / 100) * lineTotal
   }
 
   return (
@@ -196,7 +198,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
                   const vat = itemVat(item)
                   const lineTotal = Number(item.total_price || 0)
                   const withVat = lineTotal + vat
-                  const rate = item.tax_rate ?? invoice.tax_rate ?? 0
+                  const rate = vatRate
                   return (
                     <tr key={index} className="border-b border-gray-100 align-top">
                       <td className="py-3 pr-3">
@@ -229,7 +231,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
                 </div>
               )}
               <div className="flex justify-between text-gray-600">
-                <span>VAT</span>
+                <span>VAT{vatRate > 0 ? ` (${vatRate}%)` : ''}</span>
                 <span>{Number(invoice.tax_amount) > 0 ? formatCurrency(invoice.tax_amount) : '—'}</span>
               </div>
               <div className="flex justify-between font-semibold text-gray-900 border-t border-gray-300 pt-2">

@@ -147,17 +147,24 @@ export default function InvoicesPage() {
     try {
       const full = invoice?.id ? await invoicesAPI.getInvoice(invoice.id) : invoice
       setSelectedInvoice(full)
+      if (full?.document_type === 'receipt' && (full.parent_invoice_id || full.parent_invoice)) {
+        const parent = full.parent_invoice?.id
+          ? full.parent_invoice
+          : await invoicesAPI.getInvoice(full.parent_invoice_id)
+        setLinkedInvoiceForReceipt(parent)
+      } else {
+        setLinkedInvoiceForReceipt(null)
+      }
     } catch {
       setSelectedInvoice(invoice)
+      setLinkedInvoiceForReceipt(invoice?.parent_invoice || null)
     }
     setShowForm(true)
   }
 
   const handleViewInvoice = async (invoice: any) => {
     try {
-      const full = invoice.document_type === 'invoice'
-        ? await invoicesAPI.getInvoice(invoice.id)
-        : invoice
+      const full = invoice?.id ? await invoicesAPI.getInvoice(invoice.id) : invoice
       setSelectedInvoice(full)
       setShowView(true)
     } catch {
@@ -463,7 +470,7 @@ export default function InvoicesPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 hidden md:table-cell">
-                        {invoice.project?.title || '—'}
+                        {invoice.project?.title || invoice.parent_invoice?.project?.title || '—'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
                         {formatCurrency(invoice.total_amount)}

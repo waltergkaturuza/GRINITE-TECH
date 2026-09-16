@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { usersAPI, invoicesAPI } from '../../lib/api'
 import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
-import { getBalanceDue, formatCurrency, asMoney } from '../../lib/invoiceUtils'
+import { getBalanceDue, formatCurrency, asMoney, getVatRate, toInputDate } from '../../lib/invoiceUtils'
 
 interface ReceiptItem {
   description: string
@@ -37,6 +37,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
   const [useSimplePayment, setUseSimplePayment] = useState(true)
   const [formData, setFormData] = useState({
     client_id: '',
+    project_id: '',
     issue_date: new Date().toISOString().split('T')[0],
     payment_date: new Date().toISOString().split('T')[0],
     payment_reference: '',
@@ -57,10 +58,16 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
     { description: '', quantity: 1, unit_price: 0, discount_percent: 0, total_price: 0 },
   ])
 
+  const [parentInvoice, setParentInvoice] = useState<any>(linkedInvoice || receipt?.parent_invoice || null)
+
   useEffect(() => {
     loadClients()
     loadOpenInvoices()
   }, [])
+
+  useEffect(() => {
+    if (linkedInvoice) setParentInvoice(linkedInvoice)
+  }, [linkedInvoice])
 
   useEffect(() => {
     if (linkedInvoice && !receipt) {
@@ -69,17 +76,30 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
   }, [linkedInvoice, receipt])
 
   useEffect(() => {
+    const parentId = receipt?.parent_invoice_id
+    if (!parentId) return
+    if (parentInvoice?.id === parentId || linkedInvoice?.id === parentId) return
+    if (receipt.parent_invoice?.id === parentId) {
+      setParentInvoice(receipt.parent_invoice)
+      return
+    }
+    invoicesAPI.getInvoice(parentId).then(setParentInvoice).catch(() => {})
+  }, [receipt?.parent_invoice_id, receipt?.parent_invoice, parentInvoice?.id, linkedInvoice?.id])
+
+  useEffect(() => {
     if (receipt) {
-      setSelectedInvoiceId(receipt.parent_invoice_id || '')
+      const amount = asMoney(receipt.total_amount) || asMoney(receipt.subtotal)
+      setSelectedInvoiceId(receipt.parent_invoice_id || receipt.parent_invoice?.id || '')
+      setPaymentAmount(amount)
+      setUseSimplePayment(!(receipt.items?.length > 1))
       setFormData({
         client_id: receipt.client_id || '',
-        issue_date: receipt.issue_date ? new Date(receipt.issue_date).toISOString().split('T')[0] : formData.issue_date,
-        payment_date: receipt.payment_date
-          ? new Date(receipt.payment_date).toISOString().split('T')[0]
-          : formData.payment_date,
-        payment_reference: receipt.payment_reference || '',
+        project_id: receipt.project_id || receipt.project?.id || receipt.parent_invoice?.project_id || '',
+        issue_date: toInputDate(receipt.issue_date) || formData.issue_date,
+        payment_date: toInputDate(receipt.payment_date) || toInputDate(receipt.due_date) || formData.payment_date,
+        payment_reference: receipt.payment_reference || receipt.parent_invoice?.invoice_number || '',
         payment_method: receipt.payment_method || '',
-        tax_rate: asMoney(receipt.tax_rate),
+        tax_rate: getVatRate(receipt.parent_invoice || receipt),
         notes: receipt.notes || '',
         billing_address: receipt.billing_address || '',
         billing_email: receipt.billing_email || '',
@@ -142,12 +162,13 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
 
   const applyLinkedInvoice = (inv: any) => {
     const balance = getBalanceDue(inv)
-    const invoiceTax = asMoney(inv.tax_rate)
+    const invoiceTax = getVatRate(inv)
     setSelectedInvoiceId(inv.id)
     setPaymentAmount(balance)
     setFormData((prev) => ({
       ...prev,
       client_id: inv.client_id || '',
+      project_id: inv.project_id || inv.project?.id || '',
       payment_reference: inv.invoice_number,
       billing_address: inv.billing_address || prev.billing_address,
       billing_email: inv.billing_email || prev.billing_email,
@@ -169,16 +190,25 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
     const id = invoiceId ? parseInt(invoiceId, 10) : ''
     setSelectedInvoiceId(id)
     if (!invoiceId) return
-    const inv = openInvoices.find((i) => i.id === id) || (linkedInvoice?.id === id ? linkedInvoice : null)
-    if (inv) applyLinkedInvoice(inv)
+    const inv = openInvoices.find((i) => i.id === id)
+      || (linkedInvoice?.id === id ? linkedInvoice : null)
+      || (parentInvoice?.id === id ? parentInvoice : null)
+      || (receipt?.parent_invoice?.id === id ? receipt.parent_invoice : null)
+    if (inv) {
+      setParentInvoice(inv)
+      applyLinkedInvoice(inv)
+    }
   }
 
   const handlePaymentAmountChange = (amount: number) => {
     setPaymentAmount(amount)
-    const inv = openInvoices.find((i) => i.id === selectedInvoiceId) || linkedInvoice
+    const inv = openInvoices.find((i) => i.id === selectedInvoiceId)
+      || linkedInvoice
+      || parentInvoice
+      || receipt?.parent_invoice
     const invNum = inv?.invoice_number || formData.payment_reference || 'invoice'
     const invoiceTotal = asMoney(inv?.total_amount)
-    const alreadyPaid = asMoney(inv?.amount_paid)
+    const alreadyPaid = Math.max(0, asMoney(inv?.amount_paid) - (receipt ? asMoney(receipt.total_amount) : 0))
     const paidAfter = alreadyPaid + amount
     const isFull = invoiceTotal > 0 ? paidAfter >= invoiceTotal - 0.01 : amount > 0
     setFormData((prev) => ({
@@ -196,11 +226,22 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
     }
   }
 
-  const selectedInvoice = openInvoices.find((i) => i.id === selectedInvoiceId) || (linkedInvoice?.id === selectedInvoiceId ? linkedInvoice : null)
-  const balanceDue = selectedInvoice ? getBalanceDue(selectedInvoice) : null
+  const invoiceOptions = (() => {
+    const map = new Map<number, any>()
+    for (const inv of openInvoices) if (inv?.id) map.set(inv.id, inv)
+    if (linkedInvoice?.id) map.set(linkedInvoice.id, linkedInvoice)
+    if (parentInvoice?.id) map.set(parentInvoice.id, parentInvoice)
+    if (receipt?.parent_invoice?.id) map.set(receipt.parent_invoice.id, receipt.parent_invoice)
+    return Array.from(map.values())
+  })()
+  const selectedInvoice = invoiceOptions.find((i) => i.id === selectedInvoiceId) || null
+  const currentReceiptAmount = receipt ? asMoney(receipt.total_amount) : 0
+  const balanceDue = selectedInvoice ? getBalanceDue(selectedInvoice) + currentReceiptAmount : null
   const invoiceTotal = selectedInvoice ? asMoney(selectedInvoice.total_amount) : 0
-  const alreadyPaid = selectedInvoice ? asMoney(selectedInvoice.amount_paid) : 0
-  const invoiceTaxRate = selectedInvoice ? asMoney(selectedInvoice.tax_rate) : asMoney(formData.tax_rate)
+  const alreadyPaid = selectedInvoice
+    ? Math.max(0, asMoney(selectedInvoice.amount_paid) - currentReceiptAmount)
+    : 0
+  const invoiceTaxRate = selectedInvoice ? getVatRate(selectedInvoice) : asMoney(formData.tax_rate)
   const invoiceHasVat = invoiceTaxRate > 0.001
   const paidAfterThisReceipt = alreadyPaid + asMoney(useSimplePayment ? paymentAmount : items.reduce((sum, item) => sum + asMoney(item.total_price), 0))
   const willBeFullyPaid = selectedInvoice ? paidAfterThisReceipt >= invoiceTotal - 0.01 : false
@@ -211,6 +252,10 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
       : paidAfterThisReceipt > 0.01
         ? 'Partially paid'
         : String(selectedInvoice.status || 'sent').replace(/_/g, ' ')
+  const projectTitle = selectedInvoice?.project?.title
+    || receipt?.project?.title
+    || receipt?.parent_invoice?.project?.title
+    || ''
 
   const loadClients = async () => {
     try {
@@ -276,6 +321,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
     const { subtotal, taxAmount, total, taxRate } = calculateTotals()
     onSubmit({
       ...formData,
+      project_id: selectedInvoice?.project_id || formData.project_id || undefined,
       tax_rate: taxRate,
       document_type: 'receipt',
       parent_invoice_id: selectedInvoiceId || undefined,
@@ -317,15 +363,16 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
               className="w-full px-3 py-2 bg-granite-700 border border-granite-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
               <option value="">No linked invoice (standalone receipt)</option>
-              {openInvoices.map((inv) => (
+              {invoiceOptions.map((inv) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.invoice_number} – {formatCurrency(Number(inv.total_amount))} (balance: {formatCurrency(getBalanceDue(inv))})
+                  {inv.invoice_number} – {formatCurrency(Number(inv.total_amount))} (balance: {formatCurrency(getBalanceDue(inv) + (receipt?.parent_invoice_id === inv.id ? currentReceiptAmount : 0))})
                   {inv.status ? ` · ${String(inv.status).replace(/_/g, ' ')}` : ''}
+                  {inv.project?.title ? ` · ${inv.project.title}` : ''}
                 </option>
               ))}
             </select>
             {invoiceLoadError && <p className="mt-2 text-sm text-amber-400">{invoiceLoadError}</p>}
-            {!invoiceLoadError && openInvoices.length === 0 && (
+            {!invoiceLoadError && invoiceOptions.length === 0 && (
               <p className="mt-2 text-sm text-gray-400">
                 No invoices with a remaining balance. Draft, sent, and overdue invoices appear here.
               </p>
@@ -339,6 +386,9 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
                   After this receipt: <strong className={willBeFullyPaid ? 'text-green-400' : 'text-amber-300'}>{nextInvoiceStatus}</strong>
                   {' '}({formatCurrency(paidAfterThisReceipt)} of {formatCurrency(invoiceTotal)})
                 </div>
+                {projectTitle && (
+                  <div className="col-span-3 text-xs text-gray-400">Project: {projectTitle}</div>
+                )}
               </div>
             )}
           </div>
@@ -461,7 +511,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
               <p className="mt-1 text-xs text-gray-400">
                 {invoiceHasVat
                   ? `Copied from the invoice (${invoiceTaxRate}%). The amount received is recorded as-is, without adding VAT again.`
-                  : 'This invoice has no VAT, so the receipt stays at 0%.'}
+                  : 'This invoice has no VAT, so the receipt stays at 0% and VAT is not added.'}
               </p>
             )}
           </div>

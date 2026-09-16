@@ -5,11 +5,37 @@ export function asMoney(value: unknown): number {
   return Number.isFinite(n) ? n : 0
 }
 
+export function toInputDate(value?: string | Date | null): string {
+  if (!value) return ''
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10)
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/** Invoice-level VAT is the source of truth, including 0%. Line rates are only a fallback. */
+export function getVatRate(
+  invoice?: { tax_rate?: unknown } | null,
+  item?: { tax_rate?: unknown } | null,
+): number {
+  if (invoice?.tax_rate !== undefined && invoice?.tax_rate !== null && invoice.tax_rate !== '') {
+    return asMoney(invoice.tax_rate)
+  }
+  if (item?.tax_rate !== undefined && item?.tax_rate !== null && item.tax_rate !== '') {
+    return asMoney(item.tax_rate)
+  }
+  return 0
+}
+
 export function normalizeInvoice(invoice: any) {
   if (!invoice || typeof invoice !== 'object') return invoice
+  const taxRate = asMoney(invoice.tax_rate)
   return {
     ...invoice,
-    tax_rate: asMoney(invoice.tax_rate),
+    tax_rate: taxRate,
     discount_amount: asMoney(invoice.discount_amount),
     subtotal: asMoney(invoice.subtotal),
     tax_amount: asMoney(invoice.tax_amount),
@@ -20,7 +46,7 @@ export function normalizeInvoice(invoice: any) {
           ...item,
           quantity: asMoney(item.quantity) || 1,
           unit_price: asMoney(item.unit_price),
-          tax_rate: asMoney(item.tax_rate),
+          tax_rate: invoice.tax_rate !== undefined && invoice.tax_rate !== null ? taxRate : asMoney(item.tax_rate),
           total_price: asMoney(item.total_price),
           discount_percent: asMoney(item.discount_percent),
         }))

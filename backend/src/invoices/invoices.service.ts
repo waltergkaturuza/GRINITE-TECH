@@ -84,23 +84,28 @@ export class InvoicesService {
       throw new NotFoundException('Client not found');
     }
 
-    if (projectId) {
-      const project = await this.projectRepository.findOne({ where: { id: projectId } });
-      if (!project) {
-        throw new BadRequestException('Selected project was not found');
-      }
-    }
-
     let parentInvoice: Invoice | null = null;
     if (isReceipt && parent_invoice_id) {
       parentInvoice = await this.invoiceRepository.findOne({
         where: { id: parent_invoice_id },
+        relations: ['project'],
       });
       if (!parentInvoice) {
         throw new NotFoundException('Linked invoice not found');
       }
       if (documentKind(parentInvoice.document_type) === 'receipt') {
         throw new BadRequestException('Receipts can only be linked to an invoice');
+      }
+    }
+
+    const resolvedProjectId = (isReceipt && parentInvoice?.project_id && !projectId)
+      ? parentInvoice.project_id
+      : projectId;
+
+    if (resolvedProjectId) {
+      const project = await this.projectRepository.findOne({ where: { id: resolvedProjectId } });
+      if (!project) {
+        throw new BadRequestException('Selected project was not found');
       }
     }
 
@@ -196,7 +201,7 @@ export class InvoicesService {
       }
 
       const extras: Record<string, unknown> = {
-        project_id: projectId,
+        project_id: resolvedProjectId,
         document_type: document_type || 'invoice',
         tax_rate: taxRate,
         amount_paid: isReceipt ? totalAmount : 0,
@@ -259,7 +264,7 @@ export class InvoicesService {
               unitPrice,
               totalPrice,
               item.unit || 'ea',
-              item.tax_rate ?? null,
+              taxRate,
               Number(item.discount_percent) || 0,
             ],
           );
@@ -313,6 +318,8 @@ export class InvoicesService {
       .leftJoinAndSelect('invoice.client', 'client')
       .leftJoinAndSelect('invoice.project', 'project')
       .leftJoinAndSelect('invoice.items', 'items')
+      .leftJoinAndSelect('invoice.parent_invoice', 'parent_invoice')
+      .leftJoinAndSelect('parent_invoice.project', 'parent_project')
       .orderBy('invoice.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -358,7 +365,7 @@ export class InvoicesService {
   async findOne(id: number): Promise<any> {
     const invoice = await this.invoiceRepository.findOne({
       where: { id },
-      relations: ['client', 'project', 'items', 'parent_invoice'],
+      relations: ['client', 'project', 'items', 'parent_invoice', 'parent_invoice.project'],
     });
 
     if (!invoice) {
@@ -481,6 +488,12 @@ export class InvoicesService {
     if (payment_method !== undefined) updateData['payment_method'] = payment_method;
     if (parent_invoice_id !== undefined) updateData['parent_invoice_id'] = parent_invoice_id || null;
 
+    const linkedParentId = parent_invoice_id ?? invoice.parent_invoice_id;
+    if (documentKind(invoice.document_type) === 'receipt' && linkedParentId && !updateData['project_id'] && !invoice.project_id) {
+      const parent = await this.invoiceRepository.findOne({ where: { id: linkedParentId } });
+      if (parent?.project_id) updateData['project_id'] = parent.project_id;
+    }
+
     const calcLineTotal = (item: { quantity: number; unit_price: number; discount_percent?: number }) => {
       const gross = item.quantity * item.unit_price;
       const discountPct = item.discount_percent || 0;
@@ -501,7 +514,6 @@ export class InvoicesService {
       // Remove existing items
       await this.invoiceItemRepository.delete({ invoice: { id } });
 
-      const linkedParentId = parent_invoice_id ?? invoice.parent_invoice_id;
       const isLinkedReceipt = documentKind(invoice.document_type) === 'receipt' && !!linkedParentId;
       let taxRate = money(updateData.tax_rate ?? invoice.tax_rate);
       if (isLinkedReceipt) {
@@ -530,6 +542,7 @@ export class InvoicesService {
         const totalPrice = calcLineTotal(item);
         return this.invoiceItemRepository.create({
           ...item,
+          tax_rate: taxRate,
           unit: item.unit || 'ea',
           total_price: totalPrice,
           invoice,

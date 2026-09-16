@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx'
 import { QUANTIS_LETTERHEAD, formatSellerBankBlock } from './companyLetterhead'
+import { getVatRate } from './invoiceUtils'
 
 export type ReceiptDocument = {
   invoice_number: string
@@ -27,6 +28,8 @@ export type ReceiptDocument = {
   company_usd_account?: string
   company_zig_account?: string
   client?: { firstName?: string; lastName?: string; company?: string; email?: string }
+  project?: { title?: string }
+  parent_invoice?: { tax_rate?: number; project?: { title?: string }; total_amount?: number }
   items?: Array<{
     description: string
     quantity: number
@@ -47,6 +50,16 @@ const formatDate = (dateString?: string) => {
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: QUANTIS_LETTERHEAD.currency }).format(amount)
+
+function vatLine(receipt: ReceiptDocument) {
+  const rate = getVatRate(receipt.parent_invoice || receipt)
+  const showVat = rate > 0.001 && Number(receipt.tax_amount) > 0
+  return {
+    label: showVat ? `V.A.T (${rate}%)` : 'V.A.T',
+    amount: showVat ? receipt.tax_amount : 0,
+    display: showVat ? formatCurrency(receipt.tax_amount) : '—',
+  }
+}
 
 const clientName = (receipt: ReceiptDocument) => {
   const c = receipt.client
@@ -123,7 +136,7 @@ export function exportReceiptWord(receipt: ReceiptDocument) {
   </table>
   <div style="width:280px;margin-left:auto;">
     <p style="display:flex;justify-content:space-between;"><span>SUB-TOTAL</span><span>${formatCurrency(receipt.subtotal)}</span></p>
-    <p style="display:flex;justify-content:space-between;"><span>V.A.T (${receipt.tax_rate || 0}%)</span><span>${formatCurrency(receipt.tax_amount)}</span></p>
+    <p style="display:flex;justify-content:space-between;"><span>${vatLine(receipt).label}</span><span>${vatLine(receipt).display}</span></p>
     <p style="display:flex;justify-content:space-between;font-weight:bold;font-size:18px;"><span>TOTAL</span><span>${formatCurrency(receipt.total_amount)}</span></p>
   </div>
 </body></html>`
@@ -158,7 +171,7 @@ export function exportReceiptExcel(receipt: ReceiptDocument) {
     ]),
     [],
     ['SUB-TOTAL', '', '', '', receipt.subtotal],
-    [`V.A.T (${receipt.tax_rate || 0}%)`, '', '', '', receipt.tax_amount],
+    [vatLine(receipt).label, '', '', '', vatLine(receipt).display],
     ['TOTAL', '', '', '', receipt.total_amount],
   ]
 
