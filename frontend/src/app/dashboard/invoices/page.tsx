@@ -96,7 +96,8 @@ export default function InvoicesPage() {
       loadStats()
     } catch (error: any) {
       console.error('Failed to create invoice:', error)
-      const message = error?.response?.data?.message
+      const payload = error?.response?.data
+      const message = payload?.message || payload?.error || error?.message
       const detail = Array.isArray(message) ? message.join('\n') : message
       alert(detail || 'Failed to create invoice. Please try again.')
     } finally {

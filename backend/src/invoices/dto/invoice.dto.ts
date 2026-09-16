@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsDateString, Min, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsDateString, Min } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { InvoiceStatus, PaymentTerms } from '../entities/invoice.entity';
 
@@ -44,7 +44,7 @@ export class CreateInvoiceDto {
 
   @Transform(emptyToUndefined)
   @IsOptional()
-  @IsUUID()
+  @IsString()
   project_id?: string;
 
   @IsOptional()

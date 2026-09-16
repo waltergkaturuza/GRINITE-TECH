@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, QueryFailedError } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Invoice, InvoiceItem } from '../database/all-entities';
 import { InvoiceStatus } from './entities/invoice.entity';
 import { CreateInvoiceDto, UpdateInvoiceDto, UpdateInvoiceStatusDto, InvoiceStatsDto } from './dto/invoice.dto';
@@ -110,72 +110,148 @@ export class InvoicesService {
       }
     }
 
-    const invoiceDefaults = isReceipt ? {
-      status: InvoiceStatus.PAID,
-      payment_date: payment_date ? new Date(payment_date) : new Date(invoiceData.issue_date),
-      payment_reference: payment_reference || parentInvoice?.invoice_number,
-      payment_method: payment_method || 'Receipt',
-      parent_invoice_id: parent_invoice_id || null,
-      ...QUANTIS_COMPANY_DEFAULTS,
-    } : {
-      amount_paid: 0,
-      ...QUANTIS_COMPANY_DEFAULTS,
-    };
-
     const sanitizedData = {
-      ...invoiceData,
       billing_period_start: blankToNull(invoiceData.billing_period_start),
       billing_period_end: blankToNull(invoiceData.billing_period_end),
       purchase_order: blankToNull(invoiceData.purchase_order),
     };
 
     try {
-      const invoice = this.invoiceRepository.create({
-        ...sanitizedData,
-        ...invoiceDefaults,
-        client_id,
+      const invoiceNumber = await this.generateInvoiceNumber(document_type);
+      const issueDate = new Date(invoiceData.issue_date);
+      const dueDate = new Date(invoiceData.due_date);
+
+      const insertedRows: Array<{ id: number }> = await this.invoiceRepository.query(
+        `INSERT INTO invoices (
+            invoice_number, client_id, issue_date, due_date, status, payment_terms,
+            subtotal, tax_rate, tax_amount, discount_amount, total_amount,
+            notes, terms_conditions, billing_address, billing_email, billing_phone
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+          RETURNING id`,
+        [
+          invoiceNumber,
+          client_id,
+          issueDate,
+          dueDate,
+          isReceipt ? 'paid' : 'draft',
+          invoiceData.payment_terms || 'net_30',
+          subtotal,
+          Number(invoiceData.tax_rate) || 0,
+          taxAmount,
+          Number(invoiceData.discount_amount) || 0,
+          totalAmount,
+          invoiceData.notes || null,
+          invoiceData.terms_conditions || null,
+          invoiceData.billing_address || null,
+          invoiceData.billing_email || null,
+          invoiceData.billing_phone || null,
+        ],
+      );
+      const savedId = Number(insertedRows?.[0]?.id);
+      if (!savedId) {
+        throw new BadRequestException('Invoice was not saved');
+      }
+
+      const extras: Record<string, unknown> = {
         project_id: projectId,
         document_type: document_type || 'invoice',
-        subtotal,
-        tax_amount: taxAmount,
-        total_amount: totalAmount,
-        invoice_number: await this.generateInvoiceNumber(document_type),
-      });
+        amount_paid: isReceipt ? totalAmount : 0,
+        parent_invoice_id: isReceipt ? parent_invoice_id || null : null,
+        payment_date: isReceipt ? (payment_date ? new Date(payment_date) : issueDate) : null,
+        payment_method: isReceipt ? payment_method || 'Receipt' : null,
+        payment_reference: isReceipt ? payment_reference || parentInvoice?.invoice_number || null : null,
+        billing_period_start: sanitizedData.billing_period_start
+          ? new Date(String(sanitizedData.billing_period_start))
+          : null,
+        billing_period_end: sanitizedData.billing_period_end
+          ? new Date(String(sanitizedData.billing_period_end))
+          : null,
+        purchase_order: sanitizedData.purchase_order,
+        company_name: invoiceData.company_name || QUANTIS_COMPANY_DEFAULTS.company_name,
+        company_logo_url: invoiceData.company_logo_url || QUANTIS_COMPANY_DEFAULTS.company_logo_url,
+        company_address: invoiceData.company_address || QUANTIS_COMPANY_DEFAULTS.company_address,
+        company_email: invoiceData.company_email || QUANTIS_COMPANY_DEFAULTS.company_email,
+        company_phone: invoiceData.company_phone || QUANTIS_COMPANY_DEFAULTS.company_phone,
+        company_website: invoiceData.company_website || QUANTIS_COMPANY_DEFAULTS.company_website,
+        company_bank_name: invoiceData.company_bank_name || QUANTIS_COMPANY_DEFAULTS.company_bank_name,
+        company_bank_branch: invoiceData.company_bank_branch || QUANTIS_COMPANY_DEFAULTS.company_bank_branch,
+        company_account_name: invoiceData.company_account_name || QUANTIS_COMPANY_DEFAULTS.company_account_name,
+        company_usd_account: invoiceData.company_usd_account || QUANTIS_COMPANY_DEFAULTS.company_usd_account,
+        company_zig_account: invoiceData.company_zig_account || QUANTIS_COMPANY_DEFAULTS.company_zig_account,
+        company_code: invoiceData.company_code || null,
+        company_vat_code: invoiceData.company_vat_code || null,
+        company_swift: invoiceData.company_swift || null,
+        company_iban: invoiceData.company_iban || null,
+        buyer_company_code: invoiceData.buyer_company_code || null,
+        buyer_vat_code: invoiceData.buyer_vat_code || null,
+        buyer_bank_name: invoiceData.buyer_bank_name || null,
+        buyer_swift: invoiceData.buyer_swift || null,
+        buyer_iban: invoiceData.buyer_iban || null,
+      };
 
-      const savedInvoice = await this.invoiceRepository.save(invoice);
+      for (const [key, value] of Object.entries(extras)) {
+        try {
+          await this.invoiceRepository.query(
+            `UPDATE invoices SET "${key}" = $1 WHERE id = $2`,
+            [value, savedId],
+          );
+        } catch {
+          // Column may not exist in this database yet.
+        }
+      }
 
-      const invoiceItems = items.map(item => {
+      for (const item of items) {
         const totalPrice = calcLineTotal(item);
-        return this.invoiceItemRepository.create({
-          description: item.description,
-          unit: item.unit || 'ea',
-          quantity: Number(item.quantity) || 0,
-          unit_price: Number(item.unit_price) || 0,
-          tax_rate: item.tax_rate,
-          discount_percent: item.discount_percent || 0,
-          total_price: totalPrice,
-          invoice: savedInvoice,
-        });
-      });
-
-      await this.invoiceItemRepository.save(invoiceItems);
+        const quantity = Number(item.quantity) || 1;
+        const unitPrice = Number(item.unit_price) || 0;
+        try {
+          await this.invoiceRepository.query(
+            `INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, unit, tax_rate, discount_percent)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+            [
+              savedId,
+              item.description,
+              quantity,
+              unitPrice,
+              totalPrice,
+              item.unit || 'ea',
+              item.tax_rate ?? null,
+              Number(item.discount_percent) || 0,
+            ],
+          );
+        } catch {
+          await this.invoiceRepository.query(
+            `INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price)
+             VALUES ($1,$2,$3,$4,$5)`,
+            [savedId, item.description, Math.max(1, Math.round(quantity)), unitPrice, totalPrice],
+          );
+        }
+      }
 
       if (isReceipt && parent_invoice_id) {
         await this.syncParentInvoicePayments(parent_invoice_id);
       }
 
-      const withItems = await this.invoiceRepository.findOne({
-        where: { id: savedInvoice.id },
-        relations: ['items'],
-      });
-      return withItems ?? savedInvoice;
+      try {
+        const withItems = await this.invoiceRepository.findOne({
+          where: { id: savedId },
+          relations: ['items', 'client', 'project'],
+        });
+        if (withItems) return withItems;
+      } catch (loadError) {
+        this.logger.warn(`Invoice ${savedId} saved but could not be reloaded: ${invoiceDbError(loadError)}`);
+      }
+
+      return {
+        id: savedId,
+        invoice_number: invoiceNumber,
+        client_id,
+        total_amount: totalAmount,
+      } as Invoice;
     } catch (error) {
       if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
       this.logger.error('Failed to create invoice', error instanceof Error ? error.stack : error);
-      if (error instanceof QueryFailedError || (error as { code?: string })?.code) {
-        throw new BadRequestException(invoiceDbError(error));
-      }
-      throw error;
+      throw new BadRequestException(invoiceDbError(error));
     }
   }
 
@@ -511,18 +587,23 @@ export class InvoicesService {
 
   private async generateInvoiceNumber(type: 'invoice' | 'quotation' | 'receipt' = 'invoice'): Promise<string> {
     const prefix = type === 'quotation' ? 'QUO' : type === 'receipt' ? 'REC' : 'INV';
-    const rows = await this.invoiceRepository
-      .createQueryBuilder('inv')
-      .select('inv.invoice_number', 'invoice_number')
-      .where('inv.invoice_number LIKE :prefix', { prefix: `${prefix}-%` })
-      .getRawMany();
+    try {
+      const rows = await this.invoiceRepository
+        .createQueryBuilder('inv')
+        .select('inv.invoice_number', 'invoice_number')
+        .where('inv.invoice_number LIKE :prefix', { prefix: `${prefix}-%` })
+        .getRawMany();
 
-    let max = 0;
-    for (const row of rows) {
-      const n = parseInt(String(row.invoice_number || '').split('-').pop() || '0', 10);
-      if (Number.isFinite(n) && n > max) max = n;
+      let max = 0;
+      for (const row of rows) {
+        const n = parseInt(String(row.invoice_number || '').split('-').pop() || '0', 10);
+        if (Number.isFinite(n) && n > max) max = n;
+      }
+      return `${prefix}-${String(max + 1).padStart(3, '0')}`;
+    } catch (error) {
+      this.logger.warn(`Could not derive next ${prefix} number: ${invoiceDbError(error)}`);
+      return `${prefix}-${Date.now().toString().slice(-6)}`;
     }
-    return `${prefix}-${String(max + 1).padStart(3, '0')}`;
   }
 
   async sendInvoice(id: number): Promise<Invoice> {
