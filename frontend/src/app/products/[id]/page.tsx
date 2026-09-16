@@ -32,7 +32,7 @@ interface ProductDetail {
   shortDescription?: string
   price: number
   category?: string
-  images?: string[]
+  images: string[]
   videos: string[]
   gifs: string[]
   specifications: any
@@ -408,7 +408,7 @@ export default function ProductDetailPage() {
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               {/* Main Image/Video */}
               <div className="aspect-video bg-gray-100 relative">
-                {product.videos.length > 0 ? (
+                {(product.videos?.length ?? 0) > 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <button
                       onClick={() => setShowVideoModal(true)}
@@ -417,14 +417,14 @@ export default function ProductDetailPage() {
                       <PlayIcon className="h-12 w-12" />
                     </button>
                     <img
-                      src={product.images[selectedImage] || "/api/placeholder/800/450"}
+                      src={product.images?.[selectedImage] || "/api/placeholder/800/450"}
                       alt="Video thumbnail"
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
                   <img
-                    src={product.images[selectedImage] || "/api/placeholder/800/450"}
+                    src={product.images?.[selectedImage] || "/api/placeholder/800/450"}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
@@ -434,7 +434,7 @@ export default function ProductDetailPage() {
               {/* Thumbnail Gallery */}
               <div className="p-4">
                 <div className="flex gap-2 overflow-x-auto">
-                  { (product.images || []).map((image, index) => (
+                  {(product.images || []).map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
@@ -446,7 +446,7 @@ export default function ProductDetailPage() {
                     </button>
                   ))}
                   
-                  {product.gifs.map((gif, index) => (
+                  {(product.gifs || []).map((gif, index) => (
                     <button
                       key={`gif-${index}`}
                       className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors"
@@ -797,7 +797,7 @@ export default function ProductDetailPage() {
                 </button>
               </div>
               <div className="aspect-video">
-                {product.videos[0] && (
+                {product.videos?.[0] && (
                   <iframe
                     src={product.videos[0]}
                     className="w-full h-full"
