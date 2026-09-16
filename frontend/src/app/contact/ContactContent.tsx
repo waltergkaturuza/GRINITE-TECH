@@ -14,7 +14,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { requestsAPI, type BlobDocument } from '@/lib/api'
 import BlobFileUpload from '@/components/BlobFileUpload'
-import { trackEvent, trackPageView } from '@/lib/analytics'
+import { trackEvent } from '@/lib/analytics'
 import { COMPANY_CONTACT } from '@/constants/company'
 import PageBackdrop from '@/components/PageBackdrop'
 import TrackRequestPanel from '@/components/TrackRequestPanel'
@@ -60,8 +60,6 @@ export default function ContactContent() {
   const [backendReady, setBackendReady] = useState(false)
 
   useEffect(() => {
-    trackPageView('/contact')
-
     // Wake up serverless backend while the user fills the form
     warmupBackend().then(setBackendReady).catch(() => setBackendReady(false))
 

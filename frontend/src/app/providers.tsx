@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { LanguageProvider } from '@/i18n/LanguageProvider'
 import { ThemeProvider } from '@/theme/ThemeProvider'
 import PageTranslator from '@/components/PageTranslator'
+import AnalyticsTracker from '@/components/AnalyticsTracker'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -21,6 +22,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ThemeProvider>
         <LanguageProvider>
           {children}
+          <AnalyticsTracker />
           <PageTranslator />
         </LanguageProvider>
       </ThemeProvider>

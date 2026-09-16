@@ -106,7 +106,7 @@ export class AnalyticsService {
       devices,
       topPages: Object.entries(topPages)
         .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
+        .slice(0, 50)
         .map(([path, count]) => ({ path, count })),
       eventsByName: eventCounts,
       eventsByDay,

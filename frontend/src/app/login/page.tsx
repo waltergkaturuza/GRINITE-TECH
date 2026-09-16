@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
 import { isStaffRole } from '@/lib/dashboardRoles'
-import { trackEvent, trackPageView } from '@/lib/analytics'
+import { trackEvent } from '@/lib/analytics'
 import SiteFooter from '@/components/SiteFooter'
 
 export default function LoginPage() {
@@ -18,7 +18,6 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    trackPageView('/login')
     // Wake up serverless backend before the user submits (cold start can take 30–60s)
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
     if (apiUrl) {

@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { authAPI } from '@/lib/api'
-import { trackEvent, trackPageView } from '@/lib/analytics'
+import { trackEvent } from '@/lib/analytics'
 import SiteFooter from '@/components/SiteFooter'
 
 export default function ForgotPasswordPage() {
@@ -14,10 +14,6 @@ export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-
-  useEffect(() => {
-    trackPageView('/forgot-password')
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

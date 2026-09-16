@@ -3,8 +3,6 @@
 import Link from 'next/link'
 import { ArrowRightIcon } from '@heroicons/react/24/outline'
 import Navigation from './components/Navigation'
-import { useEffect } from 'react'
-import { trackPageView } from '@/lib/analytics'
 import { useLanguage } from '@/i18n/LanguageProvider'
 import { t } from '@/i18n/config'
 import PageBackdrop from '@/components/PageBackdrop'
@@ -13,9 +11,6 @@ import CapabilitiesSlider from '@/components/CapabilitiesSlider'
 import { QUANTIS_LOGO_URL } from '@/constants/company'
 
 export default function HomePageClient() {
-  useEffect(() => {
-    trackPageView('/')
-  }, [])
   const { lang } = useLanguage()
   return (
     <div className="public-page min-h-screen bg-gradient-to-br from-granite-800 via-granite-700 to-crimson-900">

@@ -11,6 +11,11 @@ import {
 import api from '@/lib/api';
 import { projectsAPI, invoicesAPI, usersAPI } from '@/lib/api';
 import {
+  PUBLIC_SITE_PAGES,
+  labelForAnalyticsPath,
+  normalizeAnalyticsPath,
+} from '@/lib/analytics';
+import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
@@ -214,6 +219,31 @@ export default function AnalyticsPage() {
       },
     } as const
   }, [])
+
+  const pageCoverage = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const page of data?.topPages || []) {
+      const path = normalizeAnalyticsPath(page.path)
+      counts.set(path, (counts.get(path) || 0) + page.count)
+    }
+
+    const catalogPaths = new Set(PUBLIC_SITE_PAGES.map((page) => page.path))
+    const catalog = PUBLIC_SITE_PAGES.map((page) => ({
+      ...page,
+      count: counts.get(page.path) || 0,
+    }))
+    const extras = [...counts.entries()]
+      .filter(([path]) => !catalogPaths.has(path))
+      .map(([path, count]) => ({
+        path,
+        label: labelForAnalyticsPath(path),
+        count,
+      }))
+      .sort((a, b) => b.count - a.count)
+
+    const catalogWithViews = catalog.filter((page) => page.count > 0).length
+    return { catalog, extras, withViews: catalogWithViews, total: catalog.length }
+  }, [data])
 
   const devices = useMemo(() => {
     const raw = data?.devices || {}
@@ -514,9 +544,12 @@ export default function AnalyticsPage() {
             </div>
 
             <ul className="divide-y divide-granite-700">
-              {data?.topPages?.map((p) => (
+              {data?.topPages?.slice(0, 15).map((p) => (
                 <li key={p.path} className="py-2 flex items-center justify-between gap-3">
-                  <span className="text-sm text-gray-200 truncate">{p.path}</span>
+                  <span className="min-w-0">
+                    <span className="block text-sm text-gray-200 truncate">{labelForAnalyticsPath(p.path)}</span>
+                    <span className="block text-xs text-slate-400 truncate">{p.path}</span>
+                  </span>
                   <span className="text-sm font-medium text-gray-100 tabular-nums">{p.count}</span>
                 </li>
               ))}
@@ -559,6 +592,50 @@ export default function AnalyticsPage() {
                 <Doughnut data={devicesChartData as any} options={doughnutOptions as any} />
               )}
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-granite-800 shadow rounded-lg border border-granite-700">
+        <div className="px-4 py-5 sm:p-6">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-lg leading-6 font-medium text-white">Public page coverage</h3>
+              <p className="mt-1 text-xs text-slate-300">
+                All public routes are tracked automatically. Dashboard, admin, debug, and test pages are excluded.
+              </p>
+            </div>
+            <span className="text-xs text-slate-400">
+              {pageCoverage.withViews} of {pageCoverage.total} catalog pages have views
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                  <th className="py-2 pr-4 font-medium">Page</th>
+                  <th className="py-2 pr-4 font-medium">Path</th>
+                  <th className="py-2 text-right font-medium">Views</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-granite-700">
+                {pageCoverage.catalog.map((page) => (
+                  <tr key={page.path}>
+                    <td className="py-2 pr-4 text-gray-200">{page.label}</td>
+                    <td className="py-2 pr-4 text-slate-400">{page.path}</td>
+                    <td className="py-2 text-right tabular-nums text-gray-100">{page.count}</td>
+                  </tr>
+                ))}
+                {pageCoverage.extras.map((page) => (
+                  <tr key={page.path}>
+                    <td className="py-2 pr-4 text-gray-200">{page.label}</td>
+                    <td className="py-2 pr-4 text-slate-400">{page.path}</td>
+                    <td className="py-2 text-right tabular-nums text-gray-100">{page.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
