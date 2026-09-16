@@ -418,6 +418,8 @@ export class InvoiceStatsDto {
   total_invoices: number;
   total_revenue: number;
   paid_invoices: number;
+  partially_paid_invoices: number;
+  unpaid_invoices: number;
   pending_invoices: number;
   draft_invoices: number;
   overdue_invoices: number;

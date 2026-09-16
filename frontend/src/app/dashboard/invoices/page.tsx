@@ -23,6 +23,8 @@ interface InvoiceStats {
   total_invoices: number
   total_revenue: number
   paid_invoices: number
+  partially_paid_invoices?: number
+  unpaid_invoices?: number
   pending_invoices: number
   draft_invoices: number
   overdue_invoices: number
@@ -303,7 +305,7 @@ export default function InvoicesPage() {
 
       {/* Stats - hide on receipts tab */}
       {stats && !isReceiptTab && (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
           <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
             <div className="p-5">
               <div className="flex items-center">
@@ -346,7 +348,20 @@ export default function InvoicesPage() {
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-300 truncate">Paid</dt>
-                    <dd className="text-lg font-medium text-white">{stats.paid_invoices}</dd>
+                    <dd className="text-lg font-medium text-green-400">{stats.paid_invoices}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-granite-800 overflow-hidden shadow rounded-lg border border-granite-700">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-300 truncate">Partially paid</dt>
+                    <dd className="text-lg font-medium text-amber-400">{stats.partially_paid_invoices ?? 0}</dd>
                   </dl>
                 </div>
               </div>
@@ -358,8 +373,8 @@ export default function InvoicesPage() {
               <div className="flex items-center">
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-300 truncate">Pending</dt>
-                    <dd className="text-lg font-medium text-white">{stats.pending_invoices}</dd>
+                    <dt className="text-sm font-medium text-gray-300 truncate">Unpaid</dt>
+                    <dd className="text-lg font-medium text-white">{stats.unpaid_invoices ?? stats.pending_invoices}</dd>
                   </dl>
                 </div>
               </div>

@@ -136,7 +136,8 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
         const all = fallback?.invoices || fallback?.data || []
         list = (Array.isArray(all) ? all : []).filter((inv: any) => {
           const status = String(inv.status || '').toLowerCase()
-          if (status === 'paid' || status === 'cancelled') return false
+          if (status === 'cancelled') return false
+          if (status === 'paid') return true
           return getBalanceDue(inv) > 0.01
         })
       }
@@ -148,11 +149,12 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
         const all = fallback?.invoices || fallback?.data || []
         const list = (Array.isArray(all) ? all : []).filter((inv: any) => {
           const status = String(inv.status || '').toLowerCase()
-          if (status === 'paid' || status === 'cancelled') return false
+          if (status === 'cancelled') return false
+          if (status === 'paid') return true
           return getBalanceDue(inv) > 0.01
         })
         setOpenInvoices(list)
-        if (!list.length) setInvoiceLoadError('No invoices with a remaining balance were found.')
+        if (!list.length) setInvoiceLoadError('No invoices were found to link.')
       } catch (fallbackError) {
         console.error('Fallback invoice load failed:', fallbackError)
         setOpenInvoices([])
@@ -163,9 +165,10 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
 
   const applyLinkedInvoice = (inv: any) => {
     const balance = getBalanceDue(inv)
+    const recordable = balance > 0.01 ? balance : Number(inv.total_amount) || 0
     const invoiceTax = getVatRate(inv)
     setSelectedInvoiceId(inv.id)
-    setPaymentAmount(balance)
+    setPaymentAmount(recordable)
     setFormData((prev) => ({
       ...prev,
       client_id: inv.client_id || '',
@@ -175,15 +178,17 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
       billing_email: inv.billing_email || prev.billing_email,
       billing_phone: inv.billing_phone || prev.billing_phone,
       tax_rate: invoiceTax,
-      notes: `Payment for invoice ${inv.invoice_number}`,
+      notes: String(inv.status || '').toLowerCase() === 'paid'
+        ? `Payment in full for invoice ${inv.invoice_number}`
+        : `Payment for invoice ${inv.invoice_number}`,
     }))
     setUseSimplePayment(true)
     setItems([{
       description: `Payment for ${inv.invoice_number}`,
       quantity: 1,
-      unit_price: balance,
+      unit_price: recordable,
       discount_percent: 0,
-      total_price: balance,
+      total_price: recordable,
     }])
   }
 
@@ -318,8 +323,15 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedInvoice && paymentAmount > (balanceDue ?? paymentAmount) + 0.01) {
-      alert(`Payment amount cannot exceed balance due (${formatCurrency(balanceDue ?? 0)})`)
-      return
+      const remaining = balanceDue ?? 0
+      const allowHistoricPaidReceipt = !receipt
+        && remaining <= 0.01
+        && String(selectedInvoice.status || '').toLowerCase() === 'paid'
+        && Number(selectedInvoice.receipt_count ?? 0) === 0
+      if (!allowHistoricPaidReceipt || paymentAmount > invoiceTotal + 0.01) {
+        alert(`Payment amount cannot exceed balance due (${formatCurrency(remaining > 0.01 ? remaining : invoiceTotal)})`)
+        return
+      }
     }
     const { subtotal, taxAmount, total, taxRate } = calculateTotals()
     onSubmit({
@@ -370,6 +382,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
               {invoiceOptions.map((inv) => (
                 <option key={inv.id} value={inv.id}>
                   {inv.invoice_number} – {formatCurrency(Number(inv.total_amount))} (balance: {formatCurrency(getBalanceDue(inv) + (receipt?.parent_invoice_id === inv.id ? currentReceiptAmount : 0))})
+                  {String(inv.status || '').toLowerCase() === 'paid' && Number(inv.receipt_count || 0) === 0 ? ' · needs receipt' : ''}
                   {inv.status ? ` · ${String(inv.status).replace(/_/g, ' ')}` : ''}
                   {inv.project?.title ? ` · ${inv.project.title}` : ''}
                 </option>
@@ -378,7 +391,7 @@ export default function ReceiptForm({ receipt, linkedInvoice, onSubmit, onCancel
             {invoiceLoadError && <p className="mt-2 text-sm text-amber-400">{invoiceLoadError}</p>}
             {!invoiceLoadError && invoiceOptions.length === 0 && (
               <p className="mt-2 text-sm text-gray-400">
-                No invoices with a remaining balance. Draft, sent, and overdue invoices appear here.
+                Draft, sent, overdue, partially paid, and paid invoices that still need a receipt appear here.
               </p>
             )}
             {selectedInvoice && balanceDue != null && (

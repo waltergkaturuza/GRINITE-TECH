@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Invoice, InvoiceItem } from '../database/all-entities';
 import { InvoiceStatus } from './entities/invoice.entity';
 import { CreateInvoiceDto, UpdateInvoiceDto, UpdateInvoiceStatusDto, InvoiceStatsDto } from './dto/invoice.dto';
@@ -36,6 +36,39 @@ function documentKind(value: unknown): string {
   return String(value || 'invoice').toLowerCase();
 }
 
+function inferredDocumentKind(invoice: {
+  document_type?: string | null;
+  invoice_number?: string | null;
+  parent_invoice_id?: number | null;
+}): string {
+  const number = String(invoice.invoice_number || '').trim().toUpperCase();
+  if (number.startsWith('REC')) return 'receipt';
+  if (number.startsWith('QUO')) return 'quotation';
+
+  const explicit = String(invoice.document_type || '').trim().toLowerCase();
+  if (explicit === 'receipt' || explicit === 'quotation') return explicit;
+  if (invoice.parent_invoice_id) return 'receipt';
+  return 'invoice';
+}
+
+function isSalesInvoice(invoice: {
+  document_type?: string | null;
+  invoice_number?: string | null;
+  parent_invoice_id?: number | null;
+}): boolean {
+  return inferredDocumentKind(invoice) === 'invoice';
+}
+
+function collectedAmount(invoice: { status?: string; total_amount?: unknown; amount_paid?: unknown }): number {
+  const total = money(invoice.total_amount);
+  const paid = money(invoice.amount_paid);
+  const status = String(invoice.status || '').toLowerCase();
+  if (status === InvoiceStatus.PAID) {
+    return paid > 0.01 ? Math.min(paid, total || paid) : total;
+  }
+  return paid > 0.01 ? Math.min(paid, total || paid) : 0;
+}
+
 function normalizeMoneyCode(code?: string | null): string {
   const raw = String(code || 'USD').trim().toUpperCase();
   if (!raw) return 'USD';
@@ -54,11 +87,6 @@ function moneyCodeOf(invoice: {
     || invoice.parent_invoice?.currency
     || invoice.parent_invoice?.project?.metadata?.currency,
   );
-}
-
-function isSalesInvoice(invoice: { document_type?: string }): boolean {
-  const kind = documentKind(invoice.document_type);
-  return kind === 'invoice' || kind === '';
 }
 
 function bagFromDocs(docs: Invoice[], pickAmount: (doc: Invoice) => number) {
@@ -369,7 +397,33 @@ export class InvoicesService {
     if (status) qb.andWhere('invoice.status = :status', { status });
     if (clientId) qb.andWhere('invoice.client_id = :clientId', { clientId });
     if (projectId) qb.andWhere('invoice.project_id = :projectId', { projectId });
-    if (documentType) qb.andWhere('invoice.document_type = :documentType', { documentType });
+    if (documentType === 'invoice') {
+      qb.andWhere(
+        `(LOWER(COALESCE(invoice.document_type, 'invoice')) NOT IN ('receipt', 'quotation'))
+         AND invoice.invoice_number NOT ILIKE :recPrefix
+         AND invoice.invoice_number NOT ILIKE :quoPrefix
+         AND invoice.parent_invoice_id IS NULL`,
+        { recPrefix: 'REC%', quoPrefix: 'QUO%' },
+      );
+    } else if (documentType === 'receipt') {
+      qb.andWhere(
+        `(LOWER(invoice.document_type) = 'receipt'
+          OR invoice.invoice_number ILIKE :recPrefix
+          OR invoice.parent_invoice_id IS NOT NULL
+          OR (
+            invoice.payment_reference ILIKE :invRef
+            AND invoice.invoice_number NOT ILIKE :invPrefix
+          ))`,
+        { recPrefix: 'REC%', invRef: 'INV%', invPrefix: 'INV%' },
+      );
+    } else if (documentType === 'quotation') {
+      qb.andWhere(
+        `(LOWER(invoice.document_type) = 'quotation' OR invoice.invoice_number ILIKE :quoPrefix)`,
+        { quoPrefix: 'QUO%' },
+      );
+    } else if (documentType) {
+      qb.andWhere('invoice.document_type = :documentType', { documentType });
+    }
     if (search && search.trim()) {
       qb.andWhere(
         '(invoice.invoice_number ILIKE :search OR client.firstName ILIKE :search OR client.lastName ILIKE :search OR client.email ILIKE :search)',
@@ -393,13 +447,17 @@ export class InvoicesService {
       relations: ['project'],
     });
     const sales = invoices.filter(isSalesInvoice);
-    const paid = sales.filter((inv) => String(inv.status).toLowerCase() === InvoiceStatus.PAID);
-    const pending = sales.filter((inv) => String(inv.status).toLowerCase() === InvoiceStatus.SENT);
-    const revenue_by_currency = bagFromDocs(paid, (inv) => money(inv.total_amount));
-    const pending_by_currency = bagFromDocs(pending, (inv) => money(inv.total_amount));
+    const collected = sales.filter((inv) => collectedAmount(inv) > 0.01);
+    const unpaid = sales.filter((inv) => {
+      const status = String(inv.status).toLowerCase();
+      return status === InvoiceStatus.SENT || status === InvoiceStatus.OVERDUE;
+    });
+    const revenue_by_currency = bagFromDocs(collected, collectedAmount);
+    const pending_by_currency = bagFromDocs(unpaid, (inv) => this.getBalanceDue(inv));
+    const paidCount = sales.filter((inv) => String(inv.status).toLowerCase() === InvoiceStatus.PAID).length;
     return {
       totalRevenue: revenue_by_currency.length <= 1 ? (revenue_by_currency[0]?.total || 0) : 0,
-      paidCount: paid.length,
+      paidCount,
       pendingAmount: pending_by_currency.length <= 1 ? (pending_by_currency[0]?.total || 0) : 0,
       revenue_by_currency,
       pending_by_currency,
@@ -431,22 +489,69 @@ export class InvoicesService {
     const invoices = await this.invoiceRepository
       .createQueryBuilder('invoice')
       .leftJoinAndSelect('invoice.client', 'client')
-      .where('(invoice.document_type = :type OR invoice.document_type IS NULL)', { type: 'invoice' })
-      .andWhere('LOWER(invoice.status) NOT IN (:...closed)', { closed: ['paid', 'cancelled'] })
+      .leftJoinAndSelect('invoice.project', 'project')
+      .where(`(LOWER(COALESCE(invoice.document_type, 'invoice')) NOT IN ('receipt', 'quotation'))`)
+      .andWhere('invoice.invoice_number NOT ILIKE :rec', { rec: 'REC%' })
+      .andWhere('invoice.invoice_number NOT ILIKE :quo', { quo: 'QUO%' })
+      .andWhere('invoice.parent_invoice_id IS NULL')
+      .andWhere('LOWER(invoice.status) <> :cancelled', { cancelled: 'cancelled' })
       .orderBy('invoice.created_at', 'DESC')
       .getMany();
 
+    let receiptCounts = new Map<number, number>();
+    try {
+      const receiptRows = await this.invoiceRepository.query(
+        `SELECT parent_invoice_id AS id, COUNT(*) AS count
+         FROM invoices
+         WHERE parent_invoice_id IS NOT NULL
+           AND LOWER(COALESCE(status, '')) <> 'cancelled'
+           AND (
+             LOWER(COALESCE(document_type, 'receipt')) = 'receipt'
+             OR invoice_number ILIKE 'REC%'
+             OR payment_reference ILIKE 'INV%'
+           )
+         GROUP BY parent_invoice_id`,
+      );
+      receiptCounts = new Map(
+        (receiptRows || []).map((row: { id: number; count: number }) => [Number(row.id), Number(row.count)]),
+      );
+    } catch (error) {
+      this.logger.warn(`Could not count linked receipts: ${invoiceDbError(error)}`);
+    }
+
     return invoices
-      .map((inv) => ({ ...inv, balance_due: this.getBalanceDue(inv) }))
-      .filter((inv) => Number(inv.balance_due) > 0.01);
+      .map((inv) => ({
+        ...inv,
+        balance_due: this.getBalanceDue(inv),
+        receipt_count: receiptCounts.get(Number(inv.id)) || 0,
+      }))
+      .filter((inv) => {
+        const status = String(inv.status || '').toLowerCase();
+        if (status === InvoiceStatus.PAID) return Number(inv.receipt_count) === 0;
+        return Number(inv.balance_due) > 0.01;
+      });
   }
 
   async getInvoiceReceipts(id: number): Promise<Invoice[]> {
-    await this.findOne(id);
-    return this.invoiceRepository.find({
-      where: { parent_invoice_id: id, document_type: 'receipt' },
-      order: { created_at: 'ASC' },
-    });
+    const invoice = await this.findOne(id);
+    return this.invoiceRepository
+      .createQueryBuilder('receipt')
+      .leftJoinAndSelect('receipt.client', 'client')
+      .leftJoinAndSelect('receipt.project', 'project')
+      .where('receipt.id <> :id', { id })
+      .andWhere(
+        `(receipt.parent_invoice_id = :id
+          OR LOWER(COALESCE(receipt.payment_reference, '')) = LOWER(:number))`,
+        { id, number: invoice.invoice_number },
+      )
+      .andWhere(
+        `(LOWER(COALESCE(receipt.document_type, 'invoice')) = 'receipt'
+          OR receipt.invoice_number ILIKE :rec
+          OR receipt.parent_invoice_id = :id)`,
+        { rec: 'REC%' },
+      )
+      .orderBy('receipt.created_at', 'ASC')
+      .getMany();
   }
 
   private getBalanceDue(invoice: Invoice): number {
@@ -645,6 +750,8 @@ export class InvoicesService {
       total_invoices: 0,
       total_revenue: 0,
       paid_invoices: 0,
+      partially_paid_invoices: 0,
+      unpaid_invoices: 0,
       pending_invoices: 0,
       draft_invoices: 0,
       overdue_invoices: 0,
@@ -655,23 +762,26 @@ export class InvoicesService {
     }
 
     try {
-      const totalInvoices = await this.invoiceRepository.count();
-      const paidInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.PAID } });
-      const pendingInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.SENT } });
-      const draftInvoices = await this.invoiceRepository.count({ where: { status: InvoiceStatus.DRAFT } });
-      const overdueInvoices = await this.invoiceRepository.count({
-        where: {
-          status: InvoiceStatus.SENT,
-          due_date: Between(new Date('1900-01-01'), new Date()),
-        },
-      });
-
-      const paidDocs = await this.invoiceRepository.find({
-        where: { status: InvoiceStatus.PAID },
+      const allDocs = await this.invoiceRepository.find({
         relations: ['project'],
       });
-      const sales = paidDocs.filter(isSalesInvoice);
-      const revenue_by_currency = bagFromDocs(sales, (inv) => money(inv.total_amount));
+      const sales = allDocs.filter(isSalesInvoice);
+      const statusOf = (inv: Invoice) => String(inv.status || '').toLowerCase();
+
+      const paidSales = sales.filter((inv) => statusOf(inv) === InvoiceStatus.PAID);
+      const partialSales = sales.filter((inv) => statusOf(inv) === InvoiceStatus.PARTIALLY_PAID);
+      const unpaidSales = sales.filter((inv) => {
+        const status = statusOf(inv);
+        return status === InvoiceStatus.SENT || status === InvoiceStatus.OVERDUE;
+      });
+      const draftSales = sales.filter((inv) => statusOf(inv) === InvoiceStatus.DRAFT);
+      const overdueSales = unpaidSales.filter((inv) => {
+        if (!inv.due_date) return false;
+        return new Date(inv.due_date) < new Date();
+      });
+      const collectedSales = sales.filter((inv) => collectedAmount(inv) > 0.01);
+
+      const revenue_by_currency = bagFromDocs(collectedSales, collectedAmount);
 
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
       const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59);
@@ -684,10 +794,10 @@ export class InvoicesService {
         return parsed >= start && parsed <= end;
       };
 
-      const monthlySales = sales.filter((inv) => inRange(inv.payment_date, startOfMonth, endOfMonth));
-      const prevMonthSales = sales.filter((inv) => inRange(inv.payment_date, startOfPrevMonth, endOfPrevMonth));
-      const monthly_by_currency = bagFromDocs(monthlySales, (inv) => money(inv.total_amount));
-      const prevMonthBag = bagFromDocs(prevMonthSales, (inv) => money(inv.total_amount));
+      const monthlySales = collectedSales.filter((inv) => inRange(inv.payment_date || inv.updated_at, startOfMonth, endOfMonth));
+      const prevMonthSales = collectedSales.filter((inv) => inRange(inv.payment_date || inv.updated_at, startOfPrevMonth, endOfPrevMonth));
+      const monthly_by_currency = bagFromDocs(monthlySales, collectedAmount);
+      const prevMonthBag = bagFromDocs(prevMonthSales, collectedAmount);
 
       const totalRevenue = revenue_by_currency.length <= 1 ? (revenue_by_currency[0]?.total || 0) : 0;
       const monthlyRevenue = monthly_by_currency.length <= 1 ? (monthly_by_currency[0]?.total || 0) : 0;
@@ -697,12 +807,14 @@ export class InvoicesService {
         : monthlyRevenue > 0 ? 100 : 0;
 
       return {
-        total_invoices: totalInvoices,
+        total_invoices: sales.length,
         total_revenue: totalRevenue,
-        paid_invoices: paidInvoices,
-        pending_invoices: pendingInvoices,
-        draft_invoices: draftInvoices,
-        overdue_invoices: overdueInvoices,
+        paid_invoices: paidSales.length,
+        partially_paid_invoices: partialSales.length,
+        unpaid_invoices: unpaidSales.length,
+        pending_invoices: unpaidSales.length,
+        draft_invoices: draftSales.length,
+        overdue_invoices: overdueSales.length,
         monthly_revenue: monthlyRevenue,
         monthly_growth: monthlyGrowth,
         revenue_by_currency,
