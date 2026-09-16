@@ -159,6 +159,8 @@ interface ProjectTrackingData {
   type: string
   status: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled'
   budget?: number
+  currency?: string
+  metadata?: { currency?: string }
   startDate?: string
   endDate?: string
   estimatedHours?: number

@@ -35,28 +35,29 @@ export function currencyLabel(code?: string | null): string {
   return normalized === 'ZWG' ? 'ZiG' : normalized
 }
 
-export function moneyCurrencyOf(record?: {
-  currency?: string | null
-  metadata?: { currency?: string | null }
-} | null): string {
-  return normalizeCurrency(record?.currency || record?.metadata?.currency)
+export function moneyCurrencyOf(record?: unknown): string {
+  if (!record || typeof record !== 'object') return 'USD'
+  const rec = record as { currency?: string | null; metadata?: { currency?: string | null } }
+  return normalizeCurrency(rec.currency || rec.metadata?.currency)
 }
 
-export function invoiceCurrencyOf(doc?: {
-  currency?: string | null
-  project?: { currency?: string | null; metadata?: { currency?: string | null } } | null
-  parent_invoice?: {
+export function invoiceCurrencyOf(doc?: unknown): string {
+  if (!doc || typeof doc !== 'object') return 'USD'
+  const rec = doc as {
     currency?: string | null
     project?: { currency?: string | null; metadata?: { currency?: string | null } } | null
-  } | null
-} | null): string {
+    parent_invoice?: {
+      currency?: string | null
+      project?: { currency?: string | null; metadata?: { currency?: string | null } } | null
+    } | null
+  }
   return normalizeCurrency(
-    doc?.currency
-      || doc?.project?.currency
-      || doc?.project?.metadata?.currency
-      || doc?.parent_invoice?.currency
-      || doc?.parent_invoice?.project?.currency
-      || doc?.parent_invoice?.project?.metadata?.currency,
+    rec.currency
+      || rec.project?.currency
+      || rec.project?.metadata?.currency
+      || rec.parent_invoice?.currency
+      || rec.parent_invoice?.project?.currency
+      || rec.parent_invoice?.project?.metadata?.currency,
   )
 }
 
