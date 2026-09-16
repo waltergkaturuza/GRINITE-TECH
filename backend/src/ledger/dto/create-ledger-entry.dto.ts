@@ -10,7 +10,7 @@ export class CreateLedgerEntryDto {
   @IsDateString()
   entryDate: string;
 
-  @ApiProperty({ description: 'Entry type', enum: ['debit', 'credit'] })
+  @ApiProperty({ description: 'debit increases the account balance, credit decreases it', enum: ['debit', 'credit'] })
   @IsString()
   type: string;
 
@@ -32,4 +32,14 @@ export class CreateLedgerEntryDto {
   @IsOptional()
   @IsString()
   referenceId?: string;
+
+  @ApiPropertyOptional({ description: 'Purpose category, e.g. bank_charge_monthly' })
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @ApiPropertyOptional({ description: 'Linked project ID' })
+  @IsOptional()
+  @IsString()
+  projectId?: string;
 }

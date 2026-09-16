@@ -52,6 +52,12 @@ export class LedgerEntry {
   @Column({ nullable: true })
   referenceId: string;
 
+  @Column({ nullable: true })
+  category: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  projectId: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 }

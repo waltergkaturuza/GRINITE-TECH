@@ -4,13 +4,15 @@ import { LedgerAccount } from './entities/ledger-account.entity';
 import { LedgerEntry } from './entities/ledger-entry.entity';
 import { LedgerService } from './ledger.service';
 import { LedgerController } from './ledger.controller';
+import { LedgerSchemaBootstrap } from './ledger-schema.bootstrap';
+import { Project } from '../projects/entities/project.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([LedgerAccount, LedgerEntry]),
+    TypeOrmModule.forFeature([LedgerAccount, LedgerEntry, Project]),
   ],
   controllers: [LedgerController],
-  providers: [LedgerService],
+  providers: [LedgerSchemaBootstrap, LedgerService],
   exports: [LedgerService],
 })
 export class LedgerModule {}

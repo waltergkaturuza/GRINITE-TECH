@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { LedgerAccount } from './entities/ledger-account.entity';
 import { LedgerEntry } from './entities/ledger-entry.entity';
 import { CreateLedgerAccountDto } from './dto/create-ledger-account.dto';
 import { UpdateLedgerAccountDto } from './dto/update-ledger-account.dto';
 import { CreateLedgerEntryDto } from './dto/create-ledger-entry.dto';
 import { UpdateLedgerEntryDto } from './dto/update-ledger-entry.dto';
+import { Project } from '../projects/entities/project.entity';
 
 @Injectable()
 export class LedgerService {
@@ -15,6 +16,8 @@ export class LedgerService {
     private accountRepository: Repository<LedgerAccount>,
     @InjectRepository(LedgerEntry)
     private entryRepository: Repository<LedgerEntry>,
+    @InjectRepository(Project)
+    private projectRepository: Repository<Project>,
   ) {}
 
   // --- Accounts ---
@@ -78,9 +81,26 @@ export class LedgerService {
     return result;
   }
 
+  private async resolveProjectId(dto: { projectId?: string; description?: string }) {
+    if (dto.projectId) return dto.projectId
+    const needle = (dto.description || '').trim().toLowerCase()
+    if (needle.length < 3) return null
+    const projects = await this.projectRepository.find({
+      select: ['id', 'title', 'projectCode'],
+      take: 200,
+    })
+    const match = projects.find((project) => {
+      const title = (project.title || '').toLowerCase()
+      const code = (project.projectCode || '').toLowerCase()
+      return (title && needle.includes(title)) || (code && needle.includes(code))
+    })
+    return match?.id || null
+  }
+
   // --- Entries ---
   async createEntry(dto: CreateLedgerEntryDto): Promise<LedgerEntry> {
     await this.findOneAccount(dto.accountId);
+    const projectId = await this.resolveProjectId(dto)
     const entry = this.entryRepository.create({
       accountId: dto.accountId,
       entryDate: new Date(dto.entryDate),
@@ -89,6 +109,8 @@ export class LedgerService {
       description: dto.description,
       referenceType: dto.referenceType || 'manual',
       referenceId: dto.referenceId,
+      category: dto.category,
+      projectId,
     });
     return this.entryRepository.save(entry);
   }
@@ -105,7 +127,22 @@ export class LedgerService {
       skip: offset,
       take: limit,
     });
-    return { entries, total };
+    const projectIds = [...new Set(entries.map((entry) => entry.projectId).filter(Boolean))] as string[]
+    const projects = projectIds.length
+      ? await this.projectRepository.find({
+          where: { id: In(projectIds) },
+          select: ['id', 'title', 'projectCode'],
+        })
+      : []
+    const projectMap = new Map(projects.map((project) => [project.id, project]))
+    return {
+      entries: entries.map((entry) => ({
+        ...entry,
+        projectTitle: entry.projectId ? projectMap.get(entry.projectId)?.title : undefined,
+        projectCode: entry.projectId ? projectMap.get(entry.projectId)?.projectCode : undefined,
+      })),
+      total,
+    }
   }
 
   async findOneEntry(id: string): Promise<LedgerEntry> {
@@ -124,6 +161,14 @@ export class LedgerService {
     if (dto.type !== undefined) updateData.type = dto.type;
     if (dto.amount !== undefined) updateData.amount = dto.amount;
     if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.category !== undefined) updateData.category = dto.category;
+    if (dto.referenceType !== undefined) updateData.referenceType = dto.referenceType;
+    if (dto.referenceId !== undefined) updateData.referenceId = dto.referenceId;
+    if (dto.projectId !== undefined) {
+      updateData.projectId = dto.projectId || null;
+    } else if (dto.description !== undefined) {
+      updateData.projectId = await this.resolveProjectId({ description: dto.description, projectId: dto.projectId });
+    }
     if (Object.keys(updateData).length) {
       await this.entryRepository.update(id, updateData);
     }
