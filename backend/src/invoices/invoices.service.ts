@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, QueryFailedError } from 'typeorm';
 import { Invoice, InvoiceItem } from '../database/all-entities';
 import { InvoiceStatus } from './entities/invoice.entity';
 import { CreateInvoiceDto, UpdateInvoiceDto, UpdateInvoiceStatusDto, InvoiceStatsDto } from './dto/invoice.dto';
 import { User } from '../users/entities/user.entity';
+import { Project } from '../projects/entities/project.entity';
 
 const QUANTIS_COMPANY_DEFAULTS = {
   company_name: 'Quantis Technologies Private Limited',
@@ -20,6 +21,23 @@ const QUANTIS_COMPANY_DEFAULTS = {
   company_zig_account: '02327737470023',
 };
 
+function blankToNull(value: unknown) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  return value;
+}
+
+function invoiceDbError(error: unknown) {
+  const driver = (error as { driverError?: { code?: string; detail?: string; message?: string } })?.driverError;
+  const code = driver?.code || (error as { code?: string })?.code;
+  const detail = driver?.detail || driver?.message || (error instanceof Error ? error.message : '');
+  if (code === '23505') return 'That invoice number already exists. Try saving again.';
+  if (code === '23503') return 'The selected client or project is invalid.';
+  if (code === '22P02') return 'One of the submitted values is in the wrong format.';
+  if (code === '42703') return 'Invoice storage is missing a required field. Refresh and try again.';
+  return detail || 'Could not save the invoice.';
+}
+
 @Injectable()
 export class InvoicesService {
   private readonly logger = new Logger(InvoicesService.name);
@@ -31,6 +49,8 @@ export class InvoicesService {
     private invoiceItemRepository: Repository<InvoiceItem>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Project)
+    private projectRepository: Repository<Project>,
   ) {
     if (!this.invoiceRepository.metadata?.name) {
       this.logger.error('Invoice repository has no TypeORM metadata — check DataSource entity registration');
@@ -44,10 +64,22 @@ export class InvoicesService {
       ...invoiceData
     } = createInvoiceDto;
     const isReceipt = document_type === 'receipt';
+    const projectId = blankToNull(project_id) as string | null;
+
+    if (!items?.length) {
+      throw new BadRequestException('Add at least one line item before saving');
+    }
 
     const client = await this.userRepository.findOne({ where: { id: client_id } });
     if (!client) {
       throw new NotFoundException('Client not found');
+    }
+
+    if (projectId) {
+      const project = await this.projectRepository.findOne({ where: { id: projectId } });
+      if (!project) {
+        throw new BadRequestException('Selected project was not found');
+      }
     }
 
     let parentInvoice: Invoice | null = null;
@@ -78,8 +110,6 @@ export class InvoicesService {
       }
     }
 
-    const invoiceNumber = await this.generateInvoiceNumber(document_type);
-
     const invoiceDefaults = isReceipt ? {
       status: InvoiceStatus.PAID,
       payment_date: payment_date ? new Date(payment_date) : new Date(invoiceData.issue_date),
@@ -92,41 +122,61 @@ export class InvoicesService {
       ...QUANTIS_COMPANY_DEFAULTS,
     };
 
-    const invoice = this.invoiceRepository.create({
+    const sanitizedData = {
       ...invoiceData,
-      ...invoiceDefaults,
-      client_id,
-      project_id: project_id || null,
-      document_type: document_type || 'invoice',
-      subtotal,
-      tax_amount: taxAmount,
-      total_amount: totalAmount,
-      invoice_number: invoiceNumber,
-    });
+      billing_period_start: blankToNull(invoiceData.billing_period_start),
+      billing_period_end: blankToNull(invoiceData.billing_period_end),
+      purchase_order: blankToNull(invoiceData.purchase_order),
+    };
 
-    const savedInvoice = await this.invoiceRepository.save(invoice);
-
-    const invoiceItems = items.map(item => {
-      const totalPrice = calcLineTotal(item);
-      return this.invoiceItemRepository.create({
-        ...item,
-        unit: item.unit || 'ea',
-        total_price: totalPrice,
-        invoice: savedInvoice,
+    try {
+      const invoice = this.invoiceRepository.create({
+        ...sanitizedData,
+        ...invoiceDefaults,
+        client_id,
+        project_id: projectId,
+        document_type: document_type || 'invoice',
+        subtotal,
+        tax_amount: taxAmount,
+        total_amount: totalAmount,
+        invoice_number: await this.generateInvoiceNumber(document_type),
       });
-    });
 
-    await this.invoiceItemRepository.save(invoiceItems);
+      const savedInvoice = await this.invoiceRepository.save(invoice);
 
-    if (isReceipt && parent_invoice_id) {
-      await this.syncParentInvoicePayments(parent_invoice_id);
+      const invoiceItems = items.map(item => {
+        const totalPrice = calcLineTotal(item);
+        return this.invoiceItemRepository.create({
+          description: item.description,
+          unit: item.unit || 'ea',
+          quantity: Number(item.quantity) || 0,
+          unit_price: Number(item.unit_price) || 0,
+          tax_rate: item.tax_rate,
+          discount_percent: item.discount_percent || 0,
+          total_price: totalPrice,
+          invoice: savedInvoice,
+        });
+      });
+
+      await this.invoiceItemRepository.save(invoiceItems);
+
+      if (isReceipt && parent_invoice_id) {
+        await this.syncParentInvoicePayments(parent_invoice_id);
+      }
+
+      const withItems = await this.invoiceRepository.findOne({
+        where: { id: savedInvoice.id },
+        relations: ['items'],
+      });
+      return withItems ?? savedInvoice;
+    } catch (error) {
+      if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
+      this.logger.error('Failed to create invoice', error instanceof Error ? error.stack : error);
+      if (error instanceof QueryFailedError || (error as { code?: string })?.code) {
+        throw new BadRequestException(invoiceDbError(error));
+      }
+      throw error;
     }
-
-    const withItems = await this.invoiceRepository.findOne({
-      where: { id: savedInvoice.id },
-      relations: ['items'],
-    });
-    return withItems ?? savedInvoice;
   }
 
   async findAll(
@@ -461,13 +511,18 @@ export class InvoicesService {
 
   private async generateInvoiceNumber(type: 'invoice' | 'quotation' | 'receipt' = 'invoice'): Promise<string> {
     const prefix = type === 'quotation' ? 'QUO' : type === 'receipt' ? 'REC' : 'INV';
-    const result = await this.invoiceRepository
+    const rows = await this.invoiceRepository
       .createQueryBuilder('inv')
-      .select('COUNT(inv.id)', 'count')
-      .where('inv.document_type = :type', { type })
-      .getRawOne();
-    const nextNumber = (parseInt(String(result?.count || 0), 10) || 0) + 1;
-    return `${prefix}-${nextNumber.toString().padStart(3, '0')}`;
+      .select('inv.invoice_number', 'invoice_number')
+      .where('inv.invoice_number LIKE :prefix', { prefix: `${prefix}-%` })
+      .getRawMany();
+
+    let max = 0;
+    for (const row of rows) {
+      const n = parseInt(String(row.invoice_number || '').split('-').pop() || '0', 10);
+      if (Number.isFinite(n) && n > max) max = n;
+    }
+    return `${prefix}-${String(max + 1).padStart(3, '0')}`;
   }
 
   async sendInvoice(id: number): Promise<Invoice> {

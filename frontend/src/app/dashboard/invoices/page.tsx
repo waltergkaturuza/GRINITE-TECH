@@ -94,9 +94,11 @@ export default function InvoicesPage() {
       setLinkedInvoiceForReceipt(null)
       loadInvoices()
       loadStats()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create invoice:', error)
-      alert('Failed to create invoice. Please try again.')
+      const message = error?.response?.data?.message
+      const detail = Array.isArray(message) ? message.join('\n') : message
+      alert(detail || 'Failed to create invoice. Please try again.')
     } finally {
       setIsFormLoading(false)
     }

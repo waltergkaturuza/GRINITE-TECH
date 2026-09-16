@@ -506,6 +506,8 @@ export default function AccountsPage() {
     setShowEntryModal(true)
     loadLookups()
   }
+
+  const openEditEntry = (entry: LedgerEntry) => {
     const purpose = purposeFor(entry.category, entry.type)
     setEditingEntry(entry)
     setEntryForm({
@@ -521,7 +523,12 @@ export default function AccountsPage() {
     setShowEntryModal(true)
     loadLookups()
   }
+
+  const handleInvoiceChange = (invoiceId: string) => {
     const invoice = invoices.find((item) => String(item.id) === invoiceId)
+    const kind = invoice?.document_type === 'receipt' ? 'Receipt' : 'Payment'
+    const number = invoice?.invoice_number || ''
+    const client = invoice?.client_name ? ` - ${invoice.client_name}` : ''
     setEntryForm((current) => ({
       ...current,
       invoiceId,
@@ -533,9 +540,7 @@ export default function AccountsPage() {
           )
         : current.amount,
       projectId: invoice?.project_id || current.projectId,
-      description: invoice
-        ? `${invoice.document_type === 'receipt' ? 'Receipt' : 'Payment'} ${invoice.invoice_number || ''} ${invoice.client_name ? `– ${invoice.client_name}` : ''}`.trim()
-        : current.description,
+      description: invoice ? `${kind} ${number}${client}`.trim() : current.description,
     }))
   }
 

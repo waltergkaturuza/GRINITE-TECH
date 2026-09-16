@@ -62,6 +62,7 @@ export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
     const alters = [
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS parent_invoice_id INTEGER`,
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS amount_paid DECIMAL(10,2) DEFAULT 0`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS document_type VARCHAR DEFAULT 'invoice'`,
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_bank_branch VARCHAR`,
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_account_name VARCHAR`,
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_usd_account VARCHAR`,
@@ -69,11 +70,35 @@ export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_period_start DATE`,
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_period_end DATE`,
       `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS purchase_order VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_code VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_vat_code VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_bank_name VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_swift VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_iban VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS buyer_company_code VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS buyer_vat_code VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS buyer_bank_name VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS buyer_swift VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS buyer_iban VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_logo_url VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_address TEXT`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_email VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_phone VARCHAR`,
+      `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_website VARCHAR`,
       `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS unit VARCHAR DEFAULT 'ea'`,
       `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS discount_percent DECIMAL(5,2) DEFAULT 0`,
     ];
     for (const sql of alters) {
       await this.dataSource.query(sql);
+    }
+    try {
+      await this.dataSource.query(
+        `ALTER TABLE invoice_items ALTER COLUMN quantity TYPE DECIMAL(10,2) USING quantity::decimal`,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Could not convert invoice_items.quantity to decimal: ${error instanceof Error ? error.message : error}`,
+      );
     }
     this.logger.log('Added missing invoice columns');
   }
@@ -139,7 +164,7 @@ export class InvoiceSchemaBootstrap implements OnApplicationBootstrap {
         invoice_id INTEGER NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
         description VARCHAR NOT NULL,
         unit VARCHAR DEFAULT 'ea',
-        quantity INTEGER NOT NULL,
+        quantity DECIMAL(10,2) NOT NULL,
         unit_price DECIMAL(10,2) NOT NULL,
         total_price DECIMAL(10,2) NOT NULL,
         tax_rate DECIMAL(5,2),

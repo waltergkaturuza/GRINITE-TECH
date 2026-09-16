@@ -211,19 +211,23 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const totals = calculateTotals()
+
     const invoiceData = {
       ...formData,
       document_type: documentType,
       project_id: formData.project_id || undefined,
-      billing_period_start: formData.billing_period_start || null,
-      billing_period_end: formData.billing_period_end || null,
+      billing_period_start: formData.billing_period_start || undefined,
+      billing_period_end: formData.billing_period_end || undefined,
       purchase_order: formData.purchase_order.trim() || undefined,
-      items: items.filter(item => item.description.trim() !== ''),
-      subtotal: parseFloat(totals.subtotal),
-      tax_amount: parseFloat(totals.taxAmount),
-      total_amount: parseFloat(totals.total)
+      items: items
+        .filter(item => item.description.trim() !== '')
+        .map(item => ({
+          description: item.description.trim(),
+          unit: item.unit || 'ea',
+          quantity: asMoney(item.quantity) || 1,
+          unit_price: asMoney(item.unit_price),
+          tax_rate: asMoney(item.tax_rate),
+        })),
     }
     
     onSubmit(invoiceData)

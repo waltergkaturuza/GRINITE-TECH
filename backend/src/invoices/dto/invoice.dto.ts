@@ -1,6 +1,9 @@
-import { IsNotEmpty, IsNumber, IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsDateString, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsNotEmpty, IsNumber, IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsDateString, Min, IsUUID } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { InvoiceStatus, PaymentTerms } from '../entities/invoice.entity';
+
+const emptyToUndefined = ({ value }: { value: unknown }) =>
+  value === '' || value === null ? undefined : value;
 
 export class CreateInvoiceItemDto {
   @IsNotEmpty()
@@ -8,11 +11,13 @@ export class CreateInvoiceItemDto {
   description: string;
 
   @IsNotEmpty()
+  @Type(() => Number)
   @IsNumber()
-  @Min(1)
+  @Min(0)
   quantity: number;
 
   @IsNotEmpty()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   unit_price: number;
@@ -37,8 +42,9 @@ export class CreateInvoiceDto {
   @IsString()
   client_id: string;
 
+  @Transform(emptyToUndefined)
   @IsOptional()
-  @IsString()
+  @IsUUID()
   project_id?: string;
 
   @IsOptional()
@@ -53,10 +59,12 @@ export class CreateInvoiceDto {
   @IsDateString()
   due_date: string;
 
+  @Transform(emptyToUndefined)
   @IsOptional()
   @IsDateString()
   billing_period_start?: string;
 
+  @Transform(emptyToUndefined)
   @IsOptional()
   @IsDateString()
   billing_period_end?: string;

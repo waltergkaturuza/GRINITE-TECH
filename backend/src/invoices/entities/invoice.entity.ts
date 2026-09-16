@@ -201,7 +201,7 @@ export class InvoiceItem {
   @Column({ default: 'ea' })
   unit: string;
 
-  @Column()
+  @Column('decimal', { precision: 10, scale: 2 })
   quantity: number;
 
   @Column('decimal', { precision: 10, scale: 2 })
