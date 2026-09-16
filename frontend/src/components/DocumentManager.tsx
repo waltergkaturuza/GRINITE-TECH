@@ -510,9 +510,9 @@ export default function DocumentManager({
       )}
 
       {workspaceTab === 'search' && (
-        <>
+        <div className="flex min-h-0 flex-col gap-4">
           {library && (
-            <div className={`flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center ${panel}`}>
+            <div className={`flex shrink-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center ${panel}`}>
               <div className="flex flex-wrap gap-2">
                 {filterChip('all', 'All')}
                 {filterChip('company', 'Company')}
@@ -546,8 +546,8 @@ export default function DocumentManager({
             </div>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-            <aside className={`rounded-xl border p-3 ${panel}`}>
+          <div className="grid min-h-0 items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:h-[min(32rem,calc(100vh-18rem))]">
+            <aside className={`rounded-xl border p-3 lg:sticky lg:top-4 lg:max-h-full lg:overflow-y-auto ${panel}`}>
               <p className={`px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${muted}`}>Categories</p>
               <button
                 type="button"
@@ -586,9 +586,9 @@ export default function DocumentManager({
               ))}
             </aside>
 
-            <div className={`rounded-xl border p-4 ${panel}`}>
-              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative flex-1">
+            <div className={`flex min-h-0 flex-col rounded-xl border p-4 ${panel}`}>
+              <div className="mb-3 shrink-0">
+                <div className="relative">
                   <MagnifyingGlassIcon className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${muted}`} />
                   <input
                     value={search}
@@ -597,74 +597,75 @@ export default function DocumentManager({
                     className={`w-full rounded-lg border py-2 pl-9 pr-3 ${input}`}
                   />
                 </div>
+                {notice && !error && <p className={`mt-2 text-sm ${muted}`}>{notice}</p>}
+                {error && <p className={`mt-2 text-sm ${errorText}`}>{error}</p>}
               </div>
 
-              {notice && !error && <p className={`mb-3 text-sm ${muted}`}>{notice}</p>}
-              {error && <p className={`mb-3 text-sm ${errorText}`}>{error}</p>}
-
-              {loading ? (
-                <div className={`h-32 animate-pulse rounded-lg ${isDark ? 'bg-granite-700/40' : 'bg-granite-100'}`} />
-              ) : docs.length === 0 ? (
-                <div className={`py-10 text-center ${muted}`}>
-                  <FolderIcon className="mx-auto mb-2 h-10 w-10" />
-                  <p>No documents in this filter yet.</p>
-                </div>
-              ) : (
-                <ul className={`divide-y ${divider}`}>
-                  {docs.map((doc) => (
-                    <li key={doc.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="font-medium truncate">{doc.title}</p>
-                        <p className={`text-xs ${muted}`}>
-                          {doc.scope === 'project' ? 'Project' : 'Company'}
-                          {` · ${documentCategoryLabel(doc.category, doc.scope)}`}
-                          {doc.project?.title ? ` · ${doc.project.title}` : ''}
-                          {` · ${formatFileSize(doc.fileSize)}`}
-                          {doc.createdAt
-                            ? ` · ${new Date(doc.createdAt).toLocaleDateString()}`
-                            : ' · From project form'}
-                        </p>
-                        <p className={`truncate text-xs ${muted}`}>{doc.originalName}</p>
-                        {doc.description && <p className={`mt-1 text-sm ${muted}`}>{doc.description}</p>}
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <a
-                          href={doc.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={`rounded-md p-2 ${hoverBtn}`}
-                          title="Open / download"
-                        >
-                          <ArrowDownTrayIcon className="h-4 w-4" />
-                        </a>
-                        {doc.id.startsWith('form-') ? null : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setEditing(doc)}
-                              className={`rounded-md p-2 ${hoverBtn}`}
-                              title="Edit details"
-                            >
-                              <PencilSquareIcon className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeDoc(doc.id)}
-                              className={`rounded-md p-2 text-crimson-400 ${hoverBtn}`}
-                              title="Delete"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <div className="min-h-0 max-h-[22rem] flex-1 overflow-y-auto overscroll-contain pr-1 lg:max-h-none">
+                {loading ? (
+                  <div className={`h-32 animate-pulse rounded-lg ${isDark ? 'bg-granite-700/40' : 'bg-granite-100'}`} />
+                ) : docs.length === 0 ? (
+                  <div className={`py-10 text-center ${muted}`}>
+                    <FolderIcon className="mx-auto mb-2 h-10 w-10" />
+                    <p>No documents in this filter yet.</p>
+                  </div>
+                ) : (
+                  <ul className={`divide-y ${divider}`}>
+                    {docs.map((doc) => (
+                      <li key={doc.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{doc.title}</p>
+                          <p className={`text-xs ${muted}`}>
+                            {doc.scope === 'project' ? 'Project' : 'Company'}
+                            {` · ${documentCategoryLabel(doc.category, doc.scope)}`}
+                            {doc.project?.title ? ` · ${doc.project.title}` : ''}
+                            {` · ${formatFileSize(doc.fileSize)}`}
+                            {doc.createdAt
+                              ? ` · ${new Date(doc.createdAt).toLocaleDateString()}`
+                              : ' · From project form'}
+                          </p>
+                          <p className={`truncate text-xs ${muted}`}>{doc.originalName}</p>
+                          {doc.description && <p className={`mt-1 text-sm ${muted}`}>{doc.description}</p>}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`rounded-md p-2 ${hoverBtn}`}
+                            title="Open / download"
+                          >
+                            <ArrowDownTrayIcon className="h-4 w-4" />
+                          </a>
+                          {doc.id.startsWith('form-') ? null : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setEditing(doc)}
+                                className={`rounded-md p-2 ${hoverBtn}`}
+                                title="Edit details"
+                              >
+                                <PencilSquareIcon className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeDoc(doc.id)}
+                                className={`rounded-md p-2 text-crimson-400 ${hoverBtn}`}
+                                title="Delete"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {editing && (
