@@ -10,10 +10,10 @@ import Modal from './Modal'
 interface LoginModalProps {
   isOpen: boolean
   closeModal: () => void
-  openSignupModal: () => void
+  openSignupModal?: () => void
 }
 
-export default function LoginModal({ isOpen, closeModal, openSignupModal }: LoginModalProps) {
+export default function LoginModal({ isOpen, closeModal }: LoginModalProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -39,9 +39,9 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
     }
   }
 
-  const switchToSignup = () => {
+  const goToContact = () => {
     closeModal()
-    openSignupModal()
+    router.push('/contact')
   }
 
   return (
@@ -156,13 +156,13 @@ export default function LoginModal({ isOpen, closeModal, openSignupModal }: Logi
 
         <div className="mt-8 text-center">
           <p className="text-gray-300">
-            Don't have an account?{' '}
+            Need a project?{' '}
             <button
               type="button"
-              onClick={switchToSignup}
+              onClick={goToContact}
               className="text-cyan-400 hover:text-yellow-400 font-medium transition-colors duration-200 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"
             >
-              Sign up
+              Contact us
             </button>
           </p>
         </div>

@@ -19,10 +19,8 @@ export class AuthController {
   }
 
   @Post('register')
-  @ApiOperation({ summary: 'User registration' })
-  @ApiResponse({ status: 201, description: 'Registration successful' })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 409, description: 'Email already exists' })
+  @ApiOperation({ summary: 'Public registration is closed; clients are contacts only' })
+  @ApiResponse({ status: 400, description: 'Public registration is closed' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }

@@ -22,6 +22,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from './entities/user.entity';
 
 @ApiTags('Users')
@@ -33,12 +34,17 @@ export class UsersController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Create a new user' })
+  @Roles(UserRole.ADMIN, UserRole.DEVELOPER)
+  @ApiOperation({ summary: 'Create a client contact or staff user' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
-  create(@Body() createUserDto: CreateUserDto) {
+  create(@Body() createUserDto: CreateUserDto, @CurrentUser() user: any) {
+    const requesterRole = String(user?.role || '').toLowerCase();
+    if (requesterRole !== UserRole.ADMIN && requesterRole !== 'admin') {
+      createUserDto.role = UserRole.CLIENT;
+      delete createUserDto.password;
+    }
     return this.usersService.create(createUserDto);
   }
 

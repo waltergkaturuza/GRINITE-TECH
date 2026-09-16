@@ -82,7 +82,7 @@ export default function LoginPage() {
               QUANTIS TECHNOLOGIES
             </h1>
           </Link>
-          <p className="text-gray-300 text-lg">Welcome back</p>
+          <p className="text-gray-300 text-lg">Staff and developer sign in</p>
         </div>
         <div className="bg-white/20 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/40 relative overflow-hidden z-10 hover:bg-white/25 transition-all duration-500 hover:shadow-cyan-500/10 hover:shadow-3xl">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/15 to-yellow-500/15 rounded-3xl animate-pulse"></div>

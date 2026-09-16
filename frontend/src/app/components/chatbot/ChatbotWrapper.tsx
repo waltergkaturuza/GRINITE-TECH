@@ -1,10 +1,14 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import EnhancedChatbot from './EnhancedChatbot'
 import WhatsAppFloat from '@/components/WhatsAppFloat'
 import { trackEvent } from '@/lib/analytics'
 
 const ChatbotWrapper = () => {
+  const pathname = usePathname()
+  const isAdminPanel = pathname === '/dashboard' || pathname.startsWith('/dashboard/')
+
   const handleMessageSent = (message: any) => {
     trackEvent('chat_message_sent', {
       length: message?.content?.length ?? 0,
@@ -22,6 +26,8 @@ const ChatbotWrapper = () => {
     trackEvent('chat_error', { error })
     console.error('Chatbot error:', error)
   }
+
+  if (isAdminPanel) return null
 
   return (
     <>

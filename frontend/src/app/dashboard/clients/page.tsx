@@ -62,7 +62,6 @@ export default function ClientsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
-  const [selectedRole, setSelectedRole] = useState<string>('all')
   const [sortField, setSortField] = useState<SortField>('firstName')
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
   const [currentPage, setCurrentPage] = useState(1)
@@ -96,10 +95,7 @@ export default function ClientsPage() {
     taxId: '',
     website: '',
     jobTitle: '',
-    role: 'client',
     status: 'active',
-    password: '',
-    confirmPassword: ''
   })
 
   // Load Clients
@@ -126,11 +122,6 @@ export default function ClientsPage() {
       filtered = filtered.filter(client => client.status === selectedStatus)
     }
 
-    // Role filter  
-    if (selectedRole !== 'all') {
-      filtered = filtered.filter(client => client.role === selectedRole)
-    }
-
     // Sort
     filtered.sort((a, b) => {
       let aValue: any = a[sortField] || ''
@@ -150,16 +141,14 @@ export default function ClientsPage() {
 
     setFilteredClients(filtered)
     setCurrentPage(1)
-  }, [clients, searchQuery, selectedStatus, selectedRole, sortField, sortOrder])
+  }, [clients, searchQuery, selectedStatus, sortField, sortOrder])
 
   const loadClients = async () => {
     try {
       setLoading(true)
-      const data = await usersAPI.getUsers()
-      // Filter only clients and exclude admin users
-      const clientUsers = data.filter(
-        (user: Client) =>
-          user.role === 'client' || user.role === 'developer' || user.role === 'staff'
+      const data = await usersAPI.getUsers({ role: 'client' })
+      const clientUsers = (Array.isArray(data) ? data : []).filter(
+        (user: Client) => user.role === 'client'
       )
       setClients(clientUsers)
     } catch (err: any) {
@@ -172,15 +161,15 @@ export default function ClientsPage() {
 
   const handleCreateClient = async () => {
     try {
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match')
+      if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+        setError('First name, last name, and email are required')
         return
       }
 
       const clientData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
         phone: formData.phone || '',
         company: formData.company || '',
         companyAddress: formData.companyAddress || undefined,
@@ -188,9 +177,8 @@ export default function ClientsPage() {
         taxId: formData.taxId || undefined,
         website: formData.website || undefined,
         jobTitle: formData.jobTitle || undefined,
-        role: formData.role,
+        role: 'client',
         status: formData.status,
-        password: formData.password
       }
       
       await usersAPI.create(clientData)
@@ -218,7 +206,7 @@ export default function ClientsPage() {
         taxId: formData.taxId || undefined,
         website: formData.website || undefined,
         jobTitle: formData.jobTitle || undefined,
-        role: formData.role,
+        role: 'client',
         status: formData.status
       }
       
@@ -260,10 +248,7 @@ export default function ClientsPage() {
       taxId: client.taxId || '',
       website: client.website || '',
       jobTitle: client.jobTitle || '',
-      role: client.role,
       status: client.status,
-      password: '',
-      confirmPassword: ''
     })
     setIsEditModalOpen(true)
   }
@@ -318,10 +303,7 @@ export default function ClientsPage() {
       taxId: '',
       website: '',
       jobTitle: '',
-      role: 'client',
       status: 'active',
-      password: '',
-      confirmPassword: ''
     })
   }
 
@@ -331,16 +313,6 @@ export default function ClientsPage() {
       case 'inactive': return 'bg-amber-800 text-amber-200'
       case 'suspended': return 'bg-red-900 text-red-200'
       default: return 'bg-gray-700 text-gray-200'
-    }
-  }
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'client': return '👤'
-      case 'developer': return '👨‍💻'
-      case 'staff': return '🛎️'
-      case 'admin': return '👑'
-      default: return '👤'
     }
   }
 
@@ -354,7 +326,7 @@ export default function ClientsPage() {
     total: clients.length,
     active: clients.filter(c => c.status === 'active').length,
     companies: new Set(clients.filter(c => c.company).map(c => c.company)).size,
-    verified: clients.filter(c => c.emailVerified).length
+    withPhone: clients.filter(c => c.phone).length
   }
 
   if (loading) {
@@ -370,9 +342,9 @@ export default function ClientsPage() {
       {/* Header */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Client Management</h1>
+          <h1 className="text-3xl font-bold text-white">Client Contacts</h1>
           <p className="mt-2 text-sm text-gray-300">
-            Manage your clients with comprehensive contact and project tracking
+            Contact people for projects, invoices, quotations, and receipts. Clients do not sign in.
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -381,7 +353,7 @@ export default function ClientsPage() {
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-800 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors active:bg-green-700"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-            Add Client
+            Add Contact
           </button>
         </div>
       </div>
@@ -418,7 +390,7 @@ export default function ClientsPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-blue-100 truncate">Total Clients</dt>
+                  <dt className="text-sm font-medium text-blue-100 truncate">Total Contacts</dt>
                   <dd className="text-lg font-medium text-white">{stats.total}</dd>
                 </dl>
               </div>
@@ -434,7 +406,7 @@ export default function ClientsPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-green-100 truncate">Active Clients</dt>
+                  <dt className="text-sm font-medium text-green-100 truncate">Active Contacts</dt>
                   <dd className="text-lg font-medium text-white">{stats.active}</dd>
                 </dl>
               </div>
@@ -462,12 +434,12 @@ export default function ClientsPage() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <EnvelopeIcon className="h-6 w-6 text-white" />
+                <PhoneIcon className="h-6 w-6 text-white" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-yellow-100 truncate">Verified</dt>
-                  <dd className="text-lg font-medium text-white">{stats.verified}</dd>
+                  <dt className="text-sm font-medium text-yellow-100 truncate">With Phone</dt>
+                  <dd className="text-lg font-medium text-white">{stats.withPhone}</dd>
                 </dl>
               </div>
             </div>
@@ -484,7 +456,7 @@ export default function ClientsPage() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search clients..."
+                  placeholder="Search contacts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-granite-600 rounded-md leading-5 bg-granite-700 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
@@ -495,17 +467,6 @@ export default function ClientsPage() {
 
             {/* Filters */}
             <div className="flex space-x-3">
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="px-3 py-2 border border-granite-600 rounded-md text-sm bg-granite-700 text-white focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
-              >
-                <option value="all">All Roles</option>
-                <option value="client">Client</option>
-                <option value="developer">Developer</option>
-                <option value="staff">Staff (requests, chat, products)</option>
-              </select>
-
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
@@ -576,12 +537,11 @@ export default function ClientsPage() {
             <table className="min-w-full divide-y divide-granite-600">
               <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Client</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Contact Person</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Phone</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Joined</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Added</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -611,18 +571,12 @@ export default function ClientsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-white">{client.phone || 'N/A'}</div>
-                      <div className="text-xs text-gray-400">
-                        {client.emailVerified ? '✅ Verified' : '❌ Unverified'}
-                      </div>
+                      {client.jobTitle && (
+                        <div className="text-xs text-gray-400">{client.jobTitle}</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white">{client.company || 'Independent'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="text-lg mr-2">{getRoleIcon(client.role)}</span>
-                        <span className="text-sm text-gray-300 capitalize">{client.role}</span>
-                      </div>
+                      <div className="text-sm text-white">{client.company || '—'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
@@ -664,20 +618,20 @@ export default function ClientsPage() {
           {filteredClients.length === 0 && (
             <div className="text-center py-12">
               <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-white">No clients found</h3>
+              <h3 className="mt-2 text-sm font-medium text-white">No contacts found</h3>
               <p className="mt-1 text-sm text-gray-400">
-                {searchQuery || selectedRole !== 'all' || selectedStatus !== 'all'
+                {searchQuery || selectedStatus !== 'all'
                   ? 'Try adjusting your search or filters.'
-                  : 'Get started by adding your first client.'}
+                  : 'Add a contact person for projects, invoices, quotations, and receipts.'}
               </p>
-              {(!searchQuery && selectedRole === 'all' && selectedStatus === 'all') && (
+              {(!searchQuery && selectedStatus === 'all') && (
                 <div className="mt-6">
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
                     className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-800 hover:bg-green-600 active:bg-green-700 transition-colors"
                   >
                     <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                    Add Client
+                    Add Contact
                   </button>
                 </div>
               )}
@@ -691,7 +645,7 @@ export default function ClientsPage() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-start justify-center py-10">
           <div className="relative w-full max-w-2xl mx-auto p-6 border border-granite-600 shadow-xl rounded-lg bg-granite-800">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">Create New Client</h3>
+              <h3 className="text-xl font-semibold text-white">Add Client Contact</h3>
               <button onClick={() => { setIsCreateModalOpen(false); resetForm() }} className="text-gray-400 hover:text-white">
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -769,58 +723,32 @@ export default function ClientsPage() {
                       className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
                     />
                   </div>
-                  {(formData.role === 'developer' || formData.role === 'staff') && (
-                    <input
-                      type="text"
-                      placeholder="Job title / role"
-                      value={formData.jobTitle}
-                      onChange={(e) => setFormData(prev => ({ ...prev, jobTitle: e.target.value }))}
-                      className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
-                    />
-                  )}
+                  <input
+                    type="text"
+                    placeholder="Job title / position"
+                    value={formData.jobTitle}
+                    onChange={(e) => setFormData(prev => ({ ...prev, jobTitle: e.target.value }))}
+                    className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
+                  />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
-                >
-                  <option value="client">Client</option>
-                  <option value="developer">Developer</option>
-                  <option value="staff">Staff (limited dashboard)</option>
-                </select>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="password"
-                  placeholder="Password *"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
-                />
-                <input
-                  type="password"
-                  placeholder="Confirm password *"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
-                />
-              </div>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              <p className="text-xs text-gray-400">
+                This contact is used on projects, invoices, quotations, and receipts. They cannot log in.
+              </p>
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleCreateClient}
                   className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-black font-medium py-2.5 px-4 rounded-lg transition-colors"
                 >
-                  Create Client
+                  Save Contact
                 </button>
                 <button
                   onClick={() => { setIsCreateModalOpen(false); resetForm() }}
@@ -839,7 +767,7 @@ export default function ClientsPage() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-start justify-center py-10">
           <div className="relative w-full max-w-2xl mx-auto p-6 border border-granite-600 shadow-xl rounded-lg bg-granite-800">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">Edit Client</h3>
+              <h3 className="text-xl font-semibold text-white">Edit Client Contact</h3>
               <button onClick={() => { setIsEditModalOpen(false); setSelectedClient(null); resetForm() }} className="text-gray-400 hover:text-white">
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -917,43 +845,30 @@ export default function ClientsPage() {
                       className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
                     />
                   </div>
-                  {(formData.role === 'developer' || formData.role === 'staff') && (
-                    <input
-                      type="text"
-                      placeholder="Job title / role"
-                      value={formData.jobTitle}
-                      onChange={(e) => setFormData(prev => ({ ...prev, jobTitle: e.target.value }))}
-                      className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
-                    />
-                  )}
+                  <input
+                    type="text"
+                    placeholder="Job title / position"
+                    value={formData.jobTitle}
+                    onChange={(e) => setFormData(prev => ({ ...prev, jobTitle: e.target.value }))}
+                    className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white placeholder-gray-400"
+                  />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
-                >
-                  <option value="client">Client</option>
-                  <option value="developer">Developer</option>
-                  <option value="staff">Staff (limited dashboard)</option>
-                </select>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="suspended">Suspended</option>
-                </select>
-              </div>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full px-3 py-2 border border-granite-600 rounded-md bg-granite-700 text-white"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </select>
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleEditClient}
                   className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-black font-medium py-2.5 px-4 rounded-lg transition-colors"
                 >
-                  Update Client
+                  Update Contact
                 </button>
                 <button
                   onClick={() => { setIsEditModalOpen(false); setSelectedClient(null); resetForm() }}
@@ -1031,9 +946,6 @@ export default function ClientsPage() {
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(selectedClient.status)}`}>
                       {selectedClient.status}
-                    </span>
-                    <span className="text-sm text-gray-400">
-                      {getRoleIcon(selectedClient.role)} {selectedClient.role}
                     </span>
                     {selectedClient.jobTitle && (
                       <span className="text-sm text-amber-400">• {selectedClient.jobTitle}</span>
@@ -1135,7 +1047,6 @@ export default function ClientsPage() {
                     <div className="flex items-center gap-2">
                       <EnvelopeIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
                       <span className="text-white">{selectedClient.email}</span>
-                      {selectedClient.emailVerified && <span className="text-green-400 text-xs">✓</span>}
                     </div>
                     {selectedClient.phone && (
                       <div className="flex items-center gap-2">
@@ -1178,16 +1089,14 @@ export default function ClientsPage() {
                 </div>
               </div>
 
-              {/* Account info */}
               <div className="bg-granite-700/50 border border-granite-600 rounded-lg p-4">
                 <h5 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  Account
+                  Record
                 </h5>
                 <div className="flex flex-wrap gap-4 text-sm">
-                  <span><span className="text-gray-500">Joined:</span> {new Date(selectedClient.createdAt).toLocaleDateString()}</span>
+                  <span><span className="text-gray-500">Added:</span> {new Date(selectedClient.createdAt).toLocaleDateString()}</span>
                   <span><span className="text-gray-500">Updated:</span> {new Date(selectedClient.updatedAt).toLocaleDateString()}</span>
-                  {selectedClient.lastLoginAt && <span><span className="text-gray-500">Last login:</span> {new Date(selectedClient.lastLoginAt).toLocaleDateString()}</span>}
                 </div>
               </div>
 

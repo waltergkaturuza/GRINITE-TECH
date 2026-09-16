@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomBytes } from 'crypto';
 import { User, UserRole, UserStatus } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -14,10 +15,23 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    
+    const role = createUserDto.role ?? UserRole.CLIENT;
+    const isClientContact = role === UserRole.CLIENT || String(role) === 'client';
+    let rawPassword = createUserDto.password;
+
+    if (!rawPassword) {
+      if (!isClientContact) {
+        throw new BadRequestException('Password is required for staff accounts');
+      }
+      // Clients are contacts only; store an unusable secret so the column stays required.
+      rawPassword = `contact-${randomBytes(32).toString('hex')}`;
+    }
+
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
     const user = this.usersRepository.create({
       ...createUserDto,
+      role,
       password: hashedPassword,
     });
 
