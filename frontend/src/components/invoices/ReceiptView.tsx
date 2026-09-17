@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ArrowDownTrayIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
-import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
+import QuantisLetterhead from '../QuantisLetterhead'
 import {
   exportReceiptPDF,
   exportReceiptWord,
@@ -34,11 +34,6 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
   }, [autoPrint, receipt])
 
   if (!receipt) return null
-
-  const letterheadUrl =
-    receipt.company_logo_url?.startsWith('http')
-      ? receipt.company_logo_url
-      : `${typeof window !== 'undefined' ? window.location.origin : ''}${receipt.company_logo_url || QUANTIS_LETTERHEAD.company_logo_url}`
 
   const vatRate = getVatRate(receipt.parent_invoice || receipt)
   const showVat = vatRate > 0.001 && Number(receipt.tax_amount) > 0
@@ -98,17 +93,7 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
 
         {/* Receipt body */}
         <div className="p-8 bg-white text-gray-900 print:p-6">
-          {/* Letterhead */}
-          <div className="mb-6 border-b border-gray-200 pb-4">
-            <img
-              src={letterheadUrl}
-              alt="Company letterhead"
-              className="w-full max-h-28 object-contain object-left mb-4"
-            />
-            <p className="text-center text-sm font-bold tracking-wide uppercase mt-2">
-              {QUANTIS_LETTERHEAD.company_legal_name}
-            </p>
-          </div>
+          <QuantisLetterhead logoSrc={receipt.company_logo_url} className="mb-6" />
 
           {/* Title row */}
           <div className="flex justify-between items-start mb-8">

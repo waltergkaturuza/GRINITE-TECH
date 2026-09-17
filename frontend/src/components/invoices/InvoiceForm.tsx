@@ -9,7 +9,8 @@ import {
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline'
 import { usersAPI, projectsAPI } from '../../lib/api'
-import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
+import { QUANTIS_LETTERHEAD, resolveLetterheadLogoSrc } from '../../lib/companyLetterhead'
+import QuantisLetterhead from '../QuantisLetterhead'
 import { asMoney, normalizeInvoice } from '../../lib/invoiceUtils'
 import { CURRENCY_OPTIONS, invoiceCurrencyOf, moneyCurrencyOf, formatMoney } from '../../lib/money'
 
@@ -109,7 +110,7 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
         billing_email: inv.billing_email || '',
         billing_phone: inv.billing_phone || '',
         company_name: inv.company_name || QUANTIS_LETTERHEAD.company_name,
-        company_logo_url: inv.company_logo_url || QUANTIS_LETTERHEAD.company_logo_url,
+        company_logo_url: resolveLetterheadLogoSrc(inv.company_logo_url),
         company_address: inv.company_address || QUANTIS_LETTERHEAD.company_address,
         company_email: inv.company_email || QUANTIS_LETTERHEAD.company_email,
         company_phone: inv.company_phone || QUANTIS_LETTERHEAD.company_phone,
@@ -247,6 +248,11 @@ export default function InvoiceForm({ invoice, onSubmit, onCancel, isLoading = f
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="bg-white rounded-lg p-4 border border-granite-600">
+          <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Letterhead preview</p>
+          <QuantisLetterhead logoSrc={formData.company_logo_url} compact />
+        </div>
+
         {/* Client and Dates Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Client Selection */}

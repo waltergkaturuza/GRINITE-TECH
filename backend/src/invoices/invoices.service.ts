@@ -9,10 +9,10 @@ import { Project } from '../projects/entities/project.entity';
 
 const QUANTIS_COMPANY_DEFAULTS = {
   company_name: 'Quantis Technologies Private Limited',
-  company_logo_url: '/QUANTIS-1.svg',
+  company_logo_url: '/quantis-logo.png',
   company_address: 'Suite R8, Kuwirirana House\nCnr Angwa and George Silundika, Harare',
   company_email: 'waltergkaturuza@gmail.com',
-  company_phone: '+263777937721',
+  company_phone: '+263 777 937 721',
   company_website: 'https://www.quantistechnologies.co.zw',
   company_bank_name: 'CBZ',
   company_bank_branch: 'Southerton (Code: 6110)',

@@ -4,10 +4,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { PrinterIcon } from '@heroicons/react/24/outline'
 import { documentsAPI, invoicesAPI, usersAPI } from '@/lib/api'
 import { uploadToBlob } from '@/lib/blobStorage'
-import { QUANTIS_LETTERHEAD } from '@/lib/companyLetterhead'
+import { QUANTIS_LETTERHEAD, letterheadCss, letterheadHtml } from '@/lib/companyLetterhead'
 import { COMPANY_CONTACT } from '@/constants/company'
-
-const LETTERHEAD_URL = '/quantis-letterhead.png'
+import QuantisLetterhead from '@/components/QuantisLetterhead'
 
 export type ComposedKind = 'bid' | 'letter' | 'sla' | 'memo'
 
@@ -242,7 +241,6 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
       })
       .join('')
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const logo = `${origin}${LETTERHEAD_URL}`
     const projectTitle = projects.find((item) => item.id === projectId)?.title || ''
     return `<!DOCTYPE html>
 <html>
@@ -252,21 +250,18 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
   <style>
     body { font-family: Georgia, "Times New Roman", serif; color: #111827; margin: ${forPrint ? '16mm' : '0'}; }
     .sheet { max-width: 800px; margin: 0 auto; }
-    .letterhead { width: 100%; max-height: 110px; object-fit: contain; object-position: left; }
     .meta { display: flex; justify-content: space-between; gap: 24px; margin: 20px 0 28px; font-size: 13px; }
     h1 { font-size: 20px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; margin: 0 0 8px; }
     .body { white-space: pre-wrap; line-height: 1.55; font-size: 15px; }
     .enclosures { margin-top: 28px; font-size: 13px; }
     .sign { margin-top: 36px; }
     .muted { color: #6b7280; }
+    ${letterheadCss()}
   </style>
 </head>
 <body>
   <div class="sheet">
-    <img class="letterhead" src="${logo}" alt="Quantis Technologies letterhead" />
-    <p class="muted" style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:600;">
-      ${escapeHtml(QUANTIS_LETTERHEAD.company_legal_name)}
-    </p>
+    ${letterheadHtml(origin)}
     <div class="meta">
       <div>
         ${recipientName ? `<p><strong>${escapeHtml(recipientName)}</strong></p>` : ''}
@@ -504,14 +499,7 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
       <div className="rounded-xl border border-granite-700 bg-granite-800 p-4">
         <p className="mb-3 text-xs uppercase tracking-wide text-gray-400">Letterhead preview</p>
         <div className="max-h-[70vh] overflow-y-auto rounded-lg bg-white p-6 text-gray-900">
-          <img
-            src={LETTERHEAD_URL}
-            alt="Quantis Technologies letterhead"
-            className="mb-3 h-20 w-full object-contain object-left"
-          />
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500">
-            {QUANTIS_LETTERHEAD.company_legal_name}
-          </p>
+          <QuantisLetterhead className="mb-5" />
           <div className="mt-4 flex justify-between gap-4 text-sm">
             <div>
               {recipientName && <p className="font-semibold">{recipientName}</p>}

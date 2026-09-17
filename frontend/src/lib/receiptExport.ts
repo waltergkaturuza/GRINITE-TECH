@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { QUANTIS_LETTERHEAD, formatSellerBankBlock } from './companyLetterhead'
+import { QUANTIS_LETTERHEAD, formatSellerBankBlock, letterheadHtmlInline } from './companyLetterhead'
 import { getVatRate } from './invoiceUtils'
 import { formatMoney, invoiceCurrencyOf } from './money'
 
@@ -23,6 +23,7 @@ export type ReceiptDocument = {
   company_email?: string
   company_phone?: string
   company_website?: string
+  company_logo_url?: string
   company_bank_name?: string
   company_bank_branch?: string
   company_account_name?: string
@@ -102,9 +103,7 @@ export function exportReceiptWord(receipt: ReceiptDocument) {
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
 <head><meta charset="utf-8"><title>Receipt ${receipt.invoice_number}</title></head>
 <body style="font-family:Arial,sans-serif;color:#222;">
-  <div style="margin-bottom:24px;">
-    <img src="${QUANTIS_LETTERHEAD.company_logo_url}" alt="Letterhead" style="max-width:100%;height:auto;" />
-  </div>
+  ${letterheadHtmlInline(typeof window !== 'undefined' ? window.location.origin : '', receipt.company_logo_url)}
   <div style="display:flex;justify-content:space-between;margin-bottom:24px;">
     <div>
       <h2 style="margin:0 0 8px;">Receipt</h2>

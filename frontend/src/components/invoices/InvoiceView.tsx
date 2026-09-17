@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowDownTrayIcon, ChevronDownIcon, BanknotesIcon } from '@heroicons/react/24/outline'
 import { QUANTIS_LETTERHEAD, formatSellerBankBlock } from '../../lib/companyLetterhead'
+import QuantisLetterhead from '../QuantisLetterhead'
 import {
   formatCurrency as formatCurrencyAmount,
   formatDate,
@@ -50,9 +51,6 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
 
   const isQuotation = invoice.document_type === 'quotation'
   const docTitle = isQuotation ? 'Quotation' : 'Invoice'
-  const letterheadUrl = invoice.company_logo_url?.startsWith('http')
-    ? invoice.company_logo_url
-    : `${typeof window !== 'undefined' ? window.location.origin : ''}${invoice.company_logo_url || QUANTIS_LETTERHEAD.company_logo_url}`
 
   const balanceDue = getBalanceDue(invoice)
   const amountPaid = Number(invoice.amount_paid || 0)
@@ -118,20 +116,15 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
         </div>
 
         <div className="p-8 bg-white text-gray-900 print:p-0">
-          <div className="flex items-start justify-between gap-6 mb-6">
-            <div className="min-w-0">
-              <img src={letterheadUrl} alt="Quantis Technologies" className="h-16 w-auto max-w-[280px] object-contain object-left mb-2" />
-              <p className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-500">
-                {QUANTIS_LETTERHEAD.company_legal_name}
-              </p>
-            </div>
-            <div className="text-right">
+          <QuantisLetterhead logoSrc={invoice.company_logo_url} className="mb-6" />
+
+          <div className="flex items-start justify-between gap-6 mb-4">
+            <p className="text-2xl font-semibold text-gray-900 mb-1">{dueHeadline}</p>
+            <div className="text-right shrink-0">
               <p className="text-3xl font-light text-gray-900">{docTitle}</p>
               <p className="text-sm text-gray-500 mt-1">{invoice.invoice_number}</p>
             </div>
           </div>
-
-          <p className="text-2xl font-semibold text-gray-900 mb-1">{dueHeadline}</p>
           {(billingPeriod || invoice.project?.title) && (
             <p className="text-sm text-gray-600 mb-6">
               {[invoice.project?.title, billingPeriod].filter(Boolean).join(' · ')}
