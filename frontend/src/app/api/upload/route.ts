@@ -18,6 +18,7 @@ const ALLOWED_TYPES = [
   'image/webp',
   'text/plain',
   'text/csv',
+  'text/html',
   'application/zip',
   'application/x-zip-compressed',
 ]
@@ -38,6 +39,7 @@ const ALLOWED_EXTENSIONS = [
   '.webp',
   '.txt',
   '.csv',
+  '.html',
   '.zip',
 ]
 

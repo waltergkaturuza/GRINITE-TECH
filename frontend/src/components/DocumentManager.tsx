@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
+  DocumentPlusIcon,
   FolderIcon,
   MagnifyingGlassIcon,
   PencilSquareIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import BlobFileUpload from '@/components/BlobFileUpload'
+import ComposeDocumentTab from '@/components/ComposeDocumentTab'
 import { documentsAPI, projectsAPI, type CompanyDocument } from '@/lib/api'
 import {
   COMPANY_DOCUMENT_CATEGORIES,
@@ -134,7 +136,7 @@ export default function DocumentManager({
   )
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState<CompanyDocument | null>(null)
-  const [workspaceTab, setWorkspaceTab] = useState<'upload' | 'search'>('upload')
+  const [workspaceTab, setWorkspaceTab] = useState<'upload' | 'search' | 'create'>('upload')
   const usedCustomTitle = useRef(false)
 
   const isDark = tone === 'dark'
@@ -431,6 +433,18 @@ export default function DocumentManager({
             <MagnifyingGlassIcon className="h-4 w-4" />
             Search documents
           </button>
+          {library && (
+            <button
+              type="button"
+              onClick={() => setWorkspaceTab('create')}
+              className={`inline-flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-medium ${
+                workspaceTab === 'create' ? activeTabClass : idleTabClass
+              }`}
+            >
+              <DocumentPlusIcon className="h-4 w-4" />
+              Create documents
+            </button>
+          )}
         </nav>
       </div>
 
@@ -507,6 +521,16 @@ export default function DocumentManager({
             onUploadingChange={onUploadingChange}
           />
         </div>
+      )}
+
+      {library && workspaceTab === 'create' && (
+        <ComposeDocumentTab
+          projects={projects}
+          onSaved={async () => {
+            setWorkspaceTab('search')
+            await load()
+          }}
+        />
       )}
 
       {workspaceTab === 'search' && (
