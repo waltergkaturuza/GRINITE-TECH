@@ -1,7 +1,7 @@
 import { put } from '@vercel/blob'
 import { NextRequest, NextResponse } from 'next/server'
 
-const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_SIZE = 25 * 1024 * 1024 // 25MB
 const ALLOWED_TYPES = [
   'application/pdf',
   'application/msword',

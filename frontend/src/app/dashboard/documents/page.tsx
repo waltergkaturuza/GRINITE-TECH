@@ -25,7 +25,7 @@ export default function DocumentsPage() {
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-white">Documents</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Upload files on one tab, search the library on another, or create letterheaded bids, letters, SLAs, and memos.
+          Upload files on one tab, search the library on another, or create letterheaded bids, letters, SLAs, and memos as a printable PDF pack.
         </p>
       </div>
       <div className="min-h-0 flex-1">

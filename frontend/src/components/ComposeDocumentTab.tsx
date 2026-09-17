@@ -1,21 +1,22 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { PrinterIcon } from '@heroicons/react/24/outline'
+import { PrinterIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import { documentsAPI, invoicesAPI, usersAPI } from '@/lib/api'
 import { uploadToBlob } from '@/lib/blobStorage'
 import { QUANTIS_LETTERHEAD, letterheadCss, letterheadHtml } from '@/lib/companyLetterhead'
 import { COMPANY_CONTACT } from '@/constants/company'
 import QuantisLetterhead from '@/components/QuantisLetterhead'
+import {
+  attachmentPrintPages,
+  buildComposedPdf,
+  downloadPdfBytes,
+  type ComposeAttachment,
+} from '@/lib/composePdf'
 
 export type ComposedKind = 'bid' | 'letter' | 'sla' | 'memo'
 
-type Attachment = {
-  key: string
-  group: string
-  label: string
-  href?: string
-}
+type Attachment = ComposeAttachment
 
 type ClientOption = {
   id: string
@@ -116,6 +117,7 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [loadingSources, setLoadingSources] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
@@ -153,30 +155,45 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
             group: 'Certificates',
             label: doc.title || doc.originalName,
             href: doc.url,
+            mimeType: doc.mimeType,
+            originalName: doc.originalName,
+            kind: 'file' as const,
           })),
           ...invoiceRows.map((row) => ({
             key: `inv-${row.id}`,
             group: 'Invoices',
             label: `${row.invoice_number}${row.project?.title ? ` · ${row.project.title}` : ''}`,
             href: row.url,
+            kind: 'invoice' as const,
+            recordId: row.id,
+            record: row,
           })),
           ...quotationRows.map((row) => ({
             key: `quo-${row.id}`,
             group: 'Quotations',
             label: `${row.invoice_number}${row.project?.title ? ` · ${row.project.title}` : ''}`,
             href: row.url,
+            kind: 'quotation' as const,
+            recordId: row.id,
+            record: row,
           })),
           ...receiptRows.map((row) => ({
             key: `rec-${row.id}`,
             group: 'Receipts',
             label: `${row.invoice_number}${row.parent_invoice?.invoice_number ? ` · ${row.parent_invoice.invoice_number}` : ''}`,
             href: row.url,
+            kind: 'receipt' as const,
+            recordId: row.id,
+            record: row,
           })),
           ...otherDocs.map((doc) => ({
             key: `doc-${doc.id}`,
             group: 'Other company files',
             label: `${doc.title} (${doc.category})`,
             href: doc.url,
+            mimeType: doc.mimeType,
+            originalName: doc.originalName,
+            kind: 'file' as const,
           })),
         ]
         setAttachments(next)
@@ -231,8 +248,8 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
     )
   }
 
-  const composedHtml = (forPrint = false) => {
-    const enclosures = chosen
+  const composedHtml = (forPrint = false, attachments = chosen, includeAttachmentPages = forPrint) => {
+    const enclosures = attachments
       .map((item) => {
         if (item.href) {
           return `<li><a href="${escapeHtml(item.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.label)}</a></li>`
@@ -256,6 +273,7 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
     .enclosures { margin-top: 28px; font-size: 13px; }
     .sign { margin-top: 36px; }
     .muted { color: #6b7280; }
+    @page { size: A4; margin: 14mm; }
     ${letterheadCss()}
   </style>
 </head>
@@ -285,24 +303,83 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
     </div>
     ${
       enclosures
-        ? `<div class="enclosures"><p><strong>Enclosures</strong></p><ul>${enclosures}</ul></div>`
+        ? `<div class="enclosures"><p><strong>Enclosures (attached as PDF)</strong></p><ul>${enclosures}</ul></div>`
         : ''
     }
   </div>
+  ${includeAttachmentPages ? attachmentPrintPages(attachments, origin) : ''}
 </body>
 </html>`
   }
 
-  const printDocument = () => {
-    const popup = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1100')
-    if (!popup) {
-      setError('Allow pop-ups to print or save this document as PDF.')
-      return
+  const pdfFilename = () => `${reference || KIND_META[kind].prefix}.pdf`
+
+  const resolveAttachments = async () => {
+    const next = await Promise.all(
+      chosen.map(async (item) => {
+        if (item.kind === 'file' || !item.recordId) return item
+        if (Array.isArray(item.record?.items) && item.record.items.length) return item
+        try {
+          const full = await invoicesAPI.getInvoice(Number(item.recordId))
+          return { ...item, record: full }
+        } catch {
+          return item
+        }
+      }),
+    )
+    return next
+  }
+
+  const printDocument = async () => {
+    try {
+      setExporting(true)
+      setError('')
+      const attachments = await resolveAttachments()
+      const popup = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1100')
+      if (!popup) {
+        setError('Allow pop-ups to print this document.')
+        return
+      }
+      popup.document.write(composedHtml(true, attachments))
+      popup.document.close()
+      popup.focus()
+      setTimeout(() => popup.print(), 500)
+    } catch (err) {
+      console.error(err)
+      setError('Could not open the print preview.')
+    } finally {
+      setExporting(false)
     }
-    popup.document.write(composedHtml(true))
-    popup.document.close()
-    popup.focus()
-    setTimeout(() => popup.print(), 400)
+  }
+
+  const makePdfFile = async () => {
+    const attachments = await resolveAttachments()
+    const bytes = await buildComposedPdf(composedHtml(true, attachments, false), attachments)
+    const filename = pdfFilename()
+    const copy = new Uint8Array(bytes.byteLength)
+    copy.set(bytes)
+    const file = new File([copy], filename, { type: 'application/pdf' })
+    return { bytes, filename, file }
+  }
+
+  const downloadPdf = async () => {
+    try {
+      setExporting(true)
+      setError('')
+      setNotice('')
+      const { bytes, filename } = await makePdfFile()
+      downloadPdfBytes(bytes, filename)
+      setNotice(
+        chosen.length
+          ? `Downloaded ${filename} with ${chosen.length} attached PDF${chosen.length === 1 ? '' : 's'}.`
+          : `Downloaded ${filename}.`,
+      )
+    } catch (err) {
+      console.error(err)
+      setError('Could not build the PDF pack. Try print instead, or attach fewer files.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   const saveToLibrary = async () => {
@@ -314,14 +391,11 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
       setSaving(true)
       setError('')
       setNotice('')
-      const html = composedHtml(true)
-      const blob = new Blob([html], { type: 'text/html' })
-      const filename = `${reference || KIND_META[kind].prefix}.html`
-      const file = new File([blob], filename, { type: 'text/html' })
+      const { file, filename } = await makePdfFile()
       const category = KIND_META[kind].category
       const uploaded = await uploadToBlob(file, { type: 'company', category }, filename)
       const enclosureNote = chosen.length
-        ? `Enclosures: ${chosen.map((item) => item.label).join('; ')}`
+        ? `PDF enclosures: ${chosen.map((item) => item.label).join('; ')}`
         : ''
       await documentsAPI.create({
         title: subject.trim() || `${KIND_META[kind].label} ${reference}`,
@@ -333,13 +407,13 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
         pathname: uploaded.pathname,
         originalName: filename,
         fileSize: file.size,
-        mimeType: 'text/html',
+        mimeType: 'application/pdf',
       })
-      setNotice(`Saved ${KIND_META[kind].label.toLowerCase()} ${reference} to the library.`)
+      setNotice(`Saved ${KIND_META[kind].label.toLowerCase()} ${reference} as a PDF pack in the library.`)
       onSaved()
     } catch (err) {
       console.error(err)
-      setError('Could not save this document to the library. You can still print it.')
+      setError('Could not save the PDF to the library. You can still download it.')
     } finally {
       setSaving(false)
     }
@@ -353,8 +427,8 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
       <div className="rounded-xl border border-granite-700 bg-granite-800 p-4 text-white">
         <h3 className="font-semibold">Create a letterheaded document</h3>
         <p className="mt-1 mb-4 text-xs text-gray-400">
-          Draft a bid, letter, SLA, or memo on the Quantis letterhead. Attach certificates, invoices,
-          quotations, or receipts from the system, then print or save to the library.
+          Draft a bid, letter, SLA, or memo on the Quantis letterhead. Tick certificates, invoices,
+          quotations, or receipts to attach them as extra PDF pages, then print or download the pack.
         </p>
         {error && <p className="mb-3 text-sm text-crimson-300">{error}</p>}
         {notice && <p className="mb-3 text-sm text-green-300">{notice}</p>}
@@ -447,7 +521,7 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
         </div>
 
         <div className="mt-5">
-          <p className="text-sm font-medium text-white mb-2">Attach from the system</p>
+          <p className="text-sm font-medium text-white mb-2">Attach from the system (included as PDF pages)</p>
           {loadingSources ? (
             <p className="text-sm text-gray-400">Loading certificates, invoices, quotations, and receipts…</p>
           ) : groups.length === 0 ? (
@@ -480,18 +554,28 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
           <button
             type="button"
             onClick={printDocument}
-            className="inline-flex items-center gap-2 rounded-lg bg-granite-600 px-4 py-2 text-sm font-medium text-white hover:bg-granite-500"
+            disabled={exporting || saving}
+            className="inline-flex items-center gap-2 rounded-lg bg-granite-600 px-4 py-2 text-sm font-medium text-white hover:bg-granite-500 disabled:opacity-60"
           >
             <PrinterIcon className="h-4 w-4" />
-            Print / save PDF
+            Print
+          </button>
+          <button
+            type="button"
+            onClick={downloadPdf}
+            disabled={exporting || saving}
+            className="inline-flex items-center gap-2 rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-600 disabled:opacity-60"
+          >
+            <ArrowDownTrayIcon className="h-4 w-4" />
+            {exporting ? 'Building PDF…' : 'Download PDF'}
           </button>
           <button
             type="button"
             onClick={saveToLibrary}
-            disabled={saving}
+            disabled={saving || exporting}
             className="rounded-lg bg-crimson-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {saving ? 'Saving…' : 'Save to library'}
+            {saving ? 'Saving PDF…' : 'Save PDF to library'}
           </button>
         </div>
       </div>
@@ -521,7 +605,7 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
           </div>
           {chosen.length > 0 && (
             <div className="mt-6 text-sm">
-              <p className="font-semibold">Enclosures</p>
+              <p className="font-semibold">Enclosures (PDF pages)</p>
               <ul className="mt-1 list-disc pl-5 text-gray-700">
                 {chosen.map((item) => (
                   <li key={item.key}>{item.label}</li>
