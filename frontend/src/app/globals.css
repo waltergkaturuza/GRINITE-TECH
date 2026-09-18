@@ -356,6 +356,26 @@ body {
   top: 0 !important;
 }
 
+.dashboard-root img,
+.dashboard-root svg,
+.dashboard-root video,
+.dashboard-root canvas {
+  max-width: 100%;
+}
+
+.dashboard-root input,
+.dashboard-root select,
+.dashboard-root textarea,
+.dashboard-root button {
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .dashboard-root h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
 .goog-text-highlight {
   background: none !important;
   box-shadow: none !important;

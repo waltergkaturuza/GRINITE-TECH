@@ -296,7 +296,7 @@ export default function DashboardServicesPage() {
         </select>
       </div>
 
-      <div className="bg-granite-800 shadow rounded-lg border border-granite-700 overflow-hidden">
+      <div className="bg-granite-800 shadow rounded-lg border border-granite-700 overflow-x-auto">
         <table className="min-w-full divide-y divide-granite-700">
           <thead className="bg-granite-900/60">
             <tr>

@@ -268,8 +268,8 @@ export default function InvoicesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-granite-600">
-        <nav className="-mb-px flex space-x-8">
+      <div className="border-b border-granite-600 overflow-x-auto">
+        <nav className="-mb-px flex min-w-max gap-6">
           <button
             onClick={() => { setActiveTab('invoices'); setCurrentPage(1) }}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -462,7 +462,7 @@ export default function InvoicesPage() {
               </button>
             </div>
           ) : (
-            <div className="overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-granite-600">
                 <thead>
                   <tr>
@@ -470,8 +470,8 @@ export default function InvoicesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Client</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden md:table-cell">Project</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Issue Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden sm:table-cell">Issue Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden md:table-cell">
                       {isReceiptTab ? 'Payment Date' : 'Due Date'}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status & Actions</th>
@@ -504,10 +504,10 @@ export default function InvoicesPage() {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden sm:table-cell">
                         {formatDate(invoice.issue_date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden md:table-cell">
                         {isReceiptTab
                           ? (invoice.payment_date ? formatDate(invoice.payment_date) : formatDate(invoice.due_date))
                           : formatDate(invoice.due_date)}
@@ -541,7 +541,7 @@ export default function InvoicesPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-granite-600 pt-6 mt-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-granite-600 pt-6 mt-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}

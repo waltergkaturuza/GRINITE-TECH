@@ -28,7 +28,7 @@ interface InvoiceViewProps {
 function MetaRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null
   return (
-    <div className="grid grid-cols-[140px_minmax(0,1fr)] gap-x-3 text-sm py-0.5">
+    <div className="grid grid-cols-[96px_minmax(0,1fr)] sm:grid-cols-[140px_minmax(0,1fr)] gap-x-3 text-sm py-0.5">
       <span className="text-gray-500">{label}</span>
       <span className="text-gray-900 font-medium">{value}</span>
     </div>
@@ -79,11 +79,11 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 print:bg-white print:p-0">
-      <div ref={printRef} id="invoice-print-area" className="bg-white max-w-5xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl print:max-h-none print:shadow-none print:rounded-none">
-        <div className="bg-granite-800 text-white p-4 rounded-t-lg print:hidden flex justify-between items-center">
-          <h2 className="text-xl font-bold">{docTitle} {invoice.invoice_number}</h2>
-          <div className="flex items-center gap-2">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:bg-white print:p-0">
+      <div ref={printRef} id="invoice-print-area" className="bg-white w-full max-w-5xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:rounded-none">
+        <div className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
+          <h2 className="text-base sm:text-xl font-bold min-w-0 truncate">{docTitle} {invoice.invoice_number}</h2>
+          <div className="flex flex-wrap items-center gap-2">
             {canRecordPayment && (
               <button
                 onClick={() => onRecordPayment(invoice)}
@@ -115,13 +115,13 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
           </div>
         </div>
 
-        <div className="p-8 bg-white text-gray-900 print:p-0">
+        <div className="p-4 sm:p-8 bg-white text-gray-900 print:p-0">
           <QuantisLetterhead logoSrc={invoice.company_logo_url} className="mb-6" />
 
-          <div className="flex items-start justify-between gap-6 mb-4">
-            <p className="text-2xl font-semibold text-gray-900 mb-1">{dueHeadline}</p>
-            <div className="text-right shrink-0">
-              <p className="text-3xl font-light text-gray-900">{docTitle}</p>
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
+            <p className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 break-words">{dueHeadline}</p>
+            <div className="text-left sm:text-right shrink-0">
+              <p className="text-2xl sm:text-3xl font-light text-gray-900">{docTitle}</p>
               <p className="text-sm text-gray-500 mt-1">{invoice.invoice_number}</p>
             </div>
           </div>

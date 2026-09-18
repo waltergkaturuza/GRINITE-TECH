@@ -47,16 +47,16 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 print:bg-white print:p-0">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:bg-white print:p-0">
       <div
         ref={printRef}
         id="receipt-print-area"
-        className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl print:max-h-none print:shadow-none print:overflow-visible"
+        className="bg-white w-full max-w-4xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:overflow-visible"
       >
         {/* Modal header - hidden when printing */}
-        <div className="bg-granite-800 text-white p-4 rounded-t-lg print:hidden flex justify-between items-center">
-          <h2 className="text-xl font-bold">Receipt {receipt.invoice_number}</h2>
-          <div className="flex items-center gap-2">
+        <div className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
+          <h2 className="text-base sm:text-xl font-bold min-w-0 truncate">Receipt {receipt.invoice_number}</h2>
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu(!showExportMenu)}

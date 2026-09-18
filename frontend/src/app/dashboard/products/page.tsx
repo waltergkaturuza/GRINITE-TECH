@@ -511,7 +511,7 @@ export default function ProductsPage() {
             Product List ({filteredProducts.length})
           </h3>
           
-          <div className="overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-granite-600">
               <thead>
                 <tr>

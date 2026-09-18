@@ -97,6 +97,19 @@ export default function DashboardLayout({
   }, [])
 
   useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!sidebarOpen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [sidebarOpen])
+
+  useEffect(() => {
     if (!user) return
     if (isStaffRole(user.role)) {
       if (pathname === '/dashboard' || !isPathAllowedForStaff(pathname)) {
@@ -151,6 +164,8 @@ export default function DashboardLayout({
 
   const collapsed = !desktopExpanded
   const userLabel = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Account'
+  const currentPage =
+    navigation.find((item) => itemIsActive(pathname, item.href))?.name || 'Dashboard'
 
   const showTip = (label: string, event: { currentTarget: EventTarget & Element }) => {
     if (!collapsed) return
@@ -161,27 +176,26 @@ export default function DashboardLayout({
   const hideTip = () => setHoverTip(null)
 
   return (
-    <div className="min-h-screen bg-granite-900">
+    <div className="dashboard-root min-h-screen min-w-0 overflow-x-hidden bg-granite-900">
       {sidebarOpen && (
-        <div className="fixed inset-0 flex z-40 md:hidden">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-granite-800 border-r border-granite-700">
-            <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="fixed inset-0 z-40 flex md:hidden">
+          <div className="fixed inset-0 bg-black/70" onClick={() => setSidebarOpen(false)} />
+          <div className="relative flex h-full w-[min(20rem,88vw)] flex-col bg-granite-800 border-r border-granite-700 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+            <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
+              <h1 className="text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900">
+                QUANTIS
+              </h1>
               <button
                 type="button"
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-white hover:bg-granite-700"
                 onClick={() => setSidebarOpen(false)}
+                aria-label="Close menu"
               >
-                <XMarkIcon className="h-6 w-6 text-white" />
+                <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-              <div className="flex-shrink-0 flex items-center px-4">
-                <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-900 to-peach-900">
-                  QUANTIS TECHNOLOGIES
-                </h1>
-              </div>
-              <nav className="mt-5 px-2 space-y-1">
+            <div className="flex-1 h-0 overflow-y-auto pb-4">
+              <nav className="mt-2 px-2 space-y-1">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
@@ -330,8 +344,8 @@ export default function DashboardLayout({
         )}
       </div>
 
-      <div className={`flex flex-col flex-1 transition-[padding] duration-200 ${collapsed ? 'md:pl-20' : 'md:pl-64'}`}>
-        <div className="sticky top-0 z-10 md:hidden flex items-center justify-between gap-2 px-3 py-2 bg-granite-800 border-b border-granite-700">
+      <div className={`flex min-w-0 flex-col flex-1 transition-[padding] duration-200 ${collapsed ? 'md:pl-20' : 'md:pl-64'}`}>
+        <div className="sticky top-0 z-20 md:hidden flex items-center gap-2 px-2 py-2 bg-granite-800/95 backdrop-blur border-b border-granite-700 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <button
             type="button"
             className="h-11 w-11 inline-flex items-center justify-center rounded-md text-gray-200 hover:text-white hover:bg-granite-700"
@@ -340,24 +354,24 @@ export default function DashboardLayout({
           >
             <Bars3Icon className="h-6 w-6" />
           </button>
-          <p className="flex-1 min-w-0 text-sm font-semibold text-white truncate">Dashboard</p>
+          <p className="flex-1 min-w-0 text-sm font-semibold text-white truncate">{currentPage}</p>
           <Link
             href="/"
-            className="shrink-0 rounded-md px-2.5 py-2 text-xs font-semibold text-yellow-300 hover:bg-granite-700"
+            className="shrink-0 rounded-md px-2 py-2 text-xs font-semibold text-yellow-300 hover:bg-granite-700"
           >
-            Website
+            Site
           </Link>
           <button
             type="button"
             onClick={handleLogout}
-            className="shrink-0 rounded-md bg-crimson-900 px-3 py-2 text-xs font-semibold text-white hover:bg-crimson-800"
+            className="shrink-0 rounded-md bg-crimson-900 px-2.5 py-2 text-xs font-semibold text-white hover:bg-crimson-800"
           >
             Logout
           </button>
         </div>
 
-        <main className="flex-1">
-          <div className="py-6 px-4 sm:px-6 lg:px-8">
+        <main className="min-w-0 flex-1 overflow-x-hidden">
+          <div className="min-w-0 py-4 px-3 sm:px-6 lg:px-8 sm:py-6">
             {children}
           </div>
         </main>

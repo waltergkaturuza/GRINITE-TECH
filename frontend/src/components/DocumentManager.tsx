@@ -412,11 +412,11 @@ export default function DocumentManager({
   return (
     <div className="flex min-h-0 flex-col gap-4">
       <div className={`border-b ${isDark ? 'border-granite-600' : 'border-granite-200'}`}>
-        <nav className="-mb-px flex gap-6" aria-label="Document workspace">
+        <nav className="-mb-px flex gap-6 overflow-x-auto" aria-label="Document workspace">
           <button
             type="button"
             onClick={() => setWorkspaceTab('upload')}
-            className={`inline-flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-medium ${
+            className={`inline-flex shrink-0 items-center gap-2 border-b-2 py-3 px-1 text-sm font-medium ${
               workspaceTab === 'upload' ? activeTabClass : idleTabClass
             }`}
           >
@@ -426,7 +426,7 @@ export default function DocumentManager({
           <button
             type="button"
             onClick={() => setWorkspaceTab('search')}
-            className={`inline-flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-medium ${
+            className={`inline-flex shrink-0 items-center gap-2 border-b-2 py-3 px-1 text-sm font-medium ${
               workspaceTab === 'search' ? activeTabClass : idleTabClass
             }`}
           >
@@ -437,7 +437,7 @@ export default function DocumentManager({
             <button
               type="button"
               onClick={() => setWorkspaceTab('create')}
-              className={`inline-flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-medium ${
+              className={`inline-flex shrink-0 items-center gap-2 border-b-2 py-3 px-1 text-sm font-medium ${
                 workspaceTab === 'create' ? activeTabClass : idleTabClass
               }`}
             >

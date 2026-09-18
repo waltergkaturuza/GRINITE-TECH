@@ -1098,24 +1098,24 @@ export default function ProjectTrackingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-0 bg-white flex flex-col lg:min-h-[calc(100vh-7rem)]">
       {/* SERTIS-style orange header */}
       <div className="bg-orange-500 flex-shrink-0">
-        <div className="flex items-center gap-4 px-4 py-4">
-          <div className="bg-white/20 rounded-lg p-2">
+        <div className="flex items-start gap-3 px-3 py-3 sm:items-center sm:gap-4 sm:px-4 sm:py-4">
+          <div className="bg-white/20 rounded-lg p-2 shrink-0">
             <Bars3Icon className="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Project Management</h1>
-            <p className="text-orange-100 text-sm">Manage and track all your projects with advanced filtering and multiple view modes</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-white">Project Management</h1>
+            <p className="text-orange-100 text-xs sm:text-sm hidden sm:block">Manage and track all your projects with advanced filtering and multiple view modes</p>
           </div>
         </div>
       </div>
 
       {/* Two-column layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
         {/* Left sidebar - project list */}
-        <aside className="w-72 border-r border-gray-200 bg-gray-50 flex flex-col flex-shrink-0">
+        <aside className="flex w-full max-h-56 flex-col border-b border-gray-200 bg-gray-50 lg:max-h-none lg:w-72 lg:flex-shrink-0 lg:border-b-0 lg:border-r">
           <div className="p-3 space-y-3">
             <input
               type="text"
@@ -1159,15 +1159,15 @@ export default function ProjectTrackingPage() {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto">
+        <main className="min-w-0 flex-1 overflow-auto">
           {/* Toolbar */}
-          <div className="border-b border-gray-200 bg-white px-4 py-3 flex flex-wrap items-center gap-4">
+          <div className="border-b border-gray-200 bg-white px-3 py-3 flex flex-wrap items-center gap-2 sm:gap-4 sm:px-4">
             <input
               type="text"
               placeholder="Search projects..."
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-48 focus:ring-orange-500 focus:border-orange-500"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-48 focus:ring-orange-500 focus:border-orange-500"
             />
             <button className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-1">
               <FunnelIcon className="w-4 h-4" /> Filters

@@ -466,7 +466,7 @@ export default function ClientsPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex space-x-3">
+            <div className="flex flex-wrap gap-3">
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
@@ -533,7 +533,7 @@ export default function ClientsPage() {
             Client List ({filteredClients.length})
           </h3>
           
-          <div className="overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-granite-600">
               <thead>
                 <tr>

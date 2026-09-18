@@ -8,7 +8,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   return (
-    <div className="p-6 bg-gradient-to-br from-granite-800 via-jungle-900 to-crimson-900 min-h-screen">
+    <div className="bg-gradient-to-br from-granite-800 via-jungle-900 to-crimson-900 min-h-[60vh] rounded-xl p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
         
