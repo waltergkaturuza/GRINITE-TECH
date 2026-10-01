@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowDownTrayIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import QuantisLetterhead from '../QuantisLetterhead'
+import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
 import {
   exportReceiptPDF,
   exportReceiptWord,
@@ -47,11 +48,11 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:bg-white print:p-0">
+    <div className="qt-print-root fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:static print:bg-white print:p-0 print:h-auto print:overflow-visible print:block">
       <div
         ref={printRef}
         id="receipt-print-area"
-        className="bg-white w-full max-w-4xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:overflow-visible"
+        className="qt-print-area bg-white w-full max-w-4xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:overflow-visible print:rounded-none print:w-full"
       >
         {/* Modal header - hidden when printing */}
         <div className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
@@ -91,9 +92,21 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
           </div>
         </div>
 
-        {/* Receipt body */}
-        <div className="p-8 bg-white text-gray-900 print:p-6">
-          <QuantisLetterhead logoSrc={receipt.company_logo_url} className="mb-6" />
+        <table className="qt-print-sheet w-full">
+          <thead className="hidden print:table-header-group">
+            <tr>
+              <td>
+                <QuantisLetterhead compact logoSrc={receipt.company_logo_url} />
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+        <div className="p-8 bg-white text-gray-900 print:p-0">
+          <div className="print:hidden">
+            <QuantisLetterhead logoSrc={receipt.company_logo_url} className="mb-6" />
+          </div>
 
           {/* Title row */}
           <div className="flex justify-between items-start mb-8">
@@ -159,7 +172,7 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
           )}
 
           {/* Items table */}
-          <div className="mb-8 overflow-x-auto">
+          <div className="mb-8 overflow-x-auto print:overflow-visible">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-sky-100">
@@ -202,26 +215,19 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
             </div>
           </div>
         </div>
-      </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #receipt-print-area,
-          #receipt-print-area * {
-            visibility: visible;
-          }
-          #receipt-print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            max-width: 100%;
-          }
-        }
-      `}</style>
+        <div className="qt-print-footer">
+          <div className="qt-print-footer-rule" />
+          <p>Thank you for your business.</p>
+          <p>
+            {QUANTIS_LETTERHEAD.company_legal_name} · {receipt.invoice_number}
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

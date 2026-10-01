@@ -79,8 +79,8 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:bg-white print:p-0">
-      <div ref={printRef} id="invoice-print-area" className="bg-white w-full max-w-5xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:rounded-none">
+    <div className="qt-print-root fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:static print:bg-white print:p-0 print:h-auto print:overflow-visible print:block">
+      <div ref={printRef} id="invoice-print-area" className="qt-print-area bg-white w-full max-w-5xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:rounded-none print:overflow-visible print:w-full">
         <div className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
           <h2 className="text-base sm:text-xl font-bold min-w-0 truncate">{docTitle} {invoice.invoice_number}</h2>
           <div className="flex flex-wrap items-center gap-2">
@@ -115,8 +115,21 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
           </div>
         </div>
 
+        <table className="qt-print-sheet w-full">
+          <thead className="hidden print:table-header-group">
+            <tr>
+              <td>
+                <QuantisLetterhead compact logoSrc={invoice.company_logo_url} />
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
         <div className="p-4 sm:p-8 bg-white text-gray-900 print:p-0">
-          <QuantisLetterhead logoSrc={invoice.company_logo_url} className="mb-6" />
+          <div className="print:hidden">
+            <QuantisLetterhead logoSrc={invoice.company_logo_url} className="mb-6" />
+          </div>
 
           <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
             <p className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 break-words">{dueHeadline}</p>
@@ -148,7 +161,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-8 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-8 text-sm print:break-inside-avoid">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Service Provider</p>
               <p className="font-semibold text-gray-900">{invoice.company_name || QUANTIS_LETTERHEAD.company_name}</p>
@@ -177,7 +190,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
             </div>
           </div>
 
-          <div className="overflow-x-auto mb-6">
+          <div className="overflow-x-auto mb-6 print:overflow-visible">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-300 text-left text-gray-500">
@@ -247,7 +260,12 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
               )}
             </div>
           </div>
-
+        </div>
+              </td>
+            </tr>
+            <tr className="qt-print-closing-row">
+              <td>
+          <div className="qt-print-closing px-4 sm:px-8 pb-4 sm:pb-8 print:px-0 print:pb-0">
           <p className="text-sm italic text-gray-600 mb-8">
             Amount in words: {amountInWords(Number(invoice.total_amount), invoiceCurrencyOf(invoice))}
           </p>
@@ -307,22 +325,24 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
             </div>
           )}
 
-          <div className="border-t border-gray-200 pt-4 text-xs text-gray-500">
+          <div className="border-t border-gray-200 pt-4 text-xs text-gray-500 print:hidden">
             <p>Thank you for your business.</p>
             <p>{QUANTIS_LETTERHEAD.company_legal_name} · {providerWebsite.replace(/^https?:\/\//, '')}</p>
           </div>
+          </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div className="qt-print-footer">
+          <div className="qt-print-footer-rule" />
+          <p>Thank you for your business.</p>
+          <p>
+            {QUANTIS_LETTERHEAD.company_legal_name} · {providerWebsite.replace(/^https?:\/\//, '')} · {invoice.invoice_number}
+          </p>
         </div>
       </div>
-
-      <style jsx global>{`
-        @media print {
-          @page { margin: 14mm; size: A4; }
-          body * { visibility: hidden; }
-          #invoice-print-area, #invoice-print-area * { visibility: visible; }
-          #invoice-print-area { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; box-shadow: none; }
-          .print\\:hidden { display: none !important; }
-        }
-      `}</style>
     </div>
   )
 }

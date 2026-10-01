@@ -380,3 +380,145 @@ body {
   background: none !important;
   box-shadow: none !important;
 }
+
+/* Invoice / receipt print: letterhead + footer on every page; addresses once. */
+.qt-print-footer {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 12mm 18mm 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  body:has(.qt-print-area) {
+    background: #fff !important;
+  }
+
+  /* Hide every sibling along the path to the document (sidebar, list, widgets). */
+  body:has(.qt-print-area) *:has(.qt-print-area) > *:not(:has(.qt-print-area)):not(.qt-print-area) {
+    display: none !important;
+  }
+
+  body:has(.qt-print-area) > *:not(:has(.qt-print-area)) {
+    display: none !important;
+  }
+
+  /* Flatten the modal / layout chain so the first page is not stamped over later pages. */
+  body:has(.qt-print-area) *:has(.qt-print-area) {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    filter: none !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .qt-print-area {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .qt-print-sheet {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .qt-print-sheet > thead {
+    display: table-header-group !important;
+  }
+
+  .qt-print-sheet > tbody {
+    display: table-row-group !important;
+  }
+
+  .qt-print-sheet > thead > tr > td {
+    padding: 0 0 8px;
+    vertical-align: top;
+  }
+
+  .qt-print-sheet > thead header > div:first-child {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  .qt-print-sheet > thead img {
+    height: 44px !important;
+  }
+
+  .qt-print-sheet > tbody > tr > td {
+    padding: 0;
+    vertical-align: top;
+  }
+
+  .qt-print-area table:not(.qt-print-sheet) thead {
+    display: table-header-group;
+  }
+
+  .qt-print-area table:not(.qt-print-sheet) tr {
+    break-inside: avoid;
+  }
+
+  /* Amount in words, bank details, notes, and terms stay together on the last page. */
+  .qt-print-closing-row,
+  .qt-print-closing {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .qt-print-closing {
+    padding-top: 8px;
+  }
+
+  /* Sit in the @page bottom margin so it cannot cover line items. */
+  .qt-print-footer {
+    display: block !important;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 14mm;
+    margin-bottom: -16mm;
+    padding-top: 4px;
+    background: #fff;
+    color: #6b7280;
+    font-size: 10px;
+    line-height: 1.35;
+    z-index: 10;
+  }
+
+  .qt-print-footer-rule {
+    height: 3px;
+    width: 100%;
+    margin-bottom: 4px;
+    background: linear-gradient(90deg, #1b365d 0%, #2e6b9e 58%, #c4a574 100%);
+  }
+}
