@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowDownTrayIcon, ChevronDownIcon, BanknotesIcon } from '@heroicons/react/24/outline'
 import { QUANTIS_LETTERHEAD, formatSellerBankBlock } from '../../lib/companyLetterhead'
 import QuantisLetterhead from '../QuantisLetterhead'
+import { downloadElementPdf } from '../../lib/documentPdf'
 import {
   formatCurrency as formatCurrencyAmount,
   formatDate,
@@ -22,7 +23,8 @@ interface InvoiceViewProps {
   onClose: () => void
   onEdit?: () => void
   onRecordPayment?: (invoice: any) => void
-  autoPrint?: boolean
+  /** Start the PDF download as soon as the document is shown (list "Download" action). */
+  autoDownload?: boolean
 }
 
 function MetaRow({ label, value }: { label: string; value?: string | null }) {
@@ -35,22 +37,49 @@ function MetaRow({ label, value }: { label: string; value?: string | null }) {
   )
 }
 
-export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment, autoPrint }: InvoiceViewProps) {
+export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment, autoDownload }: InvoiceViewProps) {
   const printRef = useRef<HTMLDivElement>(null)
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState('')
   const formatCurrency = (amount: unknown) => formatCurrencyAmount(amount, invoiceCurrencyOf(invoice))
 
+  const isQuotation = invoice?.document_type === 'quotation'
+  const docTitle = isQuotation ? 'Quotation' : 'Invoice'
+  const providerWebsite = invoice?.company_website || QUANTIS_LETTERHEAD.company_website
+
+  const handleDownloadPdf = async () => {
+    const el = printRef.current
+    if (!el || !invoice || downloading) return
+    try {
+      setDownloading(true)
+      setDownloadError('')
+      await downloadElementPdf(el, {
+        filename: `${invoice.invoice_number || docTitle}.pdf`,
+        footerLines: [
+          'Thank you for your business.',
+          `${QUANTIS_LETTERHEAD.company_legal_name} · ${providerWebsite.replace(/^https?:\/\//, '')} · ${invoice.invoice_number}`,
+        ],
+      })
+    } catch (err) {
+      console.error('PDF download failed', err)
+      setDownloadError('Could not build the PDF. Use Print instead.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   useEffect(() => {
-    if (autoPrint && invoice) {
-      const t = setTimeout(() => window.print(), 400)
+    if (autoDownload && invoice) {
+      const t = setTimeout(() => {
+        void handleDownloadPdf()
+      }, 400)
       return () => clearTimeout(t)
     }
-  }, [autoPrint, invoice])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoDownload, invoice?.id])
 
   if (!invoice) return null
-
-  const isQuotation = invoice.document_type === 'quotation'
-  const docTitle = isQuotation ? 'Quotation' : 'Invoice'
 
   const balanceDue = getBalanceDue(invoice)
   const amountPaid = Number(invoice.amount_paid || 0)
@@ -59,7 +88,6 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
   const billingPeriod = formatBillingPeriod(invoice.billing_period_start, invoice.billing_period_end)
   const providerEmail = invoice.company_email || QUANTIS_LETTERHEAD.company_email
   const providerPhone = invoice.company_phone || QUANTIS_LETTERHEAD.company_phone
-  const providerWebsite = invoice.company_website || QUANTIS_LETTERHEAD.company_website
   const contactName = [invoice.client?.firstName, invoice.client?.lastName].filter(Boolean).join(' ')
   const billToName = clientDisplayName(invoice.client)
   const showContact = contactName && contactName !== billToName
@@ -81,7 +109,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
   return (
     <div className="qt-print-root fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:static print:bg-white print:p-0 print:h-auto print:overflow-visible print:block">
       <div ref={printRef} id="invoice-print-area" className="qt-print-area bg-white w-full max-w-5xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:rounded-none print:overflow-visible print:w-full">
-        <div className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
+        <div data-pdf-hide className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
           <h2 className="text-base sm:text-xl font-bold min-w-0 truncate">{docTitle} {invoice.invoice_number}</h2>
           <div className="flex flex-wrap items-center gap-2">
             {canRecordPayment && (
@@ -93,18 +121,25 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
                 Record Payment
               </button>
             )}
-            <div className="relative">
+            <div className="relative inline-flex rounded-md shadow-sm">
               <button
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="inline-flex items-center px-4 py-2 bg-purple-700 text-white rounded-md hover:bg-purple-600"
+                onClick={handleDownloadPdf}
+                disabled={downloading}
+                className="inline-flex items-center px-4 py-2 bg-purple-700 text-white rounded-l-md hover:bg-purple-600 disabled:opacity-60"
               >
                 <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
-                Download
-                <ChevronDownIcon className="w-4 h-4 ml-1" />
+                {downloading ? 'Preparing PDF…' : 'Download PDF'}
+              </button>
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                aria-label="More download options"
+                className="inline-flex items-center px-2 py-2 bg-purple-700 text-white rounded-r-md border-l border-purple-500 hover:bg-purple-600"
+              >
+                <ChevronDownIcon className="w-4 h-4" />
               </button>
               {showExportMenu && (
-                <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg border z-10">
-                  <button onClick={() => { setShowExportMenu(false); window.print() }} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm">PDF (Print)</button>
+                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border z-10">
+                  <button onClick={() => { setShowExportMenu(false); window.print() }} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm">Print</button>
                 </div>
               )}
             </div>
@@ -114,6 +149,9 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
             <button onClick={onClose} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Close</button>
           </div>
         </div>
+        {downloadError && (
+          <p data-pdf-hide className="print:hidden px-4 sm:px-8 pt-3 text-sm text-red-600">{downloadError}</p>
+        )}
 
         <table className="qt-print-sheet w-full">
           <thead className="hidden print:table-header-group">
@@ -155,7 +193,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
               <MetaRow label="PO / reference" value={invoice.purchase_order} />
               <MetaRow label="Project" value={invoice.project?.title} />
             </div>
-            <div className="text-sm print:hidden">
+            <div data-pdf-hide className="text-sm print:hidden">
               <p className="text-gray-500">Internal status</p>
               <p className="font-semibold capitalize text-gray-800">{getPaymentStatusLabel(invoice)}</p>
             </div>
@@ -285,7 +323,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
           )}
 
           {!isQuotation && receipts.length > 0 && (
-            <div className="mb-8 print:hidden">
+            <div data-pdf-hide className="mb-8 print:hidden">
               <p className="text-sm font-semibold text-gray-800 mb-2">Payments received</p>
               <table className="w-full text-sm">
                 <thead>
@@ -325,7 +363,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
             </div>
           )}
 
-          <div className="border-t border-gray-200 pt-4 text-xs text-gray-500 print:hidden">
+          <div data-pdf-hide className="border-t border-gray-200 pt-4 text-xs text-gray-500 print:hidden">
             <p>Thank you for your business.</p>
             <p>{QUANTIS_LETTERHEAD.company_legal_name} · {providerWebsite.replace(/^https?:\/\//, '')}</p>
           </div>

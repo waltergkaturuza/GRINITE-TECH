@@ -386,6 +386,48 @@ body {
   display: none;
 }
 
+/* PDF download: html2canvas renders a clone of the document at A4 width (see lib/documentPdf.ts). */
+.qt-pdf-capture-ancestor {
+  display: block !important;
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  filter: none !important;
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.qt-pdf-capture-hidden {
+  display: none !important;
+}
+
+.qt-pdf-capture {
+  position: static !important;
+  width: 794px !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin: 0 !important;
+  background: #fff !important;
+  color: #111827 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.qt-pdf-capture .qt-print-footer,
+.qt-pdf-capture [data-pdf-hide] {
+  display: none !important;
+}
+
 @media print {
   @page {
     size: A4 portrait;

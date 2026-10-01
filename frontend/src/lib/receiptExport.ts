@@ -186,8 +186,4 @@ export function exportReceiptExcel(receipt: ReceiptDocument) {
   XLSX.writeFile(wb, `${receipt.invoice_number}.xlsx`)
 }
 
-export function exportReceiptPDF() {
-  window.print()
-}
-
 export { formatDate, clientName }

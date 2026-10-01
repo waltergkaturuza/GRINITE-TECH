@@ -5,13 +5,13 @@ import { ArrowDownTrayIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import QuantisLetterhead from '../QuantisLetterhead'
 import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
 import {
-  exportReceiptPDF,
   exportReceiptWord,
   exportReceiptExcel,
   formatCurrency as formatCurrencyAmount,
   formatDate,
   clientName,
 } from '../../lib/receiptExport'
+import { downloadElementPdf } from '../../lib/documentPdf'
 import { getVatRate } from '../../lib/invoiceUtils'
 import { invoiceCurrencyOf } from '../../lib/money'
 
@@ -19,20 +19,47 @@ interface ReceiptViewProps {
   receipt: any
   onClose: () => void
   onEdit?: () => void
-  autoPrint?: boolean
+  /** Start the PDF download as soon as the receipt is shown (list "Download" action). */
+  autoDownload?: boolean
 }
 
-export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: ReceiptViewProps) {
+export default function ReceiptView({ receipt, onClose, onEdit, autoDownload }: ReceiptViewProps) {
   const printRef = useRef<HTMLDivElement>(null)
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState('')
   const formatCurrency = (amount: number) => formatCurrencyAmount(amount, invoiceCurrencyOf(receipt))
 
+  const handleDownloadPdf = async () => {
+    const el = printRef.current
+    if (!el || !receipt || downloading) return
+    try {
+      setDownloading(true)
+      setDownloadError('')
+      await downloadElementPdf(el, {
+        filename: `${receipt.invoice_number || 'Receipt'}.pdf`,
+        footerLines: [
+          'Thank you for your business.',
+          `${QUANTIS_LETTERHEAD.company_legal_name} · ${receipt.invoice_number}`,
+        ],
+      })
+    } catch (err) {
+      console.error('PDF download failed', err)
+      setDownloadError('Could not build the PDF. Use Print instead.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   useEffect(() => {
-    if (autoPrint && receipt) {
-      const t = setTimeout(() => window.print(), 400)
+    if (autoDownload && receipt) {
+      const t = setTimeout(() => {
+        void handleDownloadPdf()
+      }, 400)
       return () => clearTimeout(t)
     }
-  }, [autoPrint, receipt])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoDownload, receipt?.id])
 
   if (!receipt) return null
 
@@ -40,9 +67,9 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
   const showVat = vatRate > 0.001 && Number(receipt.tax_amount) > 0
   const projectTitle = receipt.project?.title || receipt.parent_invoice?.project?.title
 
-  const handleExport = (type: 'pdf' | 'word' | 'excel') => {
+  const handleExport = (type: 'print' | 'word' | 'excel') => {
     setShowExportMenu(false)
-    if (type === 'pdf') exportReceiptPDF()
+    if (type === 'print') window.print()
     else if (type === 'word') exportReceiptWord(receipt)
     else exportReceiptExcel(receipt)
   }
@@ -55,22 +82,29 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
         className="qt-print-area bg-white w-full max-w-4xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:overflow-visible print:rounded-none print:w-full"
       >
         {/* Modal header - hidden when printing */}
-        <div className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
+        <div data-pdf-hide className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
           <h2 className="text-base sm:text-xl font-bold min-w-0 truncate">Receipt {receipt.invoice_number}</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
+            <div className="relative inline-flex rounded-md shadow-sm">
               <button
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="inline-flex items-center px-4 py-2 bg-purple-700 text-white rounded-md hover:bg-purple-600"
+                onClick={handleDownloadPdf}
+                disabled={downloading}
+                className="inline-flex items-center px-4 py-2 bg-purple-700 text-white rounded-l-md hover:bg-purple-600 disabled:opacity-60"
               >
                 <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
-                Download
-                <ChevronDownIcon className="w-4 h-4 ml-1" />
+                {downloading ? 'Preparing PDF…' : 'Download PDF'}
+              </button>
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                aria-label="More download options"
+                className="inline-flex items-center px-2 py-2 bg-purple-700 text-white rounded-r-md border-l border-purple-500 hover:bg-purple-600"
+              >
+                <ChevronDownIcon className="w-4 h-4" />
               </button>
               {showExportMenu && (
-                <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                  <button onClick={() => handleExport('pdf')} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm">
-                    PDF (Print)
+                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                  <button onClick={() => handleExport('print')} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm">
+                    Print
                   </button>
                   <button onClick={() => handleExport('word')} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm">
                     Word (.doc)
@@ -91,6 +125,9 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
             </button>
           </div>
         </div>
+        {downloadError && (
+          <p data-pdf-hide className="print:hidden px-8 pt-3 text-sm text-red-600">{downloadError}</p>
+        )}
 
         <table className="qt-print-sheet w-full">
           <thead className="hidden print:table-header-group">
