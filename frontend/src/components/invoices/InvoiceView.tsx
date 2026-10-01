@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowDownTrayIcon, ChevronDownIcon, BanknotesIcon } from '@heroicons/react/24/outline'
+import { ArrowDownTrayIcon, BanknotesIcon } from '@heroicons/react/24/outline'
 import { QUANTIS_LETTERHEAD, formatSellerBankBlock } from '../../lib/companyLetterhead'
 import QuantisLetterhead from '../QuantisLetterhead'
 import {
@@ -16,13 +16,14 @@ import {
   getVatRate,
 } from '../../lib/invoiceUtils'
 import { invoiceCurrencyOf } from '../../lib/money'
+import { downloadElementPdf } from '../../lib/printDocument'
 
 interface InvoiceViewProps {
   invoice: any
   onClose: () => void
   onEdit?: () => void
   onRecordPayment?: (invoice: any) => void
-  autoPrint?: boolean
+  autoDownload?: boolean
 }
 
 function MetaRow({ label, value }: { label: string; value?: string | null }) {
@@ -35,17 +36,34 @@ function MetaRow({ label, value }: { label: string; value?: string | null }) {
   )
 }
 
-export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment, autoPrint }: InvoiceViewProps) {
+export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment, autoDownload }: InvoiceViewProps) {
   const printRef = useRef<HTMLDivElement>(null)
-  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const formatCurrency = (amount: unknown) => formatCurrencyAmount(amount, invoiceCurrencyOf(invoice))
 
+  const downloadInvoice = async () => {
+    const node = printRef.current
+    if (!node || !invoice || downloading) return
+    const title = invoice.document_type === 'quotation' ? 'Quotation' : 'Invoice'
+    setDownloading(true)
+    try {
+      await downloadElementPdf(node, `${title} ${invoice.invoice_number}.pdf`)
+    } catch (error) {
+      console.error(error)
+      alert('Could not create the PDF. Please try again.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   useEffect(() => {
-    if (autoPrint && invoice) {
-      const t = setTimeout(() => window.print(), 400)
+    if (autoDownload && invoice) {
+      const t = setTimeout(() => {
+        void downloadInvoice()
+      }, 400)
       return () => clearTimeout(t)
     }
-  }, [autoPrint, invoice])
+  }, [autoDownload, invoice])
 
   if (!invoice) return null
 
@@ -79,9 +97,9 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
   }
 
   return (
-    <div className="qt-print-root fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:static print:bg-white print:p-0 print:h-auto print:overflow-visible print:block">
-      <div ref={printRef} id="invoice-print-area" className="qt-print-area bg-white w-full max-w-5xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:rounded-none print:overflow-visible print:w-full">
-        <div className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
+    <div className="invoice-print-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:bg-white print:p-0">
+      <div ref={printRef} id="invoice-print-area" className="bg-white w-full max-w-5xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:overflow-visible print:shadow-none print:rounded-none">
+        <div className="no-print bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
           <h2 className="text-base sm:text-xl font-bold min-w-0 truncate">{docTitle} {invoice.invoice_number}</h2>
           <div className="flex flex-wrap items-center gap-2">
             {canRecordPayment && (
@@ -93,21 +111,14 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
                 Record Payment
               </button>
             )}
-            <div className="relative">
-              <button
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="inline-flex items-center px-4 py-2 bg-purple-700 text-white rounded-md hover:bg-purple-600"
-              >
-                <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
-                Download
-                <ChevronDownIcon className="w-4 h-4 ml-1" />
-              </button>
-              {showExportMenu && (
-                <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg border z-10">
-                  <button onClick={() => { setShowExportMenu(false); window.print() }} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm">PDF (Print)</button>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() => { void downloadInvoice() }}
+              disabled={downloading}
+              className="inline-flex items-center px-4 py-2 bg-purple-700 text-white rounded-md hover:bg-purple-600 disabled:opacity-60"
+            >
+              <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
+              {downloading ? 'Saving PDF…' : 'Download PDF'}
+            </button>
             {onEdit && (
               <button onClick={onEdit} className="px-4 py-2 bg-amber-800 text-white rounded-md hover:bg-green-600">Edit</button>
             )}
@@ -115,21 +126,8 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
           </div>
         </div>
 
-        <table className="qt-print-sheet w-full">
-          <thead className="hidden print:table-header-group">
-            <tr>
-              <td>
-                <QuantisLetterhead compact logoSrc={invoice.company_logo_url} />
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
         <div className="p-4 sm:p-8 bg-white text-gray-900 print:p-0">
-          <div className="print:hidden">
-            <QuantisLetterhead logoSrc={invoice.company_logo_url} className="mb-6" />
-          </div>
+          <QuantisLetterhead logoSrc={invoice.company_logo_url} className="mb-6" />
 
           <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
             <p className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 break-words">{dueHeadline}</p>
@@ -161,7 +159,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-8 text-sm print:break-inside-avoid">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-8 text-sm">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Service Provider</p>
               <p className="font-semibold text-gray-900">{invoice.company_name || QUANTIS_LETTERHEAD.company_name}</p>
@@ -190,7 +188,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
             </div>
           </div>
 
-          <div className="overflow-x-auto mb-6 print:overflow-visible">
+          <div className="overflow-x-auto mb-6">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-300 text-left text-gray-500">
@@ -260,12 +258,7 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
               )}
             </div>
           </div>
-        </div>
-              </td>
-            </tr>
-            <tr className="qt-print-closing-row">
-              <td>
-          <div className="qt-print-closing px-4 sm:px-8 pb-4 sm:pb-8 print:px-0 print:pb-0">
+
           <p className="text-sm italic text-gray-600 mb-8">
             Amount in words: {amountInWords(Number(invoice.total_amount), invoiceCurrencyOf(invoice))}
           </p>
@@ -325,24 +318,43 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
             </div>
           )}
 
-          <div className="border-t border-gray-200 pt-4 text-xs text-gray-500 print:hidden">
+          <div className="invoice-closing border-t border-gray-200 pt-4 mt-2 text-xs text-gray-500">
             <p>Thank you for your business.</p>
-            <p>{QUANTIS_LETTERHEAD.company_legal_name} · {providerWebsite.replace(/^https?:\/\//, '')}</p>
+            <p className="break-words">{QUANTIS_LETTERHEAD.company_legal_name} · {providerWebsite.replace(/^https?:\/\//, '')} · {invoice.invoice_number}</p>
           </div>
-          </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div className="qt-print-footer">
-          <div className="qt-print-footer-rule" />
-          <p>Thank you for your business.</p>
-          <p>
-            {QUANTIS_LETTERHEAD.company_legal_name} · {providerWebsite.replace(/^https?:\/\//, '')} · {invoice.invoice_number}
-          </p>
         </div>
       </div>
+
+      <style jsx global>{`
+        @media print {
+          @page { size: A4; margin: 16mm 14mm 18mm; }
+          html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+          .invoice-print-backdrop {
+            position: static !important;
+            inset: auto !important;
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+            padding: 0 !important;
+            background: #fff !important;
+          }
+          #invoice-print-area {
+            position: static !important;
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
+            width: 100% !important;
+            max-width: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+          }
+          .no-print { display: none !important; }
+          .invoice-letterhead, .invoice-closing, .invoice-keep, #invoice-print-area tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+        }
+      `}</style>
     </div>
   )
 }

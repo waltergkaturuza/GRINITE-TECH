@@ -3,9 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowDownTrayIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import QuantisLetterhead from '../QuantisLetterhead'
-import { QUANTIS_LETTERHEAD } from '../../lib/companyLetterhead'
 import {
-  exportReceiptPDF,
   exportReceiptWord,
   exportReceiptExcel,
   formatCurrency as formatCurrencyAmount,
@@ -14,25 +12,43 @@ import {
 } from '../../lib/receiptExport'
 import { getVatRate } from '../../lib/invoiceUtils'
 import { invoiceCurrencyOf } from '../../lib/money'
+import { downloadElementPdf } from '../../lib/printDocument'
 
 interface ReceiptViewProps {
   receipt: any
   onClose: () => void
   onEdit?: () => void
-  autoPrint?: boolean
+  autoDownload?: boolean
 }
 
-export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: ReceiptViewProps) {
+export default function ReceiptView({ receipt, onClose, onEdit, autoDownload }: ReceiptViewProps) {
   const printRef = useRef<HTMLDivElement>(null)
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const formatCurrency = (amount: number) => formatCurrencyAmount(amount, invoiceCurrencyOf(receipt))
 
+  const downloadReceipt = async () => {
+    const node = printRef.current
+    if (!node || !receipt || downloading) return
+    setDownloading(true)
+    try {
+      await downloadElementPdf(node, `Receipt ${receipt.invoice_number}.pdf`)
+    } catch (error) {
+      console.error(error)
+      alert('Could not create the PDF. Please try again.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   useEffect(() => {
-    if (autoPrint && receipt) {
-      const t = setTimeout(() => window.print(), 400)
+    if (autoDownload && receipt) {
+      const t = setTimeout(() => {
+        void downloadReceipt()
+      }, 400)
       return () => clearTimeout(t)
     }
-  }, [autoPrint, receipt])
+  }, [autoDownload, receipt])
 
   if (!receipt) return null
 
@@ -42,20 +58,20 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
 
   const handleExport = (type: 'pdf' | 'word' | 'excel') => {
     setShowExportMenu(false)
-    if (type === 'pdf') exportReceiptPDF()
+    if (type === 'pdf') void downloadReceipt()
     else if (type === 'word') exportReceiptWord(receipt)
     else exportReceiptExcel(receipt)
   }
 
   return (
-    <div className="qt-print-root fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:static print:bg-white print:p-0 print:h-auto print:overflow-visible print:block">
+    <div className="invoice-print-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 print:bg-white print:p-0">
       <div
         ref={printRef}
         id="receipt-print-area"
-        className="qt-print-area bg-white w-full max-w-4xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:overflow-visible print:rounded-none print:w-full"
+        className="bg-white w-full max-w-4xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-lg shadow-xl print:max-h-none print:shadow-none print:overflow-visible"
       >
         {/* Modal header - hidden when printing */}
-        <div className="bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
+        <div className="no-print bg-granite-800 text-white p-3 sm:p-4 rounded-t-lg print:hidden flex flex-wrap justify-between items-center gap-2">
           <h2 className="text-base sm:text-xl font-bold min-w-0 truncate">Receipt {receipt.invoice_number}</h2>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
@@ -69,8 +85,8 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
               </button>
               {showExportMenu && (
                 <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                  <button onClick={() => handleExport('pdf')} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm">
-                    PDF (Print)
+                  <button onClick={() => handleExport('pdf')} disabled={downloading} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm disabled:opacity-60">
+                    {downloading ? 'Saving PDF…' : 'PDF'}
                   </button>
                   <button onClick={() => handleExport('word')} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 text-sm">
                     Word (.doc)
@@ -92,21 +108,9 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
           </div>
         </div>
 
-        <table className="qt-print-sheet w-full">
-          <thead className="hidden print:table-header-group">
-            <tr>
-              <td>
-                <QuantisLetterhead compact logoSrc={receipt.company_logo_url} />
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-        <div className="p-8 bg-white text-gray-900 print:p-0">
-          <div className="print:hidden">
-            <QuantisLetterhead logoSrc={receipt.company_logo_url} className="mb-6" />
-          </div>
+        {/* Receipt body */}
+        <div className="p-8 bg-white text-gray-900 print:p-6">
+          <QuantisLetterhead logoSrc={receipt.company_logo_url} className="mb-6" />
 
           {/* Title row */}
           <div className="flex justify-between items-start mb-8">
@@ -172,7 +176,7 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
           )}
 
           {/* Items table */}
-          <div className="mb-8 overflow-x-auto print:overflow-visible">
+          <div className="mb-8 overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-sky-100">
@@ -215,19 +219,36 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoPrint }: Rec
             </div>
           </div>
         </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div className="qt-print-footer">
-          <div className="qt-print-footer-rule" />
-          <p>Thank you for your business.</p>
-          <p>
-            {QUANTIS_LETTERHEAD.company_legal_name} · {receipt.invoice_number}
-          </p>
-        </div>
       </div>
+
+      <style jsx global>{`
+        @media print {
+          @page { size: A4; margin: 16mm 14mm 18mm; }
+          html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+          .invoice-print-backdrop {
+            position: static !important;
+            inset: auto !important;
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+            background: #fff !important;
+          }
+          #receipt-print-area {
+            position: static !important;
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
+            width: 100% !important;
+            max-width: none !important;
+            box-shadow: none !important;
+          }
+          .no-print { display: none !important; }
+          .invoice-letterhead, #receipt-print-area tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+        }
+      `}</style>
     </div>
   )
 }

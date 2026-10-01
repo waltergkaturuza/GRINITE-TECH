@@ -95,13 +95,13 @@ export function absoluteLetterheadLogoUrl(stored?: string | null) {
 
 export function letterheadCss() {
   return `
-.qh { width: 100%; border-collapse: collapse; margin: 0 0 10px; }
-.qh td { vertical-align: middle; padding: 0; }
-.qh-logo { width: 54%; }
-.qh-logo img { height: 68px; width: auto; max-width: 300px; display: block; }
-.qh-contact { font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 1.45; color: #1B365D; text-align: right; }
-.qh-name { font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-size: 11px; color: #152A4A; margin-bottom: 4px; }
-.qh-rule { height: 3px; background: linear-gradient(90deg, #1B365D 0%, #2E6B9E 58%, #C4A574 100%); margin: 0 0 22px; }
+.qh { width: 100%; border-collapse: collapse; margin: 0 0 10px; break-inside: avoid; page-break-inside: avoid; }
+.qh td { vertical-align: top; padding: 0; }
+.qh-logo { width: 42%; }
+.qh-logo img { height: 58px; width: auto; max-width: 220px; display: block; }
+.qh-contact { font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 1.45; color: #1B365D; text-align: right; word-wrap: break-word; overflow-wrap: anywhere; }
+.qh-name { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 11px; color: #152A4A; margin-bottom: 4px; }
+.qh-rule { height: 3px; background: linear-gradient(90deg, #1B365D 0%, #2E6B9E 58%, #C4A574 100%); margin: 8px 0 22px; }
 `
 }
 
@@ -134,10 +134,10 @@ export function letterheadHtmlInline(origin = '', storedLogo?: string | null) {
 <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 8px;">
   <tr>
     <td style="width:54%;vertical-align:middle;padding:0;">
-      <img src="${escapeHtml(logo)}" alt="Quantis Technologies" style="height:68px;width:auto;max-width:300px;display:block;" />
+      <img src="${escapeHtml(logo)}" alt="Quantis Technologies" style="height:58px;width:auto;max-width:220px;display:block;" />
     </td>
-    <td style="vertical-align:middle;padding:0;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.45;color:#1B365D;">
-      <div style="font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-size:11px;color:#152A4A;margin-bottom:4px;">${escapeHtml(contact.legalName)}</div>
+    <td style="vertical-align:top;padding:0 0 0 12px;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.45;color:#1B365D;word-wrap:break-word;">
+      <div style="font-weight:700;letter-spacing:0.04em;text-transform:uppercase;font-size:11px;color:#152A4A;margin-bottom:4px;">${escapeHtml(contact.legalName)}</div>
       ${lines}
     </td>
   </tr>

@@ -42,7 +42,7 @@ export default function InvoicesPage() {
   const [showView, setShowView] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
-  const [openForPrint, setOpenForPrint] = useState(false)
+  const [openForDownload, setOpenForDownload] = useState(false)
   const [activeTab, setActiveTab] = useState<'invoices' | 'quotations' | 'receipts'>('invoices')
   const [linkedInvoiceForReceipt, setLinkedInvoiceForReceipt] = useState<any>(null)
   const [fx, setFx] = useState<FxConfig>(defaultFxConfig)
@@ -202,9 +202,14 @@ export default function InvoicesPage() {
 
   const totalPages = Math.ceil(totalCount / itemsPerPage)
 
-  const handleDownloadPDF = (inv: any) => {
-    setSelectedInvoice(inv)
-    setOpenForPrint(true)
+  const handleDownloadPDF = async (inv: any) => {
+    try {
+      const full = inv?.id ? await invoicesAPI.getInvoice(inv.id) : inv
+      setSelectedInvoice(full)
+    } catch {
+      setSelectedInvoice(inv)
+    }
+    setOpenForDownload(true)
     setShowView(true)
   }
 
@@ -622,32 +627,32 @@ export default function InvoicesPage() {
         selectedInvoice.document_type === 'receipt' || isReceiptTab ? (
           <ReceiptView
             receipt={selectedInvoice}
-            autoPrint={openForPrint}
+            autoDownload={openForDownload}
             onClose={() => {
               setShowView(false)
               setSelectedInvoice(null)
-              setOpenForPrint(false)
+              setOpenForDownload(false)
             }}
             onEdit={() => {
               setShowView(false)
               setShowForm(true)
-              setOpenForPrint(false)
+              setOpenForDownload(false)
             }}
           />
         ) : (
           <InvoiceView
             invoice={selectedInvoice}
-            autoPrint={openForPrint}
+            autoDownload={openForDownload}
             onRecordPayment={handleRecordPayment}
             onClose={() => {
               setShowView(false)
               setSelectedInvoice(null)
-              setOpenForPrint(false)
+              setOpenForDownload(false)
             }}
             onEdit={() => {
               setShowView(false)
               setShowForm(true)
-              setOpenForPrint(false)
+              setOpenForDownload(false)
             }}
           />
         )
