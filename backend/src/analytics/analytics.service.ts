@@ -49,12 +49,14 @@ export class AnalyticsService {
   }
 
   async getSummary(windowDays = 14) {
+    const allTime = windowDays <= 0;
     const since = new Date();
     since.setDate(since.getDate() - windowDays);
+    const createdAt = allTime ? undefined : MoreThanOrEqual(since);
 
     const [pageViews, events] = await Promise.all([
-      this.pageViewRepo.find({ where: { createdAt: MoreThanOrEqual(since) } }),
-      this.eventRepo.find({ where: { createdAt: MoreThanOrEqual(since) } }),
+      this.pageViewRepo.find({ where: createdAt ? { createdAt } : {} }),
+      this.eventRepo.find({ where: createdAt ? { createdAt } : {} }),
     ]);
 
     const totalPageViews = pageViews.length;
@@ -112,7 +114,7 @@ export class AnalyticsService {
     const uniqueSessions = new Set(pageViews.map(v => v.sessionId).filter(Boolean)).size;
 
     return {
-      windowDays,
+      windowDays: allTime ? 0 : windowDays,
       totalPageViews,
       totalEvents,
       uniqueSessions,

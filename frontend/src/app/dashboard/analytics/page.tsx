@@ -44,7 +44,13 @@ const RANGE_OPTIONS: RangeOption[] = [
   { label: '30 days', windowDays: 30 },
   { label: '3 months', windowDays: 90 },
   { label: '1 year', windowDays: 365 },
+  { label: 'All time', windowDays: 0 },
 ]
+
+function rangeCaption(windowDays?: number) {
+  if (!windowDays) return 'All time'
+  return `${windowDays} days`
+}
 
 interface BusinessKpis {
   totalRevenue: number
@@ -347,7 +353,7 @@ export default function AnalyticsPage() {
           <h1 className="text-2xl font-bold text-white">Analytics</h1>
           <p className="mt-2 text-sm text-gray-300">
             {data
-              ? `Last ${data.windowDays} days · ${data.totalPageViews} page views · ${data.uniqueSessions} unique sessions`
+              ? `${data.windowDays > 0 ? `Last ${data.windowDays} days` : 'All time'} · ${data.totalPageViews} page views · ${data.uniqueSessions} unique sessions`
               : 'Web analytics summary is unavailable'}
           </p>
           {error && <p className="mt-1 text-sm text-amber-400">{error}</p>}
@@ -535,7 +541,7 @@ export default function AnalyticsPage() {
                       </option>
                     ))}
                 </select>
-                <span className="text-xs text-slate-400">{data ? `${data.windowDays} days` : ''}</span>
+                <span className="text-xs text-slate-400">{data ? rangeCaption(data.windowDays) : ''}</span>
               </div>
             </div>
 
@@ -558,7 +564,7 @@ export default function AnalyticsPage() {
                 <h3 className="text-lg leading-6 font-medium text-white">Page Views</h3>
                 <p className="mt-1 text-xs text-slate-300">Total vs unique sessions</p>
               </div>
-              <span className="text-xs text-slate-400">{data ? `${data.windowDays} days` : ''}</span>
+              <span className="text-xs text-slate-400">{data ? rangeCaption(data.windowDays) : ''}</span>
             </div>
 
             <div className="h-64">
@@ -579,7 +585,7 @@ export default function AnalyticsPage() {
           <div className="px-4 py-5 sm:p-6 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <h3 className="text-lg leading-6 font-medium text-white">Top pages</h3>
-              <span className="text-xs text-slate-400">{data ? `${data.windowDays} days` : ''}</span>
+              <span className="text-xs text-slate-400">{data ? rangeCaption(data.windowDays) : ''}</span>
             </div>
 
             <ul className="divide-y divide-granite-700">
@@ -620,7 +626,7 @@ export default function AnalyticsPage() {
                   <h3 className="text-lg leading-6 font-medium text-white">Devices</h3>
                   <p className="mt-1 text-xs text-slate-300">Browser device types</p>
                 </div>
-                <span className="text-xs text-slate-400">{data ? `${data.windowDays} days` : ''}</span>
+                <span className="text-xs text-slate-400">{data ? rangeCaption(data.windowDays) : ''}</span>
               </div>
               <div className="h-64">
                 {devices.total <= 0 ? (
@@ -639,7 +645,7 @@ export default function AnalyticsPage() {
                   <h3 className="text-lg leading-6 font-medium text-white">Countries</h3>
                   <p className="mt-1 text-xs text-slate-300">Unique visitors by country</p>
                 </div>
-                <span className="text-xs text-slate-400">{data ? `${data.windowDays} days` : ''}</span>
+                <span className="text-xs text-slate-400">{data ? rangeCaption(data.windowDays) : ''}</span>
               </div>
               <div className="h-64">
                 {countries.length === 0 ? (

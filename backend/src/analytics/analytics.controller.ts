@@ -24,7 +24,8 @@ export class AnalyticsController {
 
   @Get('summary')
   async summary(@Query('windowDays') windowDays?: string) {
-    const days = windowDays ? parseInt(windowDays, 10) || 14 : 14;
+    const parsed = windowDays === undefined || windowDays === '' ? 14 : Number(windowDays);
+    const days = Number.isFinite(parsed) ? parsed : 14;
     const data = await this.analyticsService.getSummary(days);
     return {
       success: true,
