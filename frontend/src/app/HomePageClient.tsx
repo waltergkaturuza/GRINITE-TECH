@@ -64,10 +64,10 @@ export default function HomePageClient() {
       </section>
 
       {/* Core Capabilities - 6 Strategic Pillars */}
-      <section className="py-20 bg-white dark:bg-granite-900 relative">
+      <section className="py-8 sm:py-10 bg-white dark:bg-granite-900 relative">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-crimson-900 to-transparent"></div>
         <div className="wide-container px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-6">
             <h2 className="text-3xl md:text-4xl font-bold text-granite-800 dark:text-granite-100 mb-4">
               {t(lang, 'home.pillars.heading')}
             </h2>

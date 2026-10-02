@@ -12,6 +12,33 @@ import Navigation from '../components/Navigation'
 import SiteFooter from '@/components/SiteFooter'
 import TechSkillMarquee from '@/components/TechSkillMarquee'
 
+const APPROACHES = [
+  {
+    title: 'Clean Code',
+    body: 'Writing maintainable, scalable, and well-documented code following industry best practices.',
+    icon: CodeBracketIcon,
+    iconClass: 'text-blue-600',
+  },
+  {
+    title: 'Full-Stack',
+    body: 'End-to-end development from database design to user interface implementation.',
+    icon: GlobeAltIcon,
+    iconClass: 'text-green-600',
+  },
+  {
+    title: 'Mobile First',
+    body: 'Responsive design and mobile application development for all platforms.',
+    icon: DevicePhoneMobileIcon,
+    iconClass: 'text-purple-600',
+  },
+  {
+    title: 'Performance',
+    body: 'Optimized applications with focus on speed, scalability, and user experience.',
+    icon: ChartBarIcon,
+    iconClass: 'text-orange-600',
+  },
+]
+
 type PortfolioProject = {
   id: string
   title: string
@@ -1118,42 +1145,24 @@ export default function Portfolio() {
         {/* Experience Section */}
         <div id="experience-approach" className="mb-16 scroll-mt-24">
           <h2 className="text-3xl font-bold text-white text-center mb-12">Experience & Approach</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="bg-blue-100 text-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CodeBracketIcon className="h-8 w-8" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Clean Code</h3>
-              <p className="text-black text-sm">
-                Writing maintainable, scalable, and well-documented code following industry best practices.
-              </p>
-            </div>
-            <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="bg-green-100 text-green-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <GlobeAltIcon className="h-8 w-8" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Full-Stack</h3>
-              <p className="text-black text-sm">
-                End-to-end development from database design to user interface implementation.
-              </p>
-            </div>
-            <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="bg-purple-100 text-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <DevicePhoneMobileIcon className="h-8 w-8" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Mobile First</h3>
-              <p className="text-black text-sm">
-                Responsive design and mobile application development for all platforms.
-              </p>
-            </div>
-            <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="bg-orange-100 text-orange-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ChartBarIcon className="h-8 w-8" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Performance</h3>
-              <p className="text-black text-sm">
-                Optimized applications with focus on speed, scalability, and user experience.
-              </p>
+          <div className="qt-marquee-viewport">
+            <div className="qt-marquee-track">
+              {[0, 1].map((copy) => (
+                <div className="qt-marquee-group" key={copy} aria-hidden={copy === 1}>
+                  {[0, 1].map((repeat) =>
+                    APPROACHES.map((item) => (
+                      <div
+                        key={`${copy}-${repeat}-${item.title}`}
+                        className="qt-approach-card text-center bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                      >
+                        <item.icon className={`mx-auto mb-4 h-8 w-8 ${item.iconClass}`} />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+                        <p className="text-black text-sm">{item.body}</p>
+                      </div>
+                    )),
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>

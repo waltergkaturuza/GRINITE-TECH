@@ -534,28 +534,40 @@ body {
   box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.12), 0 24px 60px rgba(2, 8, 23, 0.35);
 }
 
-.qt-skill-corner {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-color: rgba(125, 211, 252, 0.9);
-  border-style: solid;
-}
-
-.qt-skill-corner-tl { top: 14px; left: 14px; border-width: 2px 0 0 2px; }
-.qt-skill-corner-tr { top: 14px; right: 14px; border-width: 2px 2px 0 0; }
-.qt-skill-corner-bl { bottom: 14px; left: 14px; border-width: 0 0 2px 2px; }
-.qt-skill-corner-br { bottom: 14px; right: 14px; border-width: 0 2px 2px 0; }
-
 .qt-marquee-viewport {
   overflow: hidden;
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  width: 100%;
+  max-width: 100%;
+  padding: 0.7rem 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
 
 .qt-marquee-track {
   display: flex;
   width: max-content;
+  flex-wrap: nowrap;
   animation: qt-marquee 42s linear infinite;
+  will-change: transform;
+}
+
+.qt-marquee-group {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+.qt-approach-card {
+  flex: 0 0 auto;
+  width: min(18rem, 78vw);
+  margin-right: 1.25rem;
+}
+
+.qt-pillar-card {
+  flex: 0 0 auto;
+  width: min(22rem, 82vw);
+  margin-right: 1rem;
+  padding: 0;
 }
 
 .qt-marquee-reverse {
@@ -563,8 +575,20 @@ body {
   animation-direction: reverse;
 }
 
-.qt-marquee-viewport:hover .qt-marquee-track {
+.qt-marquee-viewport:has(.qt-tech-pill:hover) .qt-marquee-track,
+.qt-marquee-viewport:has(.qt-tech-pill:focus-visible) .qt-marquee-track,
+.qt-skill-marquee.is-paused .qt-marquee-track {
   animation-play-state: paused;
+}
+
+@media (max-width: 767px) {
+  .qt-marquee-track {
+    animation-duration: 26s;
+  }
+
+  .qt-marquee-reverse {
+    animation-duration: 30s;
+  }
 }
 
 .qt-tech-pill {
@@ -579,8 +603,25 @@ body {
   color: #e8f4ff;
   font-size: 0.92rem;
   font-weight: 500;
+  line-height: 1;
   white-space: nowrap;
   margin-right: 0.75rem;
+  flex: 0 0 auto;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.qt-tech-pill:hover,
+.qt-tech-pill:focus-visible {
+  position: relative;
+  z-index: 3;
+  transform: scale(1.12);
+  border-color: rgba(186, 230, 253, 0.95);
+  background: rgba(14, 116, 180, 0.72);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.45), 0 0 22px rgba(56, 189, 248, 0.65);
+  outline: none;
 }
 
 .qt-tech-pill img,
@@ -613,12 +654,6 @@ body {
 }
 
 @keyframes qt-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .qt-marquee-track {
-    animation: none;
-  }
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
 }
