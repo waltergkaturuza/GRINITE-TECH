@@ -522,3 +522,103 @@ body {
     background: linear-gradient(90deg, #1b365d 0%, #2e6b9e 58%, #c4a574 100%);
   }
 }
+
+.qt-skill-marquee {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(14, 165, 233, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(8, 18, 36, 0.92), rgba(6, 12, 24, 0.96));
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.12), 0 24px 60px rgba(2, 8, 23, 0.35);
+}
+
+.qt-skill-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(125, 211, 252, 0.9);
+  border-style: solid;
+}
+
+.qt-skill-corner-tl { top: 14px; left: 14px; border-width: 2px 0 0 2px; }
+.qt-skill-corner-tr { top: 14px; right: 14px; border-width: 2px 2px 0 0; }
+.qt-skill-corner-bl { bottom: 14px; left: 14px; border-width: 0 0 2px 2px; }
+.qt-skill-corner-br { bottom: 14px; right: 14px; border-width: 0 2px 2px 0; }
+
+.qt-marquee-viewport {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.qt-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: qt-marquee 42s linear infinite;
+}
+
+.qt-marquee-reverse {
+  animation-duration: 48s;
+  animation-direction: reverse;
+}
+
+.qt-marquee-viewport:hover .qt-marquee-track {
+  animation-play-state: paused;
+}
+
+.qt-tech-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 2.75rem;
+  padding: 0 1rem 0 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 197, 230, 0.35);
+  background: rgba(8, 20, 38, 0.72);
+  color: #e8f4ff;
+  font-size: 0.92rem;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-right: 0.75rem;
+}
+
+.qt-tech-pill img,
+.qt-tech-mask {
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+  flex: none;
+}
+
+.qt-tech-mark {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex: none;
+}
+
+.qt-tech-mask {
+  display: inline-block;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+@keyframes qt-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qt-marquee-track {
+    animation: none;
+  }
+}

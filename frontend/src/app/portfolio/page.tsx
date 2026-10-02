@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 import Navigation from '../components/Navigation'
 import SiteFooter from '@/components/SiteFooter'
+import TechSkillMarquee from '@/components/TechSkillMarquee'
 
 type PortfolioProject = {
   id: string
@@ -767,34 +768,6 @@ export default function Portfolio() {
     }
   }, [loading])
 
-  // Sample skills data
-  const skills = [
-    {
-      category: "Frontend",
-      technologies: ["React", "Next.js", "TypeScript", "Tailwind CSS", "JavaScript", "HTML5", "CSS3"]
-    },
-    {
-      category: "Backend", 
-      technologies: ["Node.js", "NestJS", "Express", "Python", "Java", "C#", ".NET"]
-    },
-    {
-      category: "Database",
-      technologies: ["PostgreSQL", "MySQL", "MongoDB", "Redis", "TypeORM", "Prisma"]
-    },
-    {
-      category: "Mobile",
-      technologies: ["React Native", "Flutter", "iOS", "Android", "Expo"]
-    },
-    {
-      category: "Cloud & DevOps",
-      technologies: ["AWS", "Docker", "Kubernetes", "CI/CD", "Vercel", "Render"]
-    },
-    {
-      category: "Tools",
-      technologies: ["Git", "GitHub", "VS Code", "Figma", "Jira", "Postman"]
-    }
-  ]
-
   const githubProjects: PortfolioProject[] = githubRepos
     .filter((r) => Boolean(r.homepage) || Boolean(r.description))
     .slice(0, 18)
@@ -964,23 +937,7 @@ export default function Portfolio() {
         {/* Skills Section */}
         <div id="technical-skills" className="mb-16 scroll-mt-24">
           <h2 className="text-3xl font-bold text-white text-center mb-12">Technical Skills</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {skills.map((skillGroup, index) => (
-              <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/15 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">{skillGroup.category}</h3>
-                <div className="flex flex-wrap gap-2">
-                  {skillGroup.technologies.map((tech, techIndex) => (
-                    <span 
-                      key={techIndex}
-                      className="bg-white/10 text-gray-100 text-sm px-3 py-1 rounded-full border border-white/15"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <TechSkillMarquee />
         </div>
 
         {/* Projects Section */}
