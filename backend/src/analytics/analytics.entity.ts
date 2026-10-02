@@ -20,6 +20,9 @@ export class PageView {
   @Column({ nullable: true })
   userAgent?: string;
 
+  @Column({ nullable: true })
+  countryCode?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }

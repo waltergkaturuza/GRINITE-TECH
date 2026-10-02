@@ -4,6 +4,7 @@ import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { AnalyticsEvent, PageView } from './analytics.entity';
 import { TrackPageViewDto } from './dto/track-page-view.dto';
 import { TrackEventDto } from './dto/track-event.dto';
+import { countryName } from './visitor-country';
 
 @Injectable()
 export class AnalyticsService {
@@ -24,13 +25,14 @@ export class AnalyticsService {
     return 'other';
   }
 
-  async trackPageView(data: TrackPageViewDto): Promise<void> {
+  async trackPageView(data: TrackPageViewDto, countryCode?: string | null): Promise<void> {
     const view = this.pageViewRepo.create({
       path: data.path,
       referrer: data.referrer,
       sessionId: data.sessionId,
       userId: data.userId,
       userAgent: data.userAgent,
+      countryCode: countryCode || undefined,
     });
     await this.pageViewRepo.save(view);
   }
@@ -78,10 +80,23 @@ export class AnalyticsService {
     }
 
     const devices: Record<string, number> = { desktop: 0, mobile: 0, tablet: 0, bot: 0, other: 0 };
+    const visitorsByCountry = new Map<string, Set<string>>();
     for (const view of pageViews) {
       const device = this.classifyDevice(view.userAgent);
       devices[device] = (devices[device] || 0) + 1;
+      if (!view.countryCode) continue;
+      const visitorKey = view.sessionId || view.id;
+      const visitors = visitorsByCountry.get(view.countryCode) || new Set<string>();
+      visitors.add(visitorKey);
+      visitorsByCountry.set(view.countryCode, visitors);
     }
+
+    const rankedCountries = [...visitorsByCountry.entries()]
+      .map(([code, visitors]) => ({ code, name: countryName(code), count: visitors.size }))
+      .sort((a, b) => b.count - a.count);
+    const topCountries = rankedCountries.slice(0, 8);
+    const otherCount = rankedCountries.slice(8).reduce((sum, row) => sum + row.count, 0);
+    const countries = otherCount > 0 ? [...topCountries, { code: 'OTHER', name: 'Other', count: otherCount }] : topCountries;
 
     const eventCounts: Record<string, number> = {};
     const eventsByDay: Record<string, number> = {};
@@ -104,6 +119,7 @@ export class AnalyticsService {
       viewsByDay,
       sessionsByDay,
       devices,
+      countries,
       topPages: Object.entries(topPages)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 50)

@@ -66,6 +66,7 @@ interface AnalyticsSummary {
   eventsByDay?: Record<string, number>;
   eventsByDayByName?: Record<string, Record<string, number>>;
   devices?: Record<string, number>;
+  countries?: { code: string; name: string; count: number }[];
 }
 
 export default function AnalyticsPage() {
@@ -283,14 +284,49 @@ export default function AnalyticsPage() {
     }
   }, [devices])
 
+  const countries = useMemo(() => data?.countries || [], [data])
+
+  const countriesChartData = useMemo(() => {
+    const palette = ['#22d3ee', '#fbbf24', '#a78bfa', '#fb7185', '#34d399', '#60a5fa', '#f472b6', '#facc15', '#94a3b8']
+    return {
+      labels: countries.map((row) => row.name),
+      datasets: [
+        {
+          data: countries.map((row) => row.count),
+          backgroundColor: countries.map((_, index) => palette[index % palette.length]),
+          borderColor: 'rgba(15, 23, 42, 0.6)',
+          borderWidth: 2,
+        },
+      ],
+    }
+  }, [countries])
+
   const doughnutOptions = useMemo(() => {
     return {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: '68%',
       plugins: {
         legend: {
           position: 'right' as const,
-          labels: { color: '#cbd5e1', boxWidth: 10 },
+          labels: {
+            color: '#e2e8f0',
+            boxWidth: 10,
+            boxHeight: 10,
+            padding: 12,
+            font: { size: 12 },
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label(context: { label?: string; raw?: unknown; dataset?: { data?: unknown[] } }) {
+              const value = Number(context.raw || 0)
+              const rows = context.dataset?.data || []
+              const total = rows.reduce<number>((sum, item) => sum + Number(item || 0), 0) || 1
+              const share = Math.round((value / total) * 100)
+              return ` ${context.label || ''}: ${value.toLocaleString()} (${share}%)`
+            },
+          },
         },
       },
     }
@@ -577,23 +613,43 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="bg-granite-800 shadow rounded-lg border border-granite-700">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-white">Devices</h3>
-                <p className="mt-1 text-xs text-slate-300">Browser device types</p>
+          <div className="px-4 py-5 sm:p-6 space-y-8">
+            <div>
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <h3 className="text-lg leading-6 font-medium text-white">Devices</h3>
+                  <p className="mt-1 text-xs text-slate-300">Browser device types</p>
+                </div>
+                <span className="text-xs text-slate-400">{data ? `${data.windowDays} days` : ''}</span>
               </div>
-              <span className="text-xs text-slate-400">{data ? `${data.windowDays} days` : ''}</span>
+              <div className="h-64">
+                {devices.total <= 0 ? (
+                  <div className="h-full rounded bg-granite-900 flex items-center justify-center">
+                    <p className="text-sm text-gray-400">No device data yet</p>
+                  </div>
+                ) : (
+                  <Doughnut data={devicesChartData as any} options={doughnutOptions as any} />
+                )}
+              </div>
             </div>
 
-            <div className="h-64">
-              {devices.total <= 0 ? (
-                <div className="h-full rounded bg-granite-900 flex items-center justify-center">
-                  <p className="text-sm text-gray-400">No device data yet</p>
+            <div className="border-t border-granite-700 pt-8">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <h3 className="text-lg leading-6 font-medium text-white">Countries</h3>
+                  <p className="mt-1 text-xs text-slate-300">Unique visitors by country</p>
                 </div>
-              ) : (
-                <Doughnut data={devicesChartData as any} options={doughnutOptions as any} />
-              )}
+                <span className="text-xs text-slate-400">{data ? `${data.windowDays} days` : ''}</span>
+              </div>
+              <div className="h-64">
+                {countries.length === 0 ? (
+                  <div className="h-full rounded bg-granite-900 flex items-center justify-center px-6 text-center">
+                    <p className="text-sm text-gray-400">Country is recorded from each new visit. Earlier visits are not included.</p>
+                  </div>
+                ) : (
+                  <Doughnut data={countriesChartData as any} options={doughnutOptions as any} />
+                )}
+              </div>
             </div>
           </div>
         </div>
