@@ -408,9 +408,7 @@ export default function ContactContent() {
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
-                  <div className="bg-crimson-100 p-3 rounded-lg">
-                    <EnvelopeIcon className="w-6 h-6 text-crimson-600" />
-                  </div>
+                  <EnvelopeIcon className="w-6 h-6 shrink-0 text-crimson-600" />
                   <div>
                     <h3 className="font-semibold text-granite-900">Email</h3>
                     <p className="text-granite-600">
@@ -443,9 +441,7 @@ export default function ContactContent() {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <PhoneIcon className="w-6 h-6 text-blue-600" />
-                  </div>
+                  <PhoneIcon className="w-6 h-6 shrink-0 text-blue-600" />
                   <div>
                     <h3 className="font-semibold text-granite-900 mb-2">Phone</h3>
                     <div className="space-y-1">
@@ -460,9 +456,7 @@ export default function ContactContent() {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="bg-green-100 p-3 rounded-lg">
-                    <MapPinIcon className="w-6 h-6 text-green-600" />
-                  </div>
+                  <MapPinIcon className="w-6 h-6 shrink-0 text-green-600" />
                   <div>
                     <h3 className="font-semibold text-granite-900">Office</h3>
                     <p className="text-granite-600 font-medium">{COMPANY_CONTACT.legalName}</p>
@@ -472,9 +466,7 @@ export default function ContactContent() {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="bg-amber-100 p-3 rounded-lg">
-                    <ClockIcon className="w-6 h-6 text-amber-600" />
-                  </div>
+                  <ClockIcon className="w-6 h-6 shrink-0 text-amber-600" />
                   <div>
                     <h3 className="font-semibold text-granite-900">Business Hours</h3>
                     <p className="text-granite-600">Monday - Friday: 8:00 AM - 6:00 PM</p>
@@ -486,9 +478,7 @@ export default function ContactContent() {
 
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="flex items-start space-x-4 mb-6">
-                <div className="bg-violet-100 p-3 rounded-lg">
-                  <MagnifyingGlassIcon className="w-6 h-6 text-violet-600" />
-                </div>
+                <MagnifyingGlassIcon className="w-6 h-6 shrink-0 text-violet-600" />
                 <div>
                   <h2 className="text-2xl font-bold text-granite-900">Track Request</h2>
                   <p className="text-granite-600 mt-2">
