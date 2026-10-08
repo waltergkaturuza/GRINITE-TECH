@@ -88,6 +88,32 @@ function cropCanvas(source: HTMLCanvasElement, sourceY: number, sourceHeight: nu
   return out
 }
 
+function rowIsBlank(data: Uint8ClampedArray, width: number, y: number) {
+  const start = y * width * 4
+  const step = Math.max(1, Math.floor(width / 500))
+  for (let x = 0; x < width; x += step) {
+    const i = start + x * 4
+    if (data[i] < 248 || data[i + 1] < 248 || data[i + 2] < 248) return false
+  }
+  return true
+}
+
+/** Drop empty rows so the logo and company text sit at the top of the letterhead. */
+function trimVerticalWhitespace(source: HTMLCanvasElement, maxTopTrim = Number.POSITIVE_INFINITY) {
+  const ctx = source.getContext('2d', { willReadFrequently: true })
+  if (!ctx || source.height < 4) return source
+  const { data, width, height } = ctx.getImageData(0, 0, source.width, source.height)
+  let top = 0
+  const topLimit = Math.min(height - 2, maxTopTrim)
+  while (top < topLimit && rowIsBlank(data, width, top)) top += 1
+  let bottom = height
+  while (bottom > top + 2 && rowIsBlank(data, width, bottom - 1)) bottom -= 1
+  top = Math.max(0, top - 1)
+  bottom = Math.min(height, bottom + 1)
+  if (top === 0 && bottom === height) return source
+  return cropCanvas(source, top, bottom - top) || source
+}
+
 type PdfLike = {
   addPage: () => void
   addImage: (data: string, format: string, x: number, y: number, w: number, h: number) => void
@@ -97,7 +123,7 @@ type PdfLike = {
 /** Draw the sheet across A4 pages, repeating the letterhead at the top of each page after the first. */
 export function paintElementPages(pdf: PdfLike, canvas: HTMLCanvasElement, root: HTMLElement) {
   const marginX = 10
-  const marginY = 12
+  const marginY = 8
   const pageWidth = pdf.internal.pageSize.getWidth()
   const pageHeight = pdf.internal.pageSize.getHeight()
   const contentWidth = pageWidth - marginX * 2
@@ -105,7 +131,7 @@ export function paintElementPages(pdf: PdfLike, canvas: HTMLCanvasElement, root:
   const total = Math.max(root.offsetHeight, 1)
   const scale = canvas.height / total
   const pageCss = (contentHeight / contentWidth) * (canvas.width / scale)
-  const gapCss = 4 * (pageCss / contentHeight)
+  const gapCss = 3 * (pageCss / contentHeight)
 
   const rootTop = root.getBoundingClientRect().top
   const letterhead = root.querySelector('.invoice-letterhead') as HTMLElement | null
@@ -113,45 +139,87 @@ export function paintElementPages(pdf: PdfLike, canvas: HTMLCanvasElement, root:
   let letterheadCss = 0
   if (letterhead) {
     const top = letterhead.getBoundingClientRect().top - rootTop
-    const marginBottom = Number.parseFloat(getComputedStyle(letterhead).marginBottom) || 0
-    letterheadCss = letterhead.offsetHeight + marginBottom
-    letterheadCanvas = cropCanvas(canvas, top * scale, letterheadCss * scale)
+    const box = letterhead.getBoundingClientRect().height
+    const raw = cropCanvas(canvas, top * scale, box * scale)
+    if (raw) {
+      letterheadCanvas = trimVerticalWhitespace(raw)
+      letterheadCss = letterheadCanvas.height / scale
+    }
+  }
+
+  const closing = root.querySelector('.invoice-closing') as HTMLElement | null
+  let closingCanvas: HTMLCanvasElement | null = null
+  let closingCss = 0
+  let bodyEnd = total
+  if (closing) {
+    const top = Math.max(0, closing.getBoundingClientRect().top - rootTop)
+    const box = closing.getBoundingClientRect().height
+    const raw = cropCanvas(canvas, top * scale, box * scale)
+    if (raw && box > 4) {
+      closingCanvas = raw
+      closingCss = raw.height / scale
+      bodyEnd = top
+    }
   }
 
   const bottoms = Array.from(
-    root.querySelectorAll('tr, .invoice-letterhead, .invoice-closing, .invoice-keep, p, li, h1, h2'),
+    root.querySelectorAll('tr, .invoice-letterhead, .invoice-keep, p, li, h1, h2'),
   )
     .map((node) => node.getBoundingClientRect().bottom - rootTop)
-    .filter((bottom) => bottom > 8)
+    .filter((bottom) => bottom > 8 && bottom <= bodyEnd + 1)
     .sort((a, b) => a - b)
 
   let cssY = 0
   let pageIndex = 0
-  while (cssY < total - 1 && pageIndex < 40) {
+  let lastContentBottomMm = marginY
+  while (cssY < bodyEnd - 1 && pageIndex < 40) {
     const reserve = pageIndex > 0 && letterheadCanvas ? letterheadCss + gapCss : 0
     const available = Math.max(pageCss - reserve, pageCss * 0.45)
-    let end = Math.min(total, cssY + available)
-    if (end < total - 4) {
+    let end = Math.min(bodyEnd, cssY + available)
+    if (end < bodyEnd - 4) {
       const snap = bottoms.filter((bottom) => bottom > cssY + available * 0.45 && bottom <= end + 0.5)
       if (snap.length) end = snap[snap.length - 1]
     }
-    if (end <= cssY + 1) end = Math.min(total, cssY + Math.max(available, 24))
+    if (end <= cssY + 1) end = Math.min(bodyEnd, cssY + Math.max(available, 24))
 
-    const slice = cropCanvas(canvas, cssY * scale, (end - cssY) * scale)
+    let slice = cropCanvas(canvas, cssY * scale, (end - cssY) * scale)
     if (!slice) break
+    let sliceCss = end - cssY
+    if (pageIndex === 0) {
+      const tightened = trimVerticalWhitespace(slice, 64 * scale)
+      if (tightened !== slice) {
+        sliceCss = tightened.height / scale
+        slice = tightened
+      }
+    }
     if (pageIndex > 0) pdf.addPage()
 
     let yMm = marginY
     if (pageIndex > 0 && letterheadCanvas) {
       const letterheadMm = (letterheadCss / pageCss) * contentHeight
       pdf.addImage(letterheadCanvas.toDataURL('image/png'), 'PNG', marginX, yMm, contentWidth, letterheadMm)
-      yMm += letterheadMm + 4
+      yMm += letterheadMm + 3
     }
-    const sliceMm = ((end - cssY) / pageCss) * contentHeight
+    const sliceMm = (sliceCss / pageCss) * contentHeight
     pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', marginX, yMm, contentWidth, sliceMm)
+    lastContentBottomMm = yMm + sliceMm
 
     cssY = end
     pageIndex += 1
+  }
+
+  if (closingCanvas && closingCss > 1) {
+    const closingMm = (closingCss / pageCss) * contentHeight
+    const footerY = pageHeight - marginY - closingMm
+    if (lastContentBottomMm + 4 > footerY) {
+      pdf.addPage()
+      let yMm = marginY
+      if (letterheadCanvas) {
+        const letterheadMm = (letterheadCss / pageCss) * contentHeight
+        pdf.addImage(letterheadCanvas.toDataURL('image/png'), 'PNG', marginX, yMm, contentWidth, letterheadMm)
+      }
+    }
+    pdf.addImage(closingCanvas.toDataURL('image/png'), 'PNG', marginX, footerY, contentWidth, closingMm)
   }
 }
 
