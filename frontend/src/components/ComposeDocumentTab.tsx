@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent } from 'react'
 import { PrinterIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import { documentsAPI, invoicesAPI, usersAPI, type ComposedDocumentDraft } from '@/lib/api'
 import { uploadToBlob } from '@/lib/blobStorage'
@@ -83,6 +83,103 @@ function escapeHtml(value: string) {
     .replace(/"/g, '&quot;')
 }
 
+type BodyAlign = 'left' | 'justify' | 'right'
+
+function bodyAlignOf(value: unknown): BodyAlign {
+  return value === 'right' || value === 'justify' || value === 'left' ? value : 'left'
+}
+
+function looksLikeHtml(value: string) {
+  return /<\/?[a-z][\s\S]*>/i.test(value)
+}
+
+const BODY_TAGS = new Set([
+  'P',
+  'DIV',
+  'BR',
+  'B',
+  'STRONG',
+  'I',
+  'EM',
+  'U',
+  'TABLE',
+  'THEAD',
+  'TBODY',
+  'TFOOT',
+  'TR',
+  'TH',
+  'TD',
+  'CAPTION',
+  'UL',
+  'OL',
+  'LI',
+])
+
+function sanitizeBodyHtml(input: string) {
+  if (typeof document === 'undefined') return ''
+  const parsed = new DOMParser().parseFromString(`<div>${input}</div>`, 'text/html')
+  const root = parsed.body.firstElementChild
+  if (!root) return ''
+
+  const clean = (node: Node): Node | null => {
+    if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent || '')
+    if (!(node instanceof HTMLElement)) return null
+    const tag = node.tagName
+    if (tag === 'BR') return document.createElement('br')
+    if (!BODY_TAGS.has(tag)) {
+      const fragment = document.createDocumentFragment()
+      node.childNodes.forEach((child) => {
+        const next = clean(child)
+        if (next) fragment.appendChild(next)
+      })
+      return fragment
+    }
+    const out = document.createElement(tag.toLowerCase())
+    if (tag === 'TH' || tag === 'TD') {
+      const colspan = Number(node.getAttribute('colspan'))
+      const rowspan = Number(node.getAttribute('rowspan'))
+      if (colspan > 1 && colspan < 20) out.setAttribute('colspan', String(Math.floor(colspan)))
+      if (rowspan > 1 && rowspan < 20) out.setAttribute('rowspan', String(Math.floor(rowspan)))
+    }
+    node.childNodes.forEach((child) => {
+      const next = clean(child)
+      if (next) out.appendChild(next)
+    })
+    return out
+  }
+
+  const holder = document.createElement('div')
+  root.childNodes.forEach((child) => {
+    const next = clean(child)
+    if (next) holder.appendChild(next)
+  })
+  return holder.innerHTML
+}
+
+function bodyToEditorHtml(value: string) {
+  if (!value) return ''
+  if (!looksLikeHtml(value)) return escapeHtml(value).replace(/\r\n/g, '\n').replace(/\n/g, '<br>')
+  if (typeof document === 'undefined') return escapeHtml(value)
+  return sanitizeBodyHtml(value)
+}
+
+function plainTextFromBody(value: string) {
+  if (!looksLikeHtml(value)) return value.replace(/\u00a0/g, ' ').trim()
+  if (typeof document === 'undefined') return value.replace(/<[^>]+>/g, ' ').trim()
+  const holder = document.createElement('div')
+  holder.innerHTML = sanitizeBodyHtml(value)
+  return (holder.textContent || '').replace(/\u00a0/g, ' ').trim()
+}
+
+function tableHtml(rows: number, cols: number) {
+  const heading = Array.from({ length: cols }, (_, index) => `<th>Column ${index + 1}</th>`).join('')
+  const body = Array.from(
+    { length: rows },
+    () => `<tr>${Array.from({ length: cols }, () => '<td>&nbsp;</td>').join('')}</tr>`,
+  ).join('')
+  return `<table><caption>Table title</caption><thead><tr>${heading}</tr></thead><tbody>${body}</tbody></table>`
+}
+
 function asList<T>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[]
   if (value && typeof value === 'object') {
@@ -122,6 +219,7 @@ export default function ComposeDocumentTab({
   const [docDate, setDocDate] = useState(starting?.docDate || todayIso())
   const [subject, setSubject] = useState(starting?.subject ?? '')
   const [body, setBody] = useState(starting?.body ?? KIND_META[startKind].defaultBody)
+  const [bodyAlign, setBodyAlign] = useState<BodyAlign>(bodyAlignOf(starting?.bodyAlign))
   const [recipientId, setRecipientId] = useState(starting?.recipientId ?? '')
   const [recipientName, setRecipientName] = useState(starting?.recipientName ?? '')
   const [recipientCompany, setRecipientCompany] = useState(starting?.recipientCompany ?? '')
@@ -139,6 +237,13 @@ export default function ComposeDocumentTab({
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [tableRows, setTableRows] = useState(3)
+  const [tableCols, setTableCols] = useState(4)
+  const editorRef = useRef<HTMLDivElement>(null)
+  const internalEdit = useRef(false)
+  const bindEditor = useCallback((node: HTMLDivElement | null) => {
+    editorRef.current = node
+  }, [])
 
   useEffect(() => {
     if (!initialDraft || !isComposedDraft(initialDraft)) return
@@ -148,6 +253,7 @@ export default function ComposeDocumentTab({
     setDocDate(initialDraft.docDate || todayIso())
     setSubject(initialDraft.subject || '')
     setBody(initialDraft.body || KIND_META[nextKind].defaultBody)
+    setBodyAlign(bodyAlignOf(initialDraft.bodyAlign))
     setRecipientId(initialDraft.recipientId || '')
     setRecipientName(initialDraft.recipientName || '')
     setRecipientCompany(initialDraft.recipientCompany || '')
@@ -256,9 +362,90 @@ export default function ComposeDocumentTab({
     if (!subject.trim() || subject === prev.defaultSubject) {
       setSubject(KIND_META[next].defaultSubject)
     }
-    if (!body.trim() || body === prev.defaultBody) {
+    if (!plainTextFromBody(body) || plainTextFromBody(body) === plainTextFromBody(prev.defaultBody)) {
       setBody(KIND_META[next].defaultBody)
     }
+  }
+
+  const rememberBody = () => {
+    const node = editorRef.current
+    if (!node) return
+    const next = sanitizeBodyHtml(node.innerHTML)
+    if (next === body) return
+    internalEdit.current = true
+    setBody(next)
+  }
+
+  useEffect(() => {
+    const node = editorRef.current
+    if (!node) return
+    if (internalEdit.current) {
+      internalEdit.current = false
+      return
+    }
+    const next = bodyToEditorHtml(body)
+    if (node.innerHTML !== next) node.innerHTML = next
+  }, [body])
+
+  const applyInline = (tag: 'strong' | 'em') => {
+    const node = editorRef.current
+    const selection = window.getSelection()
+    if (!node || !selection || selection.rangeCount === 0 || !node.contains(selection.anchorNode)) {
+      setError('Select the words in the body first.')
+      return
+    }
+    const range = selection.getRangeAt(0)
+    if (range.collapsed) {
+      setError('Select the words you want in bold or italic.')
+      return
+    }
+    setError('')
+    const parentTag = (start: Node | null) => {
+      let current: Node | null = start
+      while (current && current !== node) {
+        if (current instanceof HTMLElement && current.tagName === tag.toUpperCase()) return current
+        current = current.parentNode
+      }
+      return null
+    }
+    const existing = parentTag(range.startContainer)
+    if (existing && existing === parentTag(range.endContainer)) {
+      const fragment = document.createDocumentFragment()
+      while (existing.firstChild) fragment.appendChild(existing.firstChild)
+      existing.replaceWith(fragment)
+    } else {
+      const wrapper = document.createElement(tag)
+      try {
+        range.surroundContents(wrapper)
+      } catch {
+        wrapper.appendChild(range.extractContents())
+        range.insertNode(wrapper)
+      }
+    }
+    rememberBody()
+  }
+
+  const insertTable = () => {
+    const node = editorRef.current
+    if (!node) return
+    const rows = Math.min(12, Math.max(1, Number(tableRows) || 1))
+    const cols = Math.min(8, Math.max(1, Number(tableCols) || 1))
+    node.focus()
+    const html = `${tableHtml(rows, cols)}<br>`
+    const selection = window.getSelection()
+    const inside = Boolean(selection && selection.rangeCount > 0 && node.contains(selection.anchorNode))
+    if (!inside) node.insertAdjacentHTML('beforeend', html)
+    else document.execCommand('insertHTML', false, html)
+    rememberBody()
+  }
+
+  const pasteBody = (event: ClipboardEvent<HTMLDivElement>) => {
+    const html = event.clipboardData.getData('text/html')
+    const text = event.clipboardData.getData('text/plain')
+    event.preventDefault()
+    const safe = html ? sanitizeBodyHtml(html) : escapeHtml(text).replace(/\n/g, '<br>')
+    document.execCommand('insertHTML', false, safe)
+    rememberBody()
   }
 
   const applyClient = (id: string) => {
@@ -308,7 +495,11 @@ export default function ComposeDocumentTab({
     .sheet { max-width: 800px; margin: 0 auto; }
     .meta { display: flex; justify-content: space-between; gap: 24px; margin: 20px 0 28px; font-size: 13px; }
     h1 { font-size: 20px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; margin: 0 0 8px; }
-    .body { white-space: pre-wrap; line-height: 1.55; font-size: 15px; }
+    .body { white-space: pre-wrap; line-height: 1.55; font-size: 15px; text-align: ${bodyAlign}; }
+    .body table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13px; }
+    .body caption { caption-side: top; text-align: left; font-weight: 700; margin: 0 0 6px; }
+    .body th, .body td { border: 1px solid #111827; padding: 6px 8px; vertical-align: top; text-align: left; }
+    .body th { font-weight: 700; }
     .enclosures { margin-top: 28px; font-size: 13px; }
     .sign { margin-top: 36px; }
     .muted { color: #6b7280; }
@@ -333,7 +524,7 @@ export default function ComposeDocumentTab({
       </div>
     </div>
     ${subject ? `<h1>${escapeHtml(subject)}</h1>` : ''}
-    <div class="body">${escapeHtml(body)}</div>
+    <div class="body">${bodyToEditorHtml(body)}</div>
     <div class="sign">
       <p>${escapeHtml(signatory)}</p>
       <p class="muted">${escapeHtml(signatoryTitle)}</p>
@@ -422,7 +613,7 @@ export default function ComposeDocumentTab({
   }
 
   const saveToLibrary = async () => {
-    if (!body.trim()) {
+    if (!plainTextFromBody(body)) {
       setError('Add the document body before saving.')
       return
     }
@@ -441,7 +632,8 @@ export default function ComposeDocumentTab({
         reference,
         docDate,
         subject,
-        body,
+        body: editorRef.current ? sanitizeBodyHtml(editorRef.current.innerHTML) : bodyToEditorHtml(body),
+        bodyAlign,
         recipientId,
         recipientName,
         recipientCompany,
@@ -578,10 +770,91 @@ export default function ComposeDocumentTab({
               className={field}
             />
           </label>
-          <label className="text-sm sm:col-span-2">
+          <div className="text-sm sm:col-span-2">
             <span className="text-gray-400">Body</span>
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className={field} />
-          </label>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {(
+                [
+                  ['left', 'Left'],
+                  ['justify', 'Justify'],
+                  ['right', 'Right align'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setBodyAlign(value)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                    bodyAlign === value ? 'bg-crimson-900 text-white' : 'bg-granite-700 text-gray-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => applyInline('strong')}
+                className="rounded-md bg-granite-700 px-2.5 py-1 text-xs font-bold text-white"
+              >
+                Bold
+              </button>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => applyInline('em')}
+                className="rounded-md bg-granite-700 px-2.5 py-1 text-xs italic text-white"
+              >
+                Italic
+              </button>
+              <label className="flex items-center gap-1 text-xs text-gray-300">
+                Rows
+                <input
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={tableRows}
+                  onChange={(event) => setTableRows(Number(event.target.value))}
+                  className="w-14 rounded border border-granite-600 bg-granite-700 px-2 py-1 text-white"
+                />
+              </label>
+              <label className="flex items-center gap-1 text-xs text-gray-300">
+                Columns
+                <input
+                  type="number"
+                  min={1}
+                  max={8}
+                  value={tableCols}
+                  onChange={(event) => setTableCols(Number(event.target.value))}
+                  className="w-14 rounded border border-granite-600 bg-granite-700 px-2 py-1 text-white"
+                />
+              </label>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={insertTable}
+                className="rounded-md bg-granite-700 px-2.5 py-1 text-xs font-medium text-white"
+              >
+                Insert table
+              </button>
+            </div>
+            <div
+              ref={bindEditor}
+              contentEditable
+              suppressContentEditableWarning
+              role="textbox"
+              aria-multiline="true"
+              aria-label="Document body"
+              onInput={rememberBody}
+              onPaste={pasteBody}
+              style={{ textAlign: bodyAlign }}
+              className="compose-editor mt-2 min-h-[220px] w-full rounded-lg border border-granite-600 bg-granite-700 px-3 py-2 text-white outline-none whitespace-pre-wrap"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Select words, then use Bold or Italic. Place the cursor where the table should go, then insert it. Click a
+              cell to type.
+            </p>
+          </div>
           <label className="text-sm">
             <span className="text-gray-400">Signatory</span>
             <input value={signatory} onChange={(e) => setSignatory(e.target.value)} className={field} />
@@ -679,7 +952,17 @@ export default function ComposeDocumentTab({
             </div>
           </div>
           {subject && <h4 className="mt-5 text-lg font-semibold uppercase tracking-wide">{subject}</h4>}
-          <div className="mt-4 whitespace-pre-wrap text-[15px] leading-relaxed">{body}</div>
+          <style>{`
+            .compose-body table, .compose-editor table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+            .compose-body caption, .compose-editor caption { caption-side: top; text-align: left; font-weight: 700; margin: 0 0 6px; }
+            .compose-body th, .compose-body td, .compose-editor th, .compose-editor td { border: 1px solid #111827; padding: 6px 8px; vertical-align: top; text-align: left; }
+            .compose-editor th, .compose-editor td, .compose-editor caption { border-color: #9ca3af; }
+          `}</style>
+          <div
+            className="compose-body mt-4 whitespace-pre-wrap text-[15px] leading-relaxed"
+            style={{ textAlign: bodyAlign }}
+            dangerouslySetInnerHTML={{ __html: bodyToEditorHtml(body) }}
+          />
           <div className="mt-8 text-sm">
             <p>{signatory}</p>
             <p className="text-gray-500">{signatoryTitle}</p>

@@ -1018,6 +1018,7 @@ export type ComposedDocumentDraft = {
   docDate: string
   subject: string
   body: string
+  bodyAlign?: 'left' | 'justify' | 'right'
   recipientId: string
   recipientName: string
   recipientCompany: string
