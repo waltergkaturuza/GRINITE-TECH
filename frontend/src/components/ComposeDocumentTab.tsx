@@ -239,7 +239,7 @@ export default function ComposeDocumentTab({
   const [notice, setNotice] = useState('')
   const [tableRows, setTableRows] = useState(3)
   const [tableCols, setTableCols] = useState(4)
-  const editorRef = useRef<HTMLDivElement>(null)
+  const editorRef = useRef<HTMLDivElement | null>(null)
   const internalEdit = useRef(false)
   const bindEditor = useCallback((node: HTMLDivElement | null) => {
     editorRef.current = node
