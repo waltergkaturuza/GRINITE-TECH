@@ -95,6 +95,7 @@ export function absoluteLetterheadLogoUrl(stored?: string | null) {
 
 export function letterheadCss() {
   return `
+.invoice-letterhead { break-inside: avoid; page-break-inside: avoid; }
 .qh { width: 100%; border-collapse: collapse; margin: 0 0 10px; break-inside: avoid; page-break-inside: avoid; }
 .qh td { vertical-align: top; padding: 0; }
 .qh-logo { width: 42%; }
@@ -111,6 +112,7 @@ export function letterheadHtml(origin = '', storedLogo?: string | null) {
   const logo = /^https?:\/\//i.test(logoPath) ? logoPath : `${origin}${logoPath}`
   const lines = contact.lines.map((line) => `<div>${escapeHtml(line)}</div>`).join('')
   return `
+<div class="invoice-letterhead">
 <table class="qh" role="presentation" width="100%" cellspacing="0" cellpadding="0">
   <tr>
     <td class="qh-logo">
@@ -122,7 +124,8 @@ export function letterheadHtml(origin = '', storedLogo?: string | null) {
     </td>
   </tr>
 </table>
-<div class="qh-rule"></div>`
+<div class="qh-rule"></div>
+</div>`
 }
 
 export function letterheadHtmlInline(origin = '', storedLogo?: string | null) {

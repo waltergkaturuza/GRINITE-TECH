@@ -1,4 +1,5 @@
 import { QUANTIS_LETTERHEAD, formatSellerBankBlock, letterheadCss, letterheadHtml } from './companyLetterhead'
+import { paintElementPages } from './printDocument'
 import {
   amountInWords,
   clientDisplayName,
@@ -209,21 +210,7 @@ async function htmlToPdfBytes(html: string): Promise<Uint8Array> {
       windowWidth: 794,
     })
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-    const pageWidth = pdf.internal.pageSize.getWidth()
-    const pageHeight = pdf.internal.pageSize.getHeight()
-    const imgWidth = pageWidth
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
-    const imgData = canvas.toDataURL('image/jpeg', 0.86)
-    let heightLeft = imgHeight
-    let position = 0
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
-    while (heightLeft > 0.5) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-    }
+    paintElementPages(pdf, canvas, wrap)
     return new Uint8Array(pdf.output('arraybuffer'))
   } finally {
     host.remove()

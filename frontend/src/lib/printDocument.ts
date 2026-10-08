@@ -71,6 +71,90 @@ function waitForImages(root: ParentNode) {
   )
 }
 
+function cropCanvas(source: HTMLCanvasElement, sourceY: number, sourceHeight: number) {
+  const height = Math.max(1, Math.round(sourceHeight))
+  const out = document.createElement('canvas')
+  out.width = source.width
+  out.height = height
+  const ctx = out.getContext('2d')
+  if (!ctx) return null
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, out.width, out.height)
+  const srcY = Math.max(0, Math.round(sourceY))
+  const srcH = Math.min(height, source.height - srcY)
+  if (srcH > 0) {
+    ctx.drawImage(source, 0, srcY, source.width, srcH, 0, 0, source.width, srcH)
+  }
+  return out
+}
+
+type PdfLike = {
+  addPage: () => void
+  addImage: (data: string, format: string, x: number, y: number, w: number, h: number) => void
+  internal: { pageSize: { getWidth: () => number; getHeight: () => number } }
+}
+
+/** Draw the sheet across A4 pages, repeating the letterhead at the top of each page after the first. */
+export function paintElementPages(pdf: PdfLike, canvas: HTMLCanvasElement, root: HTMLElement) {
+  const marginX = 10
+  const marginY = 12
+  const pageWidth = pdf.internal.pageSize.getWidth()
+  const pageHeight = pdf.internal.pageSize.getHeight()
+  const contentWidth = pageWidth - marginX * 2
+  const contentHeight = pageHeight - marginY * 2
+  const total = Math.max(root.offsetHeight, 1)
+  const scale = canvas.height / total
+  const pageCss = (contentHeight / contentWidth) * (canvas.width / scale)
+  const gapCss = 4 * (pageCss / contentHeight)
+
+  const rootTop = root.getBoundingClientRect().top
+  const letterhead = root.querySelector('.invoice-letterhead') as HTMLElement | null
+  let letterheadCanvas: HTMLCanvasElement | null = null
+  let letterheadCss = 0
+  if (letterhead) {
+    const top = letterhead.getBoundingClientRect().top - rootTop
+    const marginBottom = Number.parseFloat(getComputedStyle(letterhead).marginBottom) || 0
+    letterheadCss = letterhead.offsetHeight + marginBottom
+    letterheadCanvas = cropCanvas(canvas, top * scale, letterheadCss * scale)
+  }
+
+  const bottoms = Array.from(
+    root.querySelectorAll('tr, .invoice-letterhead, .invoice-closing, .invoice-keep, p, li, h1, h2'),
+  )
+    .map((node) => node.getBoundingClientRect().bottom - rootTop)
+    .filter((bottom) => bottom > 8)
+    .sort((a, b) => a - b)
+
+  let cssY = 0
+  let pageIndex = 0
+  while (cssY < total - 1 && pageIndex < 40) {
+    const reserve = pageIndex > 0 && letterheadCanvas ? letterheadCss + gapCss : 0
+    const available = Math.max(pageCss - reserve, pageCss * 0.45)
+    let end = Math.min(total, cssY + available)
+    if (end < total - 4) {
+      const snap = bottoms.filter((bottom) => bottom > cssY + available * 0.45 && bottom <= end + 0.5)
+      if (snap.length) end = snap[snap.length - 1]
+    }
+    if (end <= cssY + 1) end = Math.min(total, cssY + Math.max(available, 24))
+
+    const slice = cropCanvas(canvas, cssY * scale, (end - cssY) * scale)
+    if (!slice) break
+    if (pageIndex > 0) pdf.addPage()
+
+    let yMm = marginY
+    if (pageIndex > 0 && letterheadCanvas) {
+      const letterheadMm = (letterheadCss / pageCss) * contentHeight
+      pdf.addImage(letterheadCanvas.toDataURL('image/png'), 'PNG', marginX, yMm, contentWidth, letterheadMm)
+      yMm += letterheadMm + 4
+    }
+    const sliceMm = ((end - cssY) / pageCss) * contentHeight
+    pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', marginX, yMm, contentWidth, sliceMm)
+
+    cssY = end
+    pageIndex += 1
+  }
+}
+
 /** Save the rendered sheet as a PDF file. Pages break between blocks so the letterhead is not sliced. */
 export async function downloadElementPdf(element: HTMLElement, filename: string) {
   const html2canvasMod = await import('html2canvas')
@@ -98,53 +182,8 @@ export async function downloadElementPdf(element: HTMLElement, filename: string)
       windowWidth: 794,
     })
 
-    const marginX = 10
-    const marginY = 12
-    const pageWidth = 210
-    const pageHeight = 297
-    const contentWidth = pageWidth - marginX * 2
-    const contentHeight = pageHeight - marginY * 2
-    const scale = canvas.height / Math.max(clone.offsetHeight, 1)
-    const pageCss = (contentHeight / contentWidth) * canvas.width / scale
-
-    const rootTop = clone.getBoundingClientRect().top
-    const bottoms = Array.from(
-      clone.querySelectorAll('tr, .invoice-letterhead, .invoice-closing, .invoice-keep, p, li'),
-    )
-      .map((node) => node.getBoundingClientRect().bottom - rootTop)
-      .filter((bottom) => bottom > 8)
-      .sort((a, b) => a - b)
-
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-    let cssY = 0
-    let pageIndex = 0
-    const total = clone.offsetHeight
-
-    while (cssY < total - 1) {
-      let end = Math.min(total, cssY + pageCss)
-      if (end < total - 4) {
-        const snap = bottoms.filter((bottom) => bottom > cssY + pageCss * 0.5 && bottom <= end + 0.5)
-        if (snap.length) end = snap[snap.length - 1]
-      }
-
-      const sliceY = Math.round(cssY * scale)
-      const sliceH = Math.max(1, Math.round((end - cssY) * scale))
-      const pageCanvas = document.createElement('canvas')
-      pageCanvas.width = canvas.width
-      pageCanvas.height = sliceH
-      const ctx = pageCanvas.getContext('2d')
-      if (!ctx) break
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height)
-      ctx.drawImage(canvas, 0, sliceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH)
-
-      const sliceMm = (sliceH / canvas.width) * contentWidth
-      if (pageIndex > 0) pdf.addPage()
-      pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', marginX, marginY, contentWidth, sliceMm)
-      cssY = end
-      pageIndex += 1
-      if (pageIndex > 30) break
-    }
+    paintElementPages(pdf, canvas, clone)
 
     const name = filename.toLowerCase().endsWith('.pdf') ? filename : `${filename}.pdf`
     pdf.save(name)
