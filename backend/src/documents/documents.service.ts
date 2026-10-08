@@ -116,6 +116,7 @@ export class DocumentsService {
       fileSize: Number(dto.fileSize) || 0,
       mimeType: dto.mimeType || null,
       uploadedById: authUserId(user),
+      metadata: dto.metadata || null,
     });
     return this.documents.save(doc);
   }
@@ -191,8 +192,21 @@ export class DocumentsService {
 
   async update(id: string, dto: UpdateCompanyDocumentDto, user?: AuthUser) {
     const doc = await this.findOne(id, user);
+    if (dto.projectId !== undefined) {
+      doc.projectId = dto.projectId || null;
+      doc.scope = doc.projectId ? 'project' : 'company';
+    }
+    if (dto.scope && dto.projectId === undefined) doc.scope = dto.scope;
     if (dto.category) this.assertCategory(doc.scope, dto.category);
-    Object.assign(doc, dto);
+    if (dto.title !== undefined) doc.title = dto.title;
+    if (dto.description !== undefined) doc.description = dto.description;
+    if (dto.category !== undefined) doc.category = dto.category;
+    if (dto.url !== undefined) doc.url = dto.url;
+    if (dto.pathname !== undefined) doc.pathname = dto.pathname;
+    if (dto.originalName !== undefined) doc.originalName = dto.originalName;
+    if (dto.fileSize !== undefined) doc.fileSize = Number(dto.fileSize) || 0;
+    if (dto.mimeType !== undefined) doc.mimeType = dto.mimeType;
+    if (dto.metadata !== undefined) doc.metadata = dto.metadata;
     return this.documents.save(doc);
   }
 

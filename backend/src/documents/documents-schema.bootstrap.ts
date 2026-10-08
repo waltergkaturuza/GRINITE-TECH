@@ -63,5 +63,10 @@ export class DocumentsSchemaBootstrap implements OnApplicationBootstrap {
       ON company_documents ("projectId", url)
       WHERE "projectId" IS NOT NULL
     `);
+
+    await this.dataSource.query(`
+      ALTER TABLE company_documents
+      ADD COLUMN IF NOT EXISTS metadata jsonb
+    `);
   }
 }

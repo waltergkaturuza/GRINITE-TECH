@@ -87,6 +87,9 @@ export class CompanyDocument {
   @Column({ nullable: true })
   uploadedById: string | null;
 
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: Record<string, unknown> | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsIn, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID, Min, ValidateIf } from 'class-validator';
 import {
   COMPANY_DOCUMENT_CATEGORIES,
   PROJECT_DOCUMENT_CATEGORIES,
@@ -11,6 +11,8 @@ const ALL_CATEGORIES = [
 
 const emptyToUndefined = ({ value }: { value: unknown }) =>
   value === '' || value === null ? undefined : value;
+
+const blankToUndefined = ({ value }: { value: unknown }) => (value === '' ? undefined : value);
 
 export class CreateCompanyDocumentDto {
   @IsNotEmpty()
@@ -55,6 +57,10 @@ export class CreateCompanyDocumentDto {
   @IsOptional()
   @IsString()
   mimeType?: string;
+
+  @IsOptional()
+  @IsObject()
+  metadata?: Record<string, unknown>;
 }
 
 export class UpdateCompanyDocumentDto {
@@ -69,4 +75,40 @@ export class UpdateCompanyDocumentDto {
   @IsOptional()
   @IsIn(ALL_CATEGORIES)
   category?: string;
+
+  @IsOptional()
+  @IsIn(['company', 'project'])
+  scope?: 'company' | 'project';
+
+  @Transform(blankToUndefined)
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null && value !== '')
+  @IsUUID()
+  projectId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  url?: string;
+
+  @IsOptional()
+  @IsString()
+  pathname?: string;
+
+  @IsOptional()
+  @IsString()
+  originalName?: string;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  fileSize?: number;
+
+  @IsOptional()
+  @IsString()
+  mimeType?: string;
+
+  @IsOptional()
+  @IsObject()
+  metadata?: Record<string, unknown>;
 }

@@ -11,8 +11,8 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import BlobFileUpload from '@/components/BlobFileUpload'
-import ComposeDocumentTab from '@/components/ComposeDocumentTab'
-import { documentsAPI, projectsAPI, type CompanyDocument } from '@/lib/api'
+import ComposeDocumentTab, { isComposedDraft } from '@/components/ComposeDocumentTab'
+import { documentsAPI, projectsAPI, type CompanyDocument, type ComposedDocumentDraft } from '@/lib/api'
 import {
   COMPANY_DOCUMENT_CATEGORIES,
   PROJECT_DOCUMENT_CATEGORIES,
@@ -136,6 +136,7 @@ export default function DocumentManager({
   )
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState<CompanyDocument | null>(null)
+  const [composeEdit, setComposeEdit] = useState<{ id: string; draft: ComposedDocumentDraft } | null>(null)
   const [workspaceTab, setWorkspaceTab] = useState<'upload' | 'search' | 'create'>('upload')
   const usedCustomTitle = useRef(false)
 
@@ -436,13 +437,16 @@ export default function DocumentManager({
           {library && (
             <button
               type="button"
-              onClick={() => setWorkspaceTab('create')}
+              onClick={() => {
+              setComposeEdit(null)
+              setWorkspaceTab('create')
+            }}
               className={`inline-flex shrink-0 items-center gap-2 border-b-2 py-3 px-1 text-sm font-medium ${
                 workspaceTab === 'create' ? activeTabClass : idleTabClass
               }`}
             >
               <DocumentPlusIcon className="h-4 w-4" />
-              Create documents
+              {composeEdit ? 'Edit document' : 'Create documents'}
             </button>
           )}
         </nav>
@@ -525,8 +529,16 @@ export default function DocumentManager({
 
       {library && workspaceTab === 'create' && (
         <ComposeDocumentTab
+          key={composeEdit?.id || 'new'}
           projects={projects}
+          documentId={composeEdit?.id}
+          initialDraft={composeEdit?.draft}
+          onCancel={() => {
+            setComposeEdit(null)
+            setWorkspaceTab('search')
+          }}
           onSaved={async () => {
+            setComposeEdit(null)
             setWorkspaceTab('search')
             await load()
           }}
@@ -665,9 +677,21 @@ export default function DocumentManager({
                             <>
                               <button
                                 type="button"
-                                onClick={() => setEditing(doc)}
+                                onClick={() => {
+                                  const draft = doc.metadata?.compose
+                                  if (isComposedDraft(draft)) {
+                                    setComposeEdit({ id: doc.id, draft })
+                                    setWorkspaceTab('create')
+                                    return
+                                  }
+                                  setEditing(doc)
+                                }}
                                 className={`rounded-md p-2 ${hoverBtn}`}
-                                title="Edit details"
+                                title={
+                                  isComposedDraft(doc.metadata?.compose)
+                                    ? 'Edit letter, memo, bid, or SLA'
+                                    : 'Edit details'
+                                }
                               >
                                 <PencilSquareIcon className="h-4 w-4" />
                               </button>
@@ -696,6 +720,13 @@ export default function DocumentManager({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className={`w-full max-w-md rounded-xl border p-5 ${panel}`}>
             <h3 className="mb-3 text-lg font-semibold">Edit document</h3>
+            {!editing.metadata?.compose &&
+              ['bids', 'correspondence', 'contracts'].includes(editing.category) && (
+                <p className={`mb-3 text-sm ${muted}`}>
+                  This file was saved before the full draft was stored, so only the title, category, and notes can be
+                  changed. Create the letter or memo again to edit the body later.
+                </p>
+              )}
             <label className="block text-sm">
               Title
               <input

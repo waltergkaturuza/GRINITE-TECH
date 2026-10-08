@@ -1007,8 +1007,25 @@ export type CompanyDocument = {
   fileSize: number
   mimeType?: string
   uploadedBy?: { firstName?: string; lastName?: string; email?: string }
+  metadata?: { compose?: ComposedDocumentDraft } | null
   createdAt: string
   updatedAt: string
+}
+
+export type ComposedDocumentDraft = {
+  kind: 'bid' | 'letter' | 'sla' | 'memo'
+  reference: string
+  docDate: string
+  subject: string
+  body: string
+  recipientId: string
+  recipientName: string
+  recipientCompany: string
+  recipientAddress: string
+  projectId: string
+  signatory: string
+  signatoryTitle: string
+  attachmentKeys: string[]
 }
 
 export const documentsAPI = {
@@ -1035,11 +1052,27 @@ export const documentsAPI = {
     originalName: string
     fileSize?: number
     mimeType?: string
+    metadata?: { compose?: ComposedDocumentDraft }
   }) => {
     const response = await api.post('/documents', data)
     return response.data as CompanyDocument
   },
-  update: async (id: string, data: { title?: string; description?: string; category?: string }) => {
+  update: async (
+    id: string,
+    data: {
+      title?: string
+      description?: string
+      category?: string
+      scope?: 'company' | 'project'
+      projectId?: string | null
+      url?: string
+      pathname?: string
+      originalName?: string
+      fileSize?: number
+      mimeType?: string
+      metadata?: { compose?: ComposedDocumentDraft }
+    },
+  ) => {
     const response = await api.patch(`/documents/${id}`, data)
     return response.data as CompanyDocument
   },

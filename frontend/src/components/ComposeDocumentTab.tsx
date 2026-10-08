@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { PrinterIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
-import { documentsAPI, invoicesAPI, usersAPI } from '@/lib/api'
+import { documentsAPI, invoicesAPI, usersAPI, type ComposedDocumentDraft } from '@/lib/api'
 import { uploadToBlob } from '@/lib/blobStorage'
 import { QUANTIS_LETTERHEAD, letterheadCss, letterheadHtml } from '@/lib/companyLetterhead'
 import { COMPANY_CONTACT } from '@/constants/company'
@@ -94,25 +94,44 @@ function asList<T>(value: unknown): T[] {
   return []
 }
 
+export function isComposedDraft(value: unknown): value is ComposedDocumentDraft {
+  if (!value || typeof value !== 'object') return false
+  const kind = (value as { kind?: string }).kind
+  return kind === 'bid' || kind === 'letter' || kind === 'sla' || kind === 'memo'
+}
+
 type ComposeDocumentTabProps = {
   projects: ProjectOption[]
   onSaved: () => void
+  onCancel?: () => void
+  documentId?: string | null
+  initialDraft?: ComposedDocumentDraft | null
 }
 
-export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumentTabProps) {
-  const [kind, setKind] = useState<ComposedKind>('letter')
-  const [reference, setReference] = useState(makeRef('letter'))
-  const [docDate, setDocDate] = useState(todayIso())
-  const [subject, setSubject] = useState('')
-  const [body, setBody] = useState(KIND_META.letter.defaultBody)
-  const [recipientId, setRecipientId] = useState('')
-  const [recipientName, setRecipientName] = useState('')
-  const [recipientCompany, setRecipientCompany] = useState('')
-  const [recipientAddress, setRecipientAddress] = useState('')
-  const [projectId, setProjectId] = useState('')
-  const [signatory, setSignatory] = useState('Walter Katuruza')
-  const [signatoryTitle, setSignatoryTitle] = useState('Director')
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([])
+export default function ComposeDocumentTab({
+  projects,
+  onSaved,
+  onCancel,
+  documentId,
+  initialDraft,
+}: ComposeDocumentTabProps) {
+  const starting = initialDraft && isComposedDraft(initialDraft) ? initialDraft : null
+  const startKind: ComposedKind = starting?.kind || 'letter'
+  const [kind, setKind] = useState<ComposedKind>(startKind)
+  const [reference, setReference] = useState(starting?.reference || makeRef(startKind))
+  const [docDate, setDocDate] = useState(starting?.docDate || todayIso())
+  const [subject, setSubject] = useState(starting?.subject ?? '')
+  const [body, setBody] = useState(starting?.body ?? KIND_META[startKind].defaultBody)
+  const [recipientId, setRecipientId] = useState(starting?.recipientId ?? '')
+  const [recipientName, setRecipientName] = useState(starting?.recipientName ?? '')
+  const [recipientCompany, setRecipientCompany] = useState(starting?.recipientCompany ?? '')
+  const [recipientAddress, setRecipientAddress] = useState(starting?.recipientAddress ?? '')
+  const [projectId, setProjectId] = useState(starting?.projectId ?? '')
+  const [signatory, setSignatory] = useState(starting?.signatory || 'Walter Katuruza')
+  const [signatoryTitle, setSignatoryTitle] = useState(starting?.signatoryTitle || 'Director')
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(
+    starting && Array.isArray(starting.attachmentKeys) ? starting.attachmentKeys : [],
+  )
   const [clients, setClients] = useState<ClientOption[]>([])
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [loadingSources, setLoadingSources] = useState(true)
@@ -120,6 +139,26 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    if (!initialDraft || !isComposedDraft(initialDraft)) return
+    const nextKind = initialDraft.kind
+    setKind(nextKind)
+    setReference(initialDraft.reference || makeRef(nextKind))
+    setDocDate(initialDraft.docDate || todayIso())
+    setSubject(initialDraft.subject || '')
+    setBody(initialDraft.body || KIND_META[nextKind].defaultBody)
+    setRecipientId(initialDraft.recipientId || '')
+    setRecipientName(initialDraft.recipientName || '')
+    setRecipientCompany(initialDraft.recipientCompany || '')
+    setRecipientAddress(initialDraft.recipientAddress || '')
+    setProjectId(initialDraft.projectId || '')
+    setSignatory(initialDraft.signatory || 'Walter Katuruza')
+    setSignatoryTitle(initialDraft.signatoryTitle || 'Director')
+    setSelectedKeys(Array.isArray(initialDraft.attachmentKeys) ? initialDraft.attachmentKeys : [])
+    // Hydrate once per opened document. The parent remounts this form with a new key.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentId])
 
   useEffect(() => {
     let cancelled = false
@@ -213,7 +252,7 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
   const changeKind = (next: ComposedKind) => {
     const prev = KIND_META[kind]
     setKind(next)
-    setReference(makeRef(next))
+    if (!documentId) setReference(makeRef(next))
     if (!subject.trim() || subject === prev.defaultSubject) {
       setSubject(KIND_META[next].defaultSubject)
     }
@@ -397,19 +436,49 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
       const enclosureNote = chosen.length
         ? `PDF enclosures: ${chosen.map((item) => item.label).join('; ')}`
         : ''
-      await documentsAPI.create({
+      const draft: ComposedDocumentDraft = {
+        kind,
+        reference,
+        docDate,
+        subject,
+        body,
+        recipientId,
+        recipientName,
+        recipientCompany,
+        recipientAddress,
+        projectId,
+        signatory,
+        signatoryTitle,
+        attachmentKeys: selectedKeys,
+      }
+      const saved = {
         title: subject.trim() || `${KIND_META[kind].label} ${reference}`,
         description: [reference, recipientCompany || recipientName, enclosureNote].filter(Boolean).join(' · '),
         category,
-        scope: projectId ? 'project' : 'company',
-        projectId: projectId || undefined,
+        scope: (projectId ? 'project' : 'company') as 'project' | 'company',
         url: uploaded.url,
         pathname: uploaded.pathname,
         originalName: filename,
         fileSize: file.size,
         mimeType: 'application/pdf',
-      })
-      setNotice(`Saved ${KIND_META[kind].label.toLowerCase()} ${reference} as a PDF pack in the library.`)
+        metadata: { compose: draft },
+      }
+      if (documentId) {
+        await documentsAPI.update(documentId, {
+          ...saved,
+          projectId: projectId || null,
+        })
+      } else {
+        await documentsAPI.create({
+          ...saved,
+          projectId: projectId || undefined,
+        })
+      }
+      setNotice(
+        documentId
+          ? `Updated ${KIND_META[kind].label.toLowerCase()} ${reference} in the library.`
+          : `Saved ${KIND_META[kind].label.toLowerCase()} ${reference} as a PDF pack in the library.`,
+      )
       onSaved()
     } catch (err) {
       console.error(err)
@@ -425,10 +494,13 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
       <div className="rounded-xl border border-granite-700 bg-granite-800 p-4 text-white">
-        <h3 className="font-semibold">Create a letterheaded document</h3>
+        <h3 className="font-semibold">
+          {documentId ? `Edit ${KIND_META[kind].label.toLowerCase()}` : 'Create a letterheaded document'}
+        </h3>
         <p className="mt-1 mb-4 text-xs text-gray-400">
-          Draft a bid, letter, SLA, or memo on the Quantis letterhead. Tick certificates, invoices,
-          quotations, or receipts to attach them as extra PDF pages, then print or download the pack.
+          {documentId
+            ? 'Change the recipient, subject, body, signatory, or attachments, then save. The library PDF is replaced with the updated letterhead pack.'
+            : 'Draft a bid, letter, SLA, or memo on the Quantis letterhead. Tick certificates, invoices, quotations, or receipts to attach them as extra PDF pages, then print or download the pack.'}
         </p>
         {error && <p className="mb-3 text-sm text-crimson-300">{error}</p>}
         {notice && <p className="mb-3 text-sm text-green-300">{notice}</p>}
@@ -575,8 +647,18 @@ export default function ComposeDocumentTab({ projects, onSaved }: ComposeDocumen
             disabled={saving || exporting}
             className="rounded-lg bg-crimson-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {saving ? 'Saving PDF…' : 'Save PDF to library'}
+            {saving ? 'Saving PDF…' : documentId ? 'Save changes' : 'Save PDF to library'}
           </button>
+          {documentId && onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={saving || exporting}
+              className="rounded-lg border border-granite-600 px-4 py-2 text-sm font-medium text-gray-200 disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </div>
 
