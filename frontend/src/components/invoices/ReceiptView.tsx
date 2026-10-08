@@ -12,7 +12,7 @@ import {
 } from '../../lib/receiptExport'
 import { getVatRate } from '../../lib/invoiceUtils'
 import { invoiceCurrencyOf } from '../../lib/money'
-import { downloadElementPdf } from '../../lib/printDocument'
+import { downloadBillingPdf } from '../../lib/invoicePdf'
 
 interface ReceiptViewProps {
   receipt: any
@@ -28,11 +28,10 @@ export default function ReceiptView({ receipt, onClose, onEdit, autoDownload }: 
   const formatCurrency = (amount: number) => formatCurrencyAmount(amount, invoiceCurrencyOf(receipt))
 
   const downloadReceipt = async () => {
-    const node = printRef.current
-    if (!node || !receipt || downloading) return
+    if (!receipt || downloading) return
     setDownloading(true)
     try {
-      await downloadElementPdf(node, `Receipt ${receipt.invoice_number}.pdf`)
+      await downloadBillingPdf(receipt, `Receipt ${receipt.invoice_number}.pdf`)
     } catch (error) {
       console.error(error)
       alert('Could not create the PDF. Please try again.')

@@ -16,7 +16,7 @@ import {
   getVatRate,
 } from '../../lib/invoiceUtils'
 import { invoiceCurrencyOf } from '../../lib/money'
-import { downloadElementPdf } from '../../lib/printDocument'
+import { downloadBillingPdf } from '../../lib/invoicePdf'
 
 interface InvoiceViewProps {
   invoice: any
@@ -42,12 +42,11 @@ export default function InvoiceView({ invoice, onClose, onEdit, onRecordPayment,
   const formatCurrency = (amount: unknown) => formatCurrencyAmount(amount, invoiceCurrencyOf(invoice))
 
   const downloadInvoice = async () => {
-    const node = printRef.current
-    if (!node || !invoice || downloading) return
+    if (!invoice || downloading) return
     const title = invoice.document_type === 'quotation' ? 'Quotation' : 'Invoice'
     setDownloading(true)
     try {
-      await downloadElementPdf(node, `${title} ${invoice.invoice_number}.pdf`)
+      await downloadBillingPdf(invoice, `${title} ${invoice.invoice_number}.pdf`)
     } catch (error) {
       console.error(error)
       alert('Could not create the PDF. Please try again.')
