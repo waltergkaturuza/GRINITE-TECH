@@ -180,6 +180,55 @@ function tableHtml(rows: number, cols: number) {
   return `<table><caption>Table title</caption><thead><tr>${heading}</tr></thead><tbody>${body}</tbody></table>`
 }
 
+function columnStart(cell: HTMLTableCellElement) {
+  const row = cell.parentElement
+  if (!row) return 0
+  let index = 0
+  for (const child of Array.from(row.children)) {
+    if (child === cell) return index
+    if (child instanceof HTMLTableCellElement) index += child.colSpan || 1
+  }
+  return index
+}
+
+function rowLayout(row: HTMLTableRowElement) {
+  const cells: { cell: HTMLTableCellElement; start: number; span: number }[] = []
+  let cursor = 0
+  for (const child of Array.from(row.children)) {
+    if (!(child instanceof HTMLTableCellElement)) continue
+    const span = child.colSpan || 1
+    cells.push({ cell: child, start: cursor, span })
+    cursor += span
+  }
+  return cells
+}
+
+function tableColumnCount(table: HTMLTableElement) {
+  let max = 0
+  table.querySelectorAll('tr').forEach((row) => {
+    if (!(row instanceof HTMLTableRowElement)) return
+    const cells = rowLayout(row)
+    const last = cells[cells.length - 1]
+    max = Math.max(max, last ? last.start + last.span : 0)
+  })
+  return max
+}
+
+function blankCell(tag: 'td' | 'th') {
+  const cell = document.createElement(tag)
+  cell.innerHTML = '&nbsp;'
+  return cell
+}
+
+function placeCaret(cell: HTMLElement) {
+  const range = document.createRange()
+  range.selectNodeContents(cell)
+  range.collapse(true)
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+}
+
 function asList<T>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[]
   if (value && typeof value === 'object') {
@@ -436,6 +485,125 @@ export default function ComposeDocumentTab({
     const inside = Boolean(selection && selection.rangeCount > 0 && node.contains(selection.anchorNode))
     if (!inside) node.insertAdjacentHTML('beforeend', html)
     else document.execCommand('insertHTML', false, html)
+    rememberBody()
+  }
+
+  const selectedTableCell = () => {
+    const editor = editorRef.current
+    const selection = window.getSelection()
+    if (!editor || !selection?.anchorNode || !editor.contains(selection.anchorNode)) return null
+    const origin = selection.anchorNode instanceof HTMLElement ? selection.anchorNode : selection.anchorNode.parentElement
+    const cell = origin?.closest('td, th')
+    if (!(cell instanceof HTMLTableCellElement) || !editor.contains(cell)) return null
+    const row = cell.parentElement
+    const table = cell.closest('table')
+    if (!(row instanceof HTMLTableRowElement) || !(table instanceof HTMLTableElement) || !editor.contains(table)) {
+      return null
+    }
+    return { cell, row, table }
+  }
+
+  const addTableRow = () => {
+    const current = selectedTableCell()
+    if (!current) {
+      setError('Click a cell in the table first.')
+      return
+    }
+    const { row, table } = current
+    if (table.querySelectorAll('tr').length >= 24) {
+      setError('This table already has 24 rows.')
+      return
+    }
+    setError('')
+    const cols = Math.max(1, tableColumnCount(table))
+    const inHead = row.parentElement?.tagName === 'THEAD'
+    const tag = inHead ? 'td' : row.cells[0]?.tagName === 'TH' ? 'th' : 'td'
+    const next = document.createElement('tr')
+    for (let index = 0; index < cols; index += 1) next.appendChild(blankCell(tag))
+    if (inHead) {
+      let body = table.tBodies[0]
+      if (!body) {
+        body = document.createElement('tbody')
+        table.appendChild(body)
+      }
+      body.insertBefore(next, body.firstChild)
+    } else {
+      row.after(next)
+    }
+    placeCaret(next.cells[0])
+    rememberBody()
+  }
+
+  const deleteTableRow = () => {
+    const current = selectedTableCell()
+    if (!current) {
+      setError('Click a cell in the table first.')
+      return
+    }
+    setError('')
+    const { row, table } = current
+    const nextRow = row.nextElementSibling instanceof HTMLTableRowElement ? row.nextElementSibling : row.previousElementSibling
+    row.remove()
+    if (!table.querySelector('tr')) table.remove()
+    else if (nextRow instanceof HTMLTableRowElement && nextRow.cells[0]) placeCaret(nextRow.cells[0])
+    rememberBody()
+  }
+
+  const addTableColumn = () => {
+    const current = selectedTableCell()
+    if (!current) {
+      setError('Click a cell in the table first.')
+      return
+    }
+    const { cell, table } = current
+    if (tableColumnCount(table) >= 12) {
+      setError('This table already has 12 columns.')
+      return
+    }
+    setError('')
+    const index = columnStart(cell)
+    let focus: HTMLTableCellElement | null = null
+    table.querySelectorAll('tr').forEach((item) => {
+      if (!(item instanceof HTMLTableRowElement)) return
+      const layout = rowLayout(item)
+      const hit = layout.find((entry) => index >= entry.start && index < entry.start + entry.span)
+      const tag = item.parentElement?.tagName === 'THEAD' || item.cells[0]?.tagName === 'TH' ? 'th' : 'td'
+      const fresh = blankCell(tag)
+      if (!hit) {
+        item.appendChild(fresh)
+      } else if (hit.span > 1 && index > hit.start) {
+        hit.cell.colSpan = hit.span + 1
+        return
+      } else {
+        hit.cell.after(fresh)
+      }
+      if (item === current.row) focus = fresh
+    })
+    if (focus) placeCaret(focus)
+    rememberBody()
+  }
+
+  const deleteTableColumn = () => {
+    const current = selectedTableCell()
+    if (!current) {
+      setError('Click a cell in the table first.')
+      return
+    }
+    setError('')
+    const { cell, table } = current
+    if (tableColumnCount(table) <= 1) {
+      table.remove()
+      rememberBody()
+      return
+    }
+    const index = columnStart(cell)
+    table.querySelectorAll('tr').forEach((item) => {
+      if (!(item instanceof HTMLTableRowElement)) return
+      const hit = rowLayout(item).find((entry) => index >= entry.start && index < entry.start + entry.span)
+      if (!hit) return
+      if (hit.span > 1) hit.cell.colSpan = hit.span - 1
+      else hit.cell.remove()
+    })
     rememberBody()
   }
 
@@ -837,6 +1005,38 @@ export default function ComposeDocumentTab({
               >
                 Insert table
               </button>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={addTableRow}
+                className="rounded-md bg-granite-700 px-2.5 py-1 text-xs font-medium text-white"
+              >
+                Add row
+              </button>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={deleteTableRow}
+                className="rounded-md bg-granite-700 px-2.5 py-1 text-xs font-medium text-white"
+              >
+                Delete row
+              </button>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={addTableColumn}
+                className="rounded-md bg-granite-700 px-2.5 py-1 text-xs font-medium text-white"
+              >
+                Add column
+              </button>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={deleteTableColumn}
+                className="rounded-md bg-granite-700 px-2.5 py-1 text-xs font-medium text-white"
+              >
+                Delete column
+              </button>
             </div>
             <div
               ref={bindEditor}
@@ -851,8 +1051,8 @@ export default function ComposeDocumentTab({
               className="compose-editor mt-2 min-h-[220px] w-full rounded-lg border border-granite-600 bg-granite-700 px-3 py-2 text-white outline-none whitespace-pre-wrap"
             />
             <p className="mt-1 text-xs text-gray-400">
-              Select words, then use Bold or Italic. Place the cursor where the table should go, then insert it. Click a
-              cell to type.
+              Select words, then use Bold or Italic. Insert a table, then click a cell and use Add row, Delete row, Add
+              column, or Delete column.
             </p>
           </div>
           <label className="text-sm">
